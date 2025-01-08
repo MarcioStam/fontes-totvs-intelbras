@@ -1,0 +1,61 @@
+procedure pi-procedimento-18:
+    form item.it-codigo     format "x(16)" column-label "Item"
+         item.cod-estabel   format "x(5)"  column-label "Estab"
+         operacao.op-codigo format ">>>>9" column-label "Oper"
+         operacao.descricao format "x(34)" column-label "Descri‡Æo"
+         with width 132 down no-box stream-io frame f-18.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "cad-homens-aps-zerados.txt"
+           c-titulo-relat = "Cadastro de Homens APS zerados".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Cadastro de Homens APS zerados...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each item fields(it-codigo cod-estabel) use-index codigo no-lock
+       where item.it-codigo   <> ""
+         and item.cod-obsoleto < 4,
+        each operacao fields(op-codigo descricao num-id-operacao) no-lock
+       where operacao.it-codigo     = item.it-codigo
+         and operacao.data-termino >= today:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 10 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if not can-find(first tt-digita where
+                              tt-digita.cod-estabel = item.cod-estabel
+                          and tt-digita.id-brw      = 0)
+        then next.
+
+        if can-find(first int-ext-operacao where
+                          int-ext-operacao.num-id-operacao = operacao.num-id-operacao
+                      and int-ext-operacao.nro-homem-aps   > 0
+                          no-lock)
+        then next.
+
+        disp stream st-relat
+             item.it-codigo
+             item.cod-estabel
+             operacao.op-codigo
+             operacao.descricao
+             with frame f-18.
+        down stream st-relat with frame f-18.
+    end. /* for each item */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-18 */

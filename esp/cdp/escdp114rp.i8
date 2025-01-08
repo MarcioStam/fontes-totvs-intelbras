@@ -1,0 +1,247 @@
+procedure pi-procedimento-08:
+    def var c-situacao as char extent init ['N∆o Confirmada','Confirmada','Cotada','Eliminada','Em Cotaá∆o','Recebida'] no-undo.
+    def var c-nf       as char no-undo.
+    
+    form ordem-compra.it-codigo      format "x(16)"        column-label "Item"
+         prazo-compra.data-entrega   format "99/99/9999"   column-label "Entrega"
+         emitente.nome-abrev         format "x(12)"        column-label "Nome Abrev"
+         prazo-compra.quant-saldo    format "->>>,>>9.999" column-label "Qtde Saldo"
+        //prazo-compra.qtd-sal-forn   format ">>>,>>9.999"  column-label "Qtde Sal Forn"
+         prazo-compra.un             format "x(2)"         column-label "Un"
+         ordem-compra.numero-ordem   format "zzzzz9,99"    column-label "Ordem"
+         ordem-compra.num-pedido     format ">>>>>,>>9"    column-label "Pedido"
+         prazo-compra.parcela        format ">>>>9"        column-label "Parc"
+         ordem-compra.cod-estabel    format "x(5)"         column-label "Estab"
+         item.codigo-refer           format "x(15)"        column-label "Situaá∆o Parc"
+         ordem-compra.dep-almoxar    format "x(3)"         column-label "Dep"
+         ordem-compra.data-emissao   format "99/99/9999"   column-label "Emiss∆o"
+         ordem-compra.requisitante   format "x(12)"        column-label "Requisitante"
+         ordem-compra.cod-comprado   format "x(12)"        column-label "Cmprador Ord"
+        //item-uni-estab.cod-comprado format "x(12)"        column-label "Cmprador Cad"
+         usuar_mestre.nom_usuario    format "x(48)"        column-label "Nome Comprador Cadastro"
+         ordens-embarque.embarque    format "x(16)"        column-label "Embarque"
+         c-sit-imp                   format "x(8)"         column-label "Situaá∆o"
+         int-prazo-compra.nro-docto  format "x(15)"        column-label "NF"
+         with width 250 down no-box stream-io frame f-08.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "ordens-compra-anteriores-a-data-de-hoje.txt"
+           c-titulo-relat = "Ordens Compra Anteriores Ö Data de Hoje".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Ordens Compra Ant Ö dt atual...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-250.
+    view stream st-relat frame f-rodape-250.
+
+    for each ordem-compra use-index estab-situa no-lock
+       where ordem-compra.situacao <> 4  /* Eliminada */
+         and ordem-compra.situacao <> 6  /* Recebida */
+         and ordem-compra.natureza  = 1, /* Compra */
+       first item fields(codigo-refer) no-lock
+       where item.it-codigo   = ordem-compra.it-codigo
+         and item.tipo-contr <> 4, /* DÇbito Direto */
+       first item-uni-estab fields(cod-comprado) no-lock
+       where item-uni-estab.it-codigo   = ordem-compra.it-codigo
+         and item-uni-estab.cod-estabel = item.cod-estabel
+         and item-uni-estab.demanda     = 1, /* Dependente */
+       first emitente fields(nome-abrev) no-lock
+       where emitente.cod-emitente = ordem-compra.cod-emitente,
+        each prazo-compra use-index ordem-sit no-lock
+       where prazo-compra.numero-ordem  = ordem-compra.numero-ordem
+         and prazo-compra.data-entrega  < today
+         and prazo-compra.situacao     <> 4 /* Eliminada */
+         and prazo-compra.situacao     <> 6 /* Recebida */
+         and prazo-compra.qtd-sal-forn  > 0:
+        assign i-cont    = i-cont + 1
+               c-nf      = ""
+               c-sit-imp = "".
+
+        if  i-cont mod 5 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+    
+        for first usuar_mestre fields(nom_usuario)
+            where usuar_mestre.cod_usuario = item-uni-estab.cod-comprado
+                  no-lock: end.
+
+        for first int-prazo-compra no-lock
+            where int-prazo-compra.numero-ordem = prazo-compra.numero-ordem
+              and int-prazo-compra.parcela      = prazo-compra.parcela: 
+            assign c-nf = trim(int-prazo-compra.nro-docto) + "/":U + trim(int-prazo-compra.serie-docto).
+        end. /* for first int-prazo-compra */
+
+        if not can-find(first ordens-embarque where
+                              ordens-embarque.numero-ordem = prazo-compra.numero-ordem
+                          and ordens-embarque.parcela      = prazo-compra.parcela 
+                              no-lock)
+        then do:
+             disp stream st-relat
+                  ordem-compra.it-codigo     
+                  prazo-compra.data-entrega  
+                  emitente.nome-abrev        
+                  prazo-compra.quant-saldo   
+                 //prazo-compra.qtd-sal-forn  
+                  prazo-compra.un            
+                  ordem-compra.numero-ordem  
+                  ordem-compra.num-pedido    
+                  prazo-compra.parcela       
+                  ordem-compra.cod-estabel   
+                  c-situacao[prazo-compra.situacao] @ item.codigo-refer  
+                  ordem-compra.dep-almoxar
+                  ordem-compra.data-emissao  
+                  ordem-compra.requisitante  
+                  ordem-compra.cod-comprado  
+                 //item-uni-estab.cod-comprado
+                  usuar_mestre.nom_usuario when avail usuar_mestre
+                  c-nf                              @ int-prazo-compra.nro-docto
+                  with frame f-08.
+             down stream st-relat with frame f-08.
+
+             next.
+        end.
+
+        for each ordens-embarque fields(cod-estabel embarque) no-lock
+           where ordens-embarque.numero-ordem = prazo-compra.numero-ordem
+             and ordens-embarque.parcela      = prazo-compra.parcela:
+            assign c-sit-imp = "Ped".
+
+            blk-sit-imp: /* basedado no esccp008 */
+            for first embarque-imp no-lock
+                where embarque-imp.cod-estabel = ordens-embarque.cod-estabel
+                  and embarque-imp.embarque    = ordens-embarque.embarque:
+                for first historico-embarque fields(cod-itiner) of embarque-imp no-lock: end.
+
+                if not avail historico-embarque
+                then leave blk-sit-imp.
+
+                for first itinerario
+                    where itinerario.cod-itiner = historico-embarque.cod-itiner
+                          no-lock: end.
+
+                if not avail itinerario
+                then leave blk-sit-imp.
+
+                assign c-sit-imp = "Prev".
+
+                for last historico-embarque fields(cod-pto-contr) no-lock
+                   where historico-embarque.cod-estabel = embarque-imp.cod-estabel
+                     and historico-embarque.embarque    = embarque-imp.embarque
+                     and historico-embarque.dt-efetiva  <> ?
+                         break by historico-embarque.dt-efetiva:
+                    if not can-find(first pto-contr where
+                                          pto-contr.cod-pto-contr = historico-embarque.cod-pto-contr
+                                          no-lock)
+                    then leave blk-sit-imp.
+                end. /* for last historico-embarque */
+
+                if can-find(first ext-embarque-imp where
+                                  ext-embarque-imp.cod-estabel = embarque-imp.cod-estabel
+                              and ext-embarque-imp.embarque    = embarque-imp.embarque
+                              and ext-embarque-imp.log-libera-alteracao
+                              and ext-embarque-imp.log-envio-comex
+                                  no-lock)
+                then do:
+                     assign c-sit-imp = "Manut".
+                     leave blk-sit-imp.
+                end.
+
+                if can-find(first  historico-embarque of embarque-imp where
+                                   historico-embarque.cod-pto-contr = itinerario.pto-chegada
+                               and historico-embarque.dt-efetiva   <> ? 
+                                   no-lock)
+                then do:
+                     assign c-sit-imp = "NF".
+                     leave blk-sit-imp.
+                end.
+
+                if can-find(first historico-embarque of embarque-imp where
+                                  historico-embarque.cod-pto-contr = itinerario.pto-desembarque 
+                              and historico-embarque.dt-efetiva   <> ?
+                                  no-lock)
+                then do:
+                     assign c-sit-imp = "DI".
+                     leave blk-sit-imp.
+                end.
+
+                if can-find(first historico-embarque of embarque-imp where
+                                  historico-embarque.cod-pto-contr = itinerario.int-1 
+                              and historico-embarque.dt-efetiva   <> ?
+                                  no-lock)
+                then do:
+                     assign c-sit-imp = "Desp".
+                     leave blk-sit-imp.
+                end.
+
+                if can-find(first historico-embarque of embarque-imp where
+                                  historico-embarque.cod-pto-contr = itinerario.pto-embarque 
+                              and historico-embarque.dt-efetiva   <> ?
+                                  no-lock)
+                then do:
+                     assign c-sit-imp = "Embar".
+                     leave blk-sit-imp.
+                end.
+
+                if can-find(first historico-embarque of embarque-imp where
+                                  historico-embarque.cod-pto-contr = embarque-imp.cdn-pto-despch 
+                              and historico-embarque.dt-efetiva   <> ?
+                                  no-lock)
+                then do:
+                     assign c-sit-imp = "Agt".
+                     leave blk-sit-imp.
+                end.                
+
+                for first ext-embarque-imp fields(cdn-pto-instrucao)
+                    where ext-embarque-imp.cod-estabel = embarque-imp.cod-estabel
+                      and ext-embarque-imp.embarque    = embarque-imp.embarque
+                          no-lock: end.
+
+                if  avail ext-embarque-imp
+                and can-find(first historico-embarque of embarque-imp where
+                                   historico-embarque.cod-pto-contr = ext-embarque-imp.cdn-pto-instrucao
+                               and historico-embarque.dt-efetiva   <> ?
+                                   no-lock)
+                then do:
+                     assign c-sit-imp = "Inst".
+                     leave blk-sit-imp.
+                end.
+            end. /* for first embarque-imp */
+
+            disp stream st-relat
+                 ordem-compra.it-codigo     
+                 prazo-compra.data-entrega  
+                 emitente.nome-abrev        
+                 prazo-compra.quant-saldo   
+                //prazo-compra.qtd-sal-forn  
+                 prazo-compra.un            
+                 ordem-compra.numero-ordem  
+                 ordem-compra.num-pedido    
+                 prazo-compra.parcela       
+                 ordem-compra.cod-estabel   
+                 c-situacao[prazo-compra.situacao] @ item.codigo-refer
+                 ordem-compra.dep-almoxar
+                 ordem-compra.data-emissao  
+                 ordem-compra.requisitante  
+                 ordem-compra.cod-comprado  
+                //item-uni-estab.cod-comprado
+                 usuar_mestre.nom_usuario when avail usuar_mestre
+                 ordens-embarque.embarque
+                 c-sit-imp
+                 c-nf                              @ int-prazo-compra.nro-docto
+                 with frame f-08.
+            down stream st-relat with frame f-08.
+        end. /* for each ordens-embarque */
+    end. /* for each ordem-compra */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-08 */

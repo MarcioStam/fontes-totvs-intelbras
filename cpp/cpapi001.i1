@@ -1,0 +1,110 @@
+/****************************************************************************
+**
+**   Include: CPAPI001.I  - Defini‡Æo das Temp-Tables Adicionais do Reporte
+**
+*****************************************************************************/
+{cdp/cdcfgman.i}
+ 
+def temp-table tt-aloca 
+    field cod-estabel      like aloca-reserva.cod-estabel
+    field it-codigo        like aloca-reserva.it-codigo
+    field nr-ord-produ     like aloca-reserva.nr-ord-produ
+    field cod-depos        like aloca-reserva.cod-depos
+    field cod-localiz      like aloca-reserva.cod-localiz
+    field lote-serie       like reservas.lote-serie
+    field quant-aloc       like aloca-reserva.quant-aloc   
+    field quant-calc       like aloca-reserva.quant-aloc
+    field qt-a-req         like aloca-reserva.quant-aloc
+    field cod-refer        like saldo-estoq.cod-refer
+    field op-codigo        like aloca-reserva.op-codigo
+    field cod-roteiro      like aloca-reserva.cod-roteiro
+    field item-pai         like aloca-reserva.item-pai
+    field un               like reservas.un
+    field dt-vali-lote     like saldo-estoq.dt-vali-lote
+    field rw-aloca-reserva as rowid
+    field sequencia        as integer
+  &IF DEFINED (bf_man_per_ppm) &THEN
+    field veiculo          like reservas.veiculo
+    field per-ppm          like reservas.per-ppm
+    field per-ppm-lote     like reservas.per-ppm
+    field tipo-formula     like reservas.tipo-formula
+    field qt-a-req-fis     like aloca-reserva.quant-aloc
+    field qt-aloc-lote     like aloca-reserva.qt-aloc-lote
+    field l-balanceado     as log
+  &ENDIF
+    index seq is primary unique nr-ord-produ sequencia
+    index aloca item-pai 
+                cod-roteiro         
+                op-codigo
+                it-codigo
+                cod-estabel
+                cod-depos
+                cod-localiz
+                lote-serie
+    index rowid-aloca-reserva rw-aloca-reserva.
+         
+def temp-table tt-reservas 
+    field proporcao       as decimal
+    field log-sem-saldo   as logical
+    field nr-ord-produ  like reservas.nr-ord-produ
+    field cod-refer     like reservas.cod-refer
+    field it-codigo     like reservas.it-codigo
+    field quant-orig    like reservas.quant-orig  
+    field quant-aloc    like reservas.quant-orig
+    field quant-atend   like reservas.quant-orig
+    field quant-calc    like reservas.quant-orig
+    field quant-requis  like reservas.quant-orig
+    field cod-depos     like reservas.cod-depos
+    field cod-localiz   like reservas.cod-localiz
+    field lote-serie    like reservas.lote-serie
+    field dt-vali-lote  like saldo-estoq.dt-vali-lote
+    field un            like reservas.un
+    field estado        like reservas.estado
+    field tipo-sobra    like reservas.tipo-sobra
+    field item-pai      like reservas.item-pai
+    field op-codigo     like reservas.op-codigo
+    field cod-roteiro   like reservas.cod-roteiro
+  &IF DEFINED (bf_man_per_ppm) &THEN
+    field veiculo        like reservas.veiculo
+    field per-ppm        like reservas.per-ppm
+    field per-ppm-lote   like reservas.per-ppm
+    field tipo-formula   like reservas.tipo-formula
+    field qt-atend-lote  like reservas.qt-atend-lote
+    field qt-requis-lote like reservas.quant-orig
+    field qt-aloc-lote   like reservas.quant-orig
+    field alternativo-de        as char /* item o qual o alternativo esta substituindo */
+    field cod-refer-it-original as char /* referencia do item que esta sendo substituido */    
+    field qt-atend-res          as dec
+    field qt-atend-lote-res     as dec    
+    field quant-calc-orig       like reservas.quant-orig
+  &ENDIF
+    field processada      as logical
+    field rw-reserva      as rowid
+    field rw-saldo-estoq  as rowid
+    field tipo-ordem      as integer
+    field tempo           as integer
+    field tentativas      as integer
+    field sequencia       as integer
+    index seq is primary unique nr-ord-produ sequencia
+    index proc nr-ord-produ processada
+    index rw-reserva rw-reserva
+    index codigo nr-ord-produ quant-orig processada
+    index tempo  nr-ord-produ quant-orig processada tempo tentativas
+    index idx    nr-ord-produ item-pai it-codigo cod-roteiro op-codigo cod-depos cod-localiz
+    index item   nr-ord-produ it-codigo
+    index saldo  nr-ord-produ it-codigo cod-depos cod-localiz lote-serie cod-refer.   
+    
+&IF DEFINED (bf_man_sfc_lc) &THEN
+def temp-table tt-mat-reciclado 
+    field nr-ord-produ like ord-prod.nr-ord-produ
+    field es-codigo    like item-lista-compon.es-codigo
+    field cod-depos    like reservas.cod-depos
+    field cod-localiz  like reservas.cod-localiz
+    field quant-orig   like reservas.quant-orig
+    field quant-atend  like reservas.quant-atend
+    field quant-requis like reservas.quant-requis
+    field perc-requis  as dec format ">>9.99"
+    field old-quant    like reservas.quant-requis
+    field nro-ord-seq  as integer
+    index codigo is unique primary nr-ord-produ nro-ord-seq es-codigo.
+&ENDIF

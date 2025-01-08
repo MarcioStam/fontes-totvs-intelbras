@@ -1,0 +1,14 @@
+
+ADD FIELD "l-quebra-doc-por-natureza" OF "param-xml" AS logical 
+  FORMAT "yes/no"
+  INITIAL "yes"
+  LABEL "Quebra Doc. P/ Natureza"
+  POSITION 22
+  MAX-WIDTH 1
+  COLUMN-LABEL "Quebra Doc. P/ Nat."
+  ORDER 210
+.
+PSC
+cpstream=ibm850
+.
+0000005121

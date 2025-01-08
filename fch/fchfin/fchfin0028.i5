@@ -1,0 +1,22 @@
+DEFINE TEMP-TABLE {1} NO-UNDO 
+  FIELD transactionID AS integer
+  FIELD sequence AS integer
+  FIELD economicPurpose AS character
+  FIELD gLNature AS integer
+  FIELD gLSource AS integer
+  FIELD companyCode AS character
+  FIELD siteCode AS character
+  FIELD gLScenario AS character
+  FIELD accountPlanCode AS character
+  FIELD accountCode AS character
+  FIELD businessUnitCode AS character
+  FIELD costCenterPlanCode AS character
+  FIELD costCenterCode AS character
+  FIELD checkingAccountCode AS character
+  FIELD economicIndicator AS character
+  FIELD transactionValue AS decimal decimals 4  
+  FIELD post AS logical
+  FIELD mutualPayment AS logical
+  FIELD transactionDate AS date
+
+.

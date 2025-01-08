@@ -1,0 +1,68 @@
+procedure pi-procedimento-17:
+    form item.it-codigo   format "x(16)" column-label "Item"
+         item.desc-item   format "x(60)" column-label "Descri‡Æo"
+         item.cod-estabel format "x(5)"  column-label "Estab"
+         with width 132 down no-box stream-io frame f-17.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "itens-ativ-sem-oper.txt"
+           c-titulo-relat = "Itens ativos sem Opera‡Æo".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Itens ativos sem Opera‡Æo...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each item fields(it-codigo desc-item cod-estabel ge-codigo) no-lock
+       where item.it-codigo      <> ""
+         and item.cod-obsoleto    = 1
+         and item.compr-fabric    = 2
+         and item.cod-unid-negoc <> "ENS":
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 15 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if not can-find(first tt-digita where
+                              tt-digita.cod-estabel = item.cod-estabel
+                          and tt-digita.id-brw      = 0)
+        then next.
+
+        if can-find(first operacao where
+                          operacao.it-codigo     = item.it-codigo
+                      and operacao.data-termino >= today
+                          no-lock)
+        then next.
+
+        if  not can-find(first estrutura use-index onde-se-usa where
+                               estrutura.es-codigo     = item.it-codigo
+                           and estrutura.data-termino >= today
+                           and estrutura.fantasma      = no
+                               no-lock)
+        and item.ge-codigo <> 40
+        and item.ge-codigo <> 42
+        and item.ge-codigo <> 45
+        then next.
+
+        disp stream st-relat
+             item.it-codigo
+             item.desc-item
+             item.cod-estabel
+             with frame f-17.
+        down stream st-relat with frame f-17.
+    end. /* for each item */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-17 */

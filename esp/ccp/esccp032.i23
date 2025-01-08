@@ -1,0 +1,163 @@
+/********************************************************************************
+*
+* cd0901.i4 Include para calculo da data de termino e inicio da ordem de compra
+*
+*********************************************************************************/
+
+&IF DEFINED(bf_man_203) &THEN
+   assign da-termino = periodo.dt-termino.
+   if i-tam-per > 1 THEN do:
+        find prev periodo where
+                  periodo.cd-tipo    = pl-prod.cd-tipo no-lock no-error.
+        if avail periodo then 
+           assign da-termino = periodo.dt-termino
+                  da-inicio  = periodo.dt-termino.
+   end.
+   
+   assign da-termino = if  {1}.tipo-est-seg = 2 /* (no) tempo */
+                       and {1}.conv-tempo-seg = no /* converte tempo seguran‡a */
+                       and pl-prod.tp-seg-comp
+                           then da-termino - {1}.res-cq-comp
+                                - {1}.tempo-segur
+                       else da-termino - {1}.res-cq-comp.
+   
+   if i-tam-per = 1 then do:
+       find first calen-prod where
+           calen-prod.cod-estabel = param-cp.cod-estabel and
+           calen-prod.data        = da-termino no-lock no-error.
+       do  while true:
+           if  avail calen-prod
+               and calen-prod.tipo-dia = 1 then do:
+               assign da-termino = calen-prod.data.
+               leave.
+           end. 
+           else do:
+               find prev calen-prod 
+                   where calen-prod.cod-estabel = param-cp.cod-estabel
+                     and calen-prod.data        < da-termino
+                     and calen-prod.tipo-dia    = 1
+                        no-lock no-error.                                       
+               if   not avail calen-prod then do:
+                   find first calen-prod where 
+                              calen-prod.cod-estabel = param-cp.cod-estabel and
+                              calen-prod.data       >= da-termino          and
+                              calen-prod.tipo-dia    = 1 no-lock no-error.
+                   if  avail calen-prod then
+                       assign da-termino = calen-prod.data.
+                   leave. 
+               end.
+           end.
+       end.
+   end.
+                       
+   assign  da-inicio = if {1}.tipo-est-seg =  2 /* (no) tempo */
+                      and {1}.conv-tempo-seg = no  /* converte tempo seguran‡a */
+                      and pl-prod.tp-seg-comp
+                         then da-termino - {1}.res-int-comp
+                              - {1}.res-for-comp
+                      else da-termino - {1}.res-int-comp
+                           - {1}.res-for-comp.
+                           
+   if da-inicio > da-termino then do:
+       find last periodo where
+           periodo.cd-tipo    = pl-prod.cd-tipo and
+           periodo.dt-termino <= da-termino no-lock no-error.
+           
+       assign  da-inicio = if {1}.tipo-est-seg =  2 /* (no) tempo */
+                      and {1}.conv-tempo-seg = no  /* converte tempo seguran‡a */
+                      and pl-prod.tp-seg-comp
+                         then periodo.dt-termino - {1}.res-int-comp
+                              - {1}.res-for-comp
+                      else periodo.dt-termino - {1}.res-int-comp
+                           - {1}.res-for-comp.
+   end.
+     
+   if i-tam-per > 1 then do:
+       FIND FIRST periodo WHERE periodo.cd-tipo   = pl-prod.cd-tipo
+                            AND periodo.dt-termino >= da-termino NO-LOCK NO-ERROR.  
+       ASSIGN da-termino = periodo.dt-termino.
+       FIND LAST periodo WHERE periodo.cd-tipo   = pl-prod.cd-tipo
+                           AND periodo.dt-inicio <= da-inicio NO-LOCK NO-ERROR.    
+       ASSIGN da-inicio = periodo.dt-inicio.
+   end.
+   
+   assign da-data-aux = da-termino.
+   if i-tam-per = 1 then do:
+       find first calen-prod where
+               calen-prod.cod-estabel = param-cp.cod-estabel and
+               calen-prod.data        = da-data-aux no-lock no-error.
+       do  while true:
+           if  avail calen-prod
+           and calen-prod.tipo-dia = 1 then do:
+               assign da-data-aux = calen-prod.data.
+               leave.
+           end. 
+           else do:
+               find prev calen-prod 
+                    where calen-prod.cod-estabel = param-cp.cod-estabel
+                      and calen-prod.data        < da-data-aux
+                      and calen-prod.tipo-dia    = 1
+                         no-lock no-error.                                       
+               if   not avail calen-prod then do:
+                    find first calen-prod where 
+                               calen-prod.cod-estabel = param-cp.cod-estabel and
+                               calen-prod.data       >= da-data-aux          and
+                              calen-prod.tipo-dia    = 1 no-lock no-error.
+                    if  avail calen-prod then
+                        assign da-data-aux = calen-prod.data.
+                    leave. 
+               end.
+           end.
+       end.
+   end.
+   assign da-termino = da-data-aux.
+   
+   assign da-data-aux = da-inicio.
+   if i-tam-per = 1 then do:
+       find first calen-prod where
+                  calen-prod.cod-estabel = param-cp.cod-estabel and
+                  calen-prod.data        = da-data-aux no-lock no-error.
+       do  while true:
+           if  avail calen-prod
+           and calen-prod.tipo-dia = 1 then do:
+               assign da-data-aux = calen-prod.data.
+               leave.
+           end. 
+           else do:
+               find prev calen-prod 
+                    where calen-prod.cod-estabel = param-cp.cod-estabel
+                      and calen-prod.data        < da-data-aux
+                      and calen-prod.tipo-dia    = 1
+                         no-lock no-error.                                       
+               if   not avail calen-prod then do:
+                    find first calen-prod where 
+                               calen-prod.cod-estabel = param-cp.cod-estabel and
+                               calen-prod.data       >= da-data-aux          and
+                               calen-prod.tipo-dia    = 1 no-lock no-error.
+                    if  avail calen-prod then
+                        assign da-data-aux = calen-prod.data.
+                    leave. 
+               end.
+           end.
+       end.
+   end.
+   assign da-inicio = da-data-aux.
+   
+
+&ELSE
+assign da-termino = if  item.tipo-est-seg = 2 /* (no) tempo */
+                    and item.conv-tempo-seg = no /* converte tempo seguran‡a */
+                    and pl-prod.tp-seg-comp
+                        then periodo.dt-inicio - item.res-cq-comp
+                             - item.tempo-segur
+                    else periodo.dt-inicio - item.res-cq-comp
+       da-inicio = if item.tipo-est-seg =  2 /* (no) tempo */
+                   and item.conv-tempo-seg = no  /* converte tempo seguran‡a */
+                   and pl-prod.tp-seg-comp
+                      then da-termino - item.res-int-comp
+                           - item.res-for-comp 
+                   else da-termino - item.res-int-comp
+                        - item.res-for-comp.
+&ENDIF
+
+/* fim da include */

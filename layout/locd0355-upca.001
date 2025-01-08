@@ -1,0 +1,22 @@
++----------------------------------------------------------------------------+
+|                Layout do Arquivo de Importacao de Cod Enq.IPI              |
+|----------------------------------------------------------------------------|
+|         Nome do Arquivo: A ser informado.                                  |
+|                 Formato: Arquivo Microsoft Excel (*.csv).                  |
+|                 Obs.Os campos do tipo caracter utilizam o parametro        |
+|                     generico asterisco ?*? e os campos numericos utilizam  |
+|                     o parametro ?0? para todos.                            |
+|----------------------------------------------------------------------------|
+|  Coluna  |  Descricao                                                      |
+|----------+-----------------------------------------------------------------|
+|      01  |  Codigo Tributo                                                 |
+|      02  |  E/S - Entrada ou Saida                                         |
+|      03  |  Data Inic Validade                                             |
+|      04  |  Estabelecimento                                                |
+|      05  |  Natureza de Operacao                                           |
+|      06  |  Classificacao Fiscal                                           |
+|      07  |  Codigo do Item                                                 |
+|      08  |  Grupo Emitente                                                 |
+|      09  |  Código Emitente                                                |
++----------------------------------------------------------------------------+
+

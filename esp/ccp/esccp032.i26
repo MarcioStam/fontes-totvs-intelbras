@@ -1,0 +1,39 @@
+def temp-table tt-dados-fda no-undo
+    field i-seq              as integer
+    field cod-estabel        like saldo-estoq.cod-estabel    /*obrigatorio*/
+    field cod-depos          like saldo-estoq.cod-depos
+    field cod-localiz        like saldo-estoq.cod-localiz
+    field it-codigo          like saldo-estoq.it-codigo      /*obrigatorio*/
+    field cod-refer          like saldo-estoq.cod-refer
+    field fm-codigo          like familia.fm-codigo
+    field nr-ultimo-lote     like saldo-estoq.lote           /*obrigat¢rio para parecer*/
+    field dt-validade-ultimo like saldo-estoq.dt-vali-lote
+    field nr-ord-produ       like ord-prod.nr-ord-produ
+    field dt-fabric          like movto-estoq.dt-trans
+    field cod-emitente       like emitente.cod-emitente
+    field nat-operacao       like movto-estoq.nat-operacao
+    field nro-docto          like movto-estoq.nro-docto
+    field serie-docto        like movto-estoq.serie-docto
+    field cod-unid-negoc     like movto-estoq.cod-unid-negoc
+    field cod-modul-dtsul    like modul_dtsul.cod_modul_dtsul /*obrigatorio*/
+    field cod-usuario        like usuar_mestre.cod_usuario
+    field cod-grp-usuar      like usuar_grp_usuar.cod_grp_usuar
+    field esp-docto          like movto-estoq.esp-docto
+    field cd-estado-novo     as integer. /*obrigatorio para parecer*/
+
+def temp-table tt-valores no-undo
+    field i-seq   as integer
+    field lote    like tt-dados-fda.nr-ultimo-lote
+    field dt-val  like tt-dados-fda.dt-validade-ultimo
+    field estado  like tt-dados-fda.cd-estado-novo.
+
+def temp-table tt-valores2 no-undo
+    field lote          like tt-dados-fda.nr-ultimo-lote
+    field dt-val        like tt-dados-fda.dt-validade-ultimo
+    field estado        like tt-dados-fda.cd-estado-novo
+    field l-movto       as logical init no
+    field l-saldo       as logical init no
+    field log-aloca     as log
+    field log-aloca-wms as log
+    field r-rowid       as rowid
+    field des-estado    like fda-lote-estado.des-estado .

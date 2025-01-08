@@ -1,0 +1,129 @@
+/************************************************************************** 
+**
+**   CEAPI001K.I2 - Gera movimento de estoque da api CEAPI001.p
+**   Criado por............: Werner
+**   Criado em ............: 10/03/1997 15:00
+**
+**************************************************************************/
+
+for first estabelec fields (cod-estabel
+                            usa-mensal
+                            usa-on-line
+                            usa-padrao
+                            custo-contab
+                            ep-codigo
+                            char-2)
+    where estabelec.cod-estabel = {2}.cod-estabel no-lock: end.
+
+find estab-mat where 
+     estab-mat.cod-estabel = {2}.cod-estabel no-lock no-error.
+
+buffer-copy {2} except nr-trans to {1}  
+assign {1}.hr-trans          = string(time,"HH:MM:SS").
+if not l-ordem-prod then  
+   /* grava os valores de PIS e COFINS p/ contabilizar */
+   &IF "{&bf_mat_versao_ems}" >= "2.06" &THEN
+      assign {1}.valor-pis       = round({2}.valor-mob-p[1],2)  /* PIS moeda corrente */
+             {1}.vl-pis-fasb     = round({2}.valor-mob-p[2],2)  /* PIS FASB */
+             {1}.vl-pis-cmi      = round({2}.valor-mob-p[3],2)  /* PIS CMCAC */
+             {1}.val-cofins      = round({2}.valor-ggf-p[1],2)  /* COFINS moeda corrente */
+             {1}.val-cofins-fasb = round({2}.valor-ggf-p[2],2)  /* COFINS FASB */
+             {1}.val-cofins-cmi  = round({2}.valor-ggf-p[3],2). /* COFINS CMCAC */ 
+   &else
+      assign overlay({1}.char-1,29,14) = if {2}.valor-mob-p[1] = ? then "0" 
+                                          else string(round({2}.valor-mob-p[1],2))  /* PIS moeda corrente */
+              overlay({1}.char-1,1,14)  = if {2}.valor-mob-p[2] = ? then "0"
+                                          else string(round({2}.valor-mob-p[2],2))  /* PIS FASB */
+              overlay({1}.char-1,15,14) = if {2}.valor-mob-p[3] = ? then "0" 
+                                          else string(round({2}.valor-mob-p[3],2))  /* PIS CMCAC */
+              overlay({1}.char-1,43,14) = if {2}.valor-ggf-p[1] = ? then "0" 
+                                          else string(round({2}.valor-ggf-p[1],2))  /* COFINS moeda corrente */
+              overlay({1}.char-1,71,14) = if {2}.valor-ggf-p[2] = ? then "0" 
+                                          else string(round({2}.valor-ggf-p[2],2))  /* COFINS FASB */
+              overlay({1}.char-1,57,14) = if {2}.valor-ggf-p[3] = ? then "0" 
+                                          else string(round({2}.valor-ggf-p[3],2)). /* COFINS CMCAC */
+   
+   &endif
+
+/* Tanto o custo m‚dio on-line como o padrÆo tem o seus valores iniciados
+   a partir do custo m‚dio mensal. O custo m‚dio mensal ‚ sempre o 
+   informado nos programas */
+
+/*
+A partir do EMS 2.05 as informacoes referentes ao custeio estarao na tabela "estab-mat"
+e os valores referentes aos custeios on-line constarao na extensao '-o'
+*/
+if estab-mat.usa-on-line then do:
+    
+    /** ALTERA€ÇO REALIZADA CONFORME FO 1814.809 - XEROX-BA **/    
+    if  {2}.esp-docto <> {&ACT}
+    or  (   {2}.esp-docto = {&ACT}
+        and (   {2}.nro-docto = "1000"
+             or {2}.nro-docto = "1010"
+             or {2}.nro-docto = "1020"
+             or {2}.nro-docto = "1030"
+             or {2}.nro-docto = "1040"
+             )
+        ) then
+        do i-cont = 1 to 3:
+            assign {1}.valor-mat-o[i-cont] = fn_ajust_dec({2}.valor-mat-m[i-cont],unid-monet[i-cont])
+                   {1}.valor-ggf-o[i-cont] = fn_ajust_dec({2}.valor-ggf-m[i-cont],unid-monet[i-cont])
+                   {1}.valor-mob-o[i-cont] = fn_ajust_dec({2}.valor-mob-m[i-cont],unid-monet[i-cont]).
+        end.
+end.
+else
+    assign {1}.valor-mat-o = 0
+           {1}.valor-ggf-o = 0
+           {1}.valor-mob-o = 0.
+
+
+for first contabiliza fields (cod-estabel
+                              cod-depos
+                              ge-codigo
+                              sc-codigo
+                              ct-codigo)           
+    where contabiliza.cod-estabel = {2}.cod-estabel
+      and contabiliza.cod-depos   = {2}.cod-depos
+      and contabiliza.ge-codigo   = item.ge-codigo no-lock: end.
+
+if available contabiliza then       
+   assign {1}.ct-saldo    = contabiliza.ct-codigo
+          {1}.sc-saldo    = contabiliza.sc-codigo.
+
+
+/***********Performance M‚dio Proj 314 ************/
+if {1}.nr-ord-prod <> 0 then do:
+    run cep/ceapi001p.p       /*Programa responsavel pela cria‡Æo das tabelas para */
+           (input {1}.nr-ord-prod, /* Aumento da performance do M‚dio*/
+            input {1}.cod-estabel,
+            input {1}.esp-docto  ,
+            input {1}.dt-trans   ,
+            input {1}.it-codigo  ,
+            input {1}.num-ord-des).
+end.
+
+/***************************/
+
+
+
+
+/**IMPLEMENTACOES UNIDADE DE NEGOCIO**/
+IF  l-unidade-negocio THEN DO:
+
+    IF NOT VALID-HANDLE(h-cdapi024) THEN
+        RUN cdp/cdapi024.p persistent set h-cdapi024.
+
+    RUN RetornaUnidadeNegocio IN h-cdapi024 (INPUT  {2}.cod-estabel,
+                                             INPUT  {2}.it-codigo,
+                                             INPUT  {2}.cod-depos,
+                                             OUTPUT {1}.cod-unid-negoc-sdo).
+END.
+
+if  movto-estoq.esp-docto = 0 then do:
+
+    run utp/ut-msgs.p(input 'show':U,
+                      input 29460,
+                      input tt-movto.cod-prog-orig).
+     undo , return "nok":u.
+end.
+/* fim do include CEAPI001.I2 */ 

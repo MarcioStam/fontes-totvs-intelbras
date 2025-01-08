@@ -1,0 +1,483 @@
+<script language="SpeedScript">
+PROCEDURE output-header:
+   IF (get-cgi("HTTP_ACCEPT") MATCHES "*application/xhtml+xml*") THEN
+      output-content-type("application/xhtml+xml; charset=iso-8859-1").
+   ELSE
+      output-content-type("text/html; charset=iso-8859-1").
+END.
+
+DEFINE VARIABLE h-util AS HANDLE NO-UNDO.
+RUN html-util.p PERSISTENT SET h-util.
+
+DEFINE VARIABLE c-query-de      AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-query-ate     AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-desc-item     AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-query-desc    AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-tipo-pesquisa AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-where         AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-sort          AS CHARACTER NO-UNDO.
+DEFINE VARIABLE hQuery          AS HANDLE    NO-UNDO.
+DEFINE VARIABLE hBuffer         AS HANDLE    NO-UNDO.
+DEFINE VARIABLE c-color         AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-it-codigo     AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-it-fabric     AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-nome-abrev    AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-ativo         AS character NO-UNDO.
+DEFINE VARIABLE c-cod-ean13     AS CHARACTER NO-UNDO.
+</script>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt_BR">
+<head>
+  <title>Busca de Item</title>
+  <style type="text/css">
+body {
+  text-align: center;
+  background-color: #ffffff;
+  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-size: 0.8em;
+}
+h2 {
+  font-size: 1.8em;
+}
+h5 {
+  font-size: 1em;
+}
+h6 {
+  font-size: 0.9em;
+}
+table {
+  font-size: 1em;
+  margin: auto;
+}
+th {
+  background-color: #aaaaaa;
+}
+.light {
+  background-color: #ffffff;
+}
+.dark {
+  background-color: #e7e7e7;
+}
+input {
+  font-size: 0.9em;
+}
+select {
+  font-size: 0.9em;
+}
+fieldset {
+  height: 5em;
+}
+legend {
+  margin-bottom: 0.5em;
+}
+#ajuda {
+  margin: auto;
+  width: 600px;
+}
+#pesquisa {
+  font-size: 0.9em;
+  margin: auto;
+  width: 600px;
+}
+#pesquisa .col1 {
+  clear: both;
+  display: block;
+  float: left;
+  width: 20%;
+}
+#pesquisa .col2 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#pesquisa .col3 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#pesquisa .col4 {
+  display: block;
+  float: left;
+  text-align: center;
+  width: 10%;
+}
+#resultado {
+  font-size: 0.9em;
+  padding-top: 1em;
+}
+</style>
+<script type="text/javascript">
+function verifica() {
+  regExpDe  = /^[0-9]+$/;
+  regExpAte = /^[0-9]*$/;
+  if (document.getElementById('aliquota-ipi').selected) {
+    if (!regExpDe.test(document.getElementById('query-de').value)) {
+      alert('A pesquisa deve conter apenas numeros');
+      document.getElementById('query-de').focus();
+      return false;
+    }
+    if (!regExpAte.test(document.getElementById('query-ate').value)) {
+      alert('A pesquisa deve conter apenas numeros');
+      document.getElementById('query-ate').focus();
+      return false;
+    }
+  }
+
+  return true;
+}
+
+</script>
+</head>
+
+<body onload="javascript:document.getElementById('query-de').focus();">
+<script language="SpeedScript">
+ASSIGN c-query-de      = LEFT-TRIM(TRIM(get-value("query-de")))
+       c-query-ate     = LEFT-TRIM(TRIM(get-value("query-ate")))
+       c-tipo-pesquisa = get-value("tipo-pesquisa").
+</script>
+<h2>Busca de Item</h2>
+<div id="pesquisa">
+  <form action="" method="post" onsubmit="javascript:return verifica();">
+    <fieldset>
+      <legend>Op&ccedil;&otilde;es</legend>
+      <span class="col1">
+        <select name="tipo-pesquisa" id="tipo-pesquisa">
+          <option <!--WSS IF ((c-tipo-pesquisa = "it-codigo") OR (c-tipo-pesquisa = "")) THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="it-codigo" value="it-codigo">C&oacute;digo</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "desc-item") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="desc-item" value="desc-item">Descri&ccedil;&atilde;o</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "fm-codigo") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="fm-codigo" value="fm-codigo">Fam&iacute;lia</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "fm-cod-com") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="fm-cod-com" value="fm-cod-com">Fm. Comercial</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "class-fiscal") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="class-fiscal" value="class-fiscal">NCM</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "aliquota-ipi") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="aliquota-ipi" value="aliquota-ipi">IPI</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "nve") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="nve" value="nve">NVE</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "ex-tarifario") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="ex-tarifario" value="ex-tarifario">Ex. Tarif&aacute;rio</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "it-fabric") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="it-fabric" value="it-fabric">Part-number</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "fabricante") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="fabricante" value="fabricante">Fabricante</option>
+          <option <!--WSS IF (c-tipo-pesquisa = "cod-ean13") THEN DO: {&OUT} --> selected="selected" <!--WSS END. --> id="cod-ean13" value="cod-ean13">C¢digo EAN-13</option>
+        </select>
+      </span>
+      <span class="col2">
+        <label for="query-de">De:</label>
+        <span style=" width: 70%;"><input type="text" <!--WSS IF (c-query-de <> "") THEN DO: {&OUT} --> value="`c-query-de`" <!--WSS END. --> name="query-de" id="query-de"/></span>
+      </span>
+      <span class="col3">
+        <label for="query-ate">at&eacute;:</label>
+        <span style="width: 70%;"><input type="text" <!--WSS IF (c-query-ate <> "") THEN DO: {&OUT} --> value="`c-query-ate`" <!--WSS END. --> name="query-ate" id="query-ate" /></span>
+      </span>
+      <span class="col4">
+        <input type="submit" style="width: 90%;" value="OK"/>
+      </span>
+    </fieldset>
+  </form>
+</div>
+<div id="ajuda">
+  Para maiores esclarecimentos de como funciona esta ferramenta de pesquisa, favor
+  entrar em contato com a Inform&aacute;tica no ramal 9577.
+</div>
+<p/>
+<script language="SpeedScript">
+IF ((c-tipo-pesquisa <> ?) AND (c-tipo-pesquisa <> "")) THEN DO:
+   CREATE QUERY hQuery.
+
+   IF (c-tipo-pesquisa = "it-codigo") OR (c-tipo-pesquisa = "desc-item") OR (c-tipo-pesquisa = "class-fiscal") OR (c-tipo-pesquisa = "fm-codigo") OR (c-tipo-pesquisa = "fm-cod-com") OR (c-tipo-pesquisa = "aliquota-ipi") THEN DO:
+      ASSIGN c-where = "EACH item FIELDS (it-codigo desc-item class-fiscal fm-codigo fm-cod-com aliquota-ipi log-necessita-li cod-obsoleto) NO-LOCK ".
+
+      IF (c-tipo-pesquisa = "it-codigo") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item.it-codigo = '" + c-query-de + "' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE item.it-codigo >= '" + c-query-de + "'
+                                          AND item.it-codigo <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY item.it-codigo ".
+      END.
+      ELSE IF (c-tipo-pesquisa = "desc-item") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item.desc-item MATCHES '*" + c-query-de + "*' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE item.desc-item >= '" + c-query-de + "'
+                                          AND item.desc-item <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY item.desc-item BY item.it-codigo ".
+      END.
+      ELSE IF (c-tipo-pesquisa = "class-fiscal") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item.class-fiscal = '" + replace(c-query-de, ".", "") + "' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE item.class-fiscal >= '" + replace(c-query-de, ".", "") + "'
+                                          AND item.class-fiscal <= '" + replace(c-query-ate, ".", "") + "' ".
+         ASSIGN c-sort  = " BY item.class-fiscal BY item.it-codigo ".
+      END.
+      ELSE IF (c-tipo-pesquisa = "fm-codigo") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item.fm-codigo = '" + c-query-de + "' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE item.fm-codigo >= '" + c-query-de + "'
+                                          AND item.fm-codigo <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY item.fm-codigo BY item.it-codigo ".
+      END.
+      ELSE IF (c-tipo-pesquisa = "fm-cod-com") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item.fm-cod-com = '" + c-query-de + "' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE item.fm-cod-com >= '" + c-query-de + "'
+                                          AND item.fm-cod-com <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY item.fm-cod-com BY item.it-codigo ".
+      END.
+      ELSE IF (c-tipo-pesquisa = "aliquota-ipi") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item.aliquota-ipi = " + c-query-de + " ".
+         ELSE
+         ASSIGN c-where = c-where + "WHERE item.aliquota-ipi >= " + c-query-de + "
+                                       AND item.aliquota-ipi <= " + c-query-ate + " ".
+         ASSIGN c-sort  = " BY item.aliquota-ipi BY item.it-codigo ".
+      END.
+
+      ASSIGN c-where = c-where + ", EACH int-item NO-LOCK
+                                       WHERE int-item.it-codigo = item.it-codigo,
+                                    EACH item-fabric FIELDS (it-fabric) NO-LOCK
+                                       WHERE item-fabric.it-codigo = item.it-codigo OUTER-JOIN,
+                                    EACH fabricante FIELDS (nome-abrev) NO-LOCK
+                                       WHERE fabricante.cod-fabric = item-fabric.cod-fabric OUTER-JOIN,
+                                    FIRST item-ean FIELDS (cod-ean13) NO-LOCK
+                                       WHERE item-ean.it-codigo = item.it-codigo OUTER-JOIN,
+									FIRST item-mat FIELDS (it-codigo cod-ean) no-lock
+									   WHERE item-mat.it-codigo = item.it-codigo OUTER-JOIN ".
+
+      hQuery:SET-BUFFERS(BUFFER item:Handle, BUFFER int-item:Handle, BUFFER item-fabric:Handle, BUFFER fabricante:Handle, BUFFER item-ean:Handle, BUFFER item-mat:handle).
+   END.
+   ELSE IF (c-tipo-pesquisa = "nve") OR (c-tipo-pesquisa = "ex-tarifario") THEN DO:
+      ASSIGN c-where = "EACH int-item NO-LOCK ".
+      IF (c-tipo-pesquisa = "nve") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE int-item.nve = '" + c-query-de + "' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE int-item.nve >= '" + c-query-de + "'
+                                          AND int-item.nve <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY int-item.it-codigo BY item.it-codigo ".
+      END.
+      ELSE IF (c-tipo-pesquisa = "ex-tarifario") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE int-item.ex-tarifario = '" + c-query-de + "' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE int-item.ex-tarifario >= '" + c-query-de + "'
+                                          AND int-item.ex-tarifario <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY int-item.it-codigo BY item.it-codigo ".
+      END.
+
+      ASSIGN c-where = c-where + ", EACH item FIELDS (it-codigo desc-item class-fiscal fm-codigo fm-cod-com aliquota-ipi log-necessita-li cod-obsoleto) NO-LOCK
+                                       WHERE item.it-codigo = int-item.it-codigo,
+                                    EACH item-fabric FIELDS (it-fabric) NO-LOCK
+                                       WHERE item-fabric.it-codigo = item.it-codigo OUTER-JOIN,
+                                    EACH fabricante FIELDS (nome-abrev) NO-LOCK
+                                       WHERE fabricante.cod-fabric = item-fabric.cod-fabric OUTER-JOIN,
+                                    FIRST item-ean FIELDS (cod-ean13) NO-LOCK
+                                       WHERE item-ean.it-codigo = item.it-codigo OUTER-JOIN,
+									FIRST item-mat FIELDS (it-codigo cod-ean) no-lock
+									   WHERE item-mat.it-codigo = item.it-codigo OUTER-JOIN ".
+
+      hQuery:SET-BUFFERS(BUFFER int-item:Handle, BUFFER item:Handle, BUFFER item-fabric:Handle, BUFFER fabricante:Handle, BUFFER item-ean:Handle, BUFFER item-mat:handle).
+   END.
+   ELSE IF (c-tipo-pesquisa = "it-fabric") THEN DO:
+      ASSIGN c-where = "EACH item-fabric FIELDS (it-fabric it-codigo) NO-LOCK ".
+      IF (c-tipo-pesquisa = "it-fabric") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item-fabric.it-fabric MATCHES '*" + c-query-de + "*' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE item-fabric.it-fabric >= '" + c-query-de + "'
+                                          AND item-fabric.it-fabric <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY item-fabric.it-fabric BY item.it-codigo ".
+      END.
+
+      ASSIGN c-where = c-where + ", EACH fabricante FIELDS (nome-abrev) NO-LOCK
+                                       WHERE fabricante.cod-fabric = item-fabric.cod-fabric OUTER-JOIN,
+                                    EACH item FIELDS (it-codigo desc-item class-fiscal fm-codigo fm-cod-com aliquota-ipi cod-obsoleto log-necessita-li) NO-LOCK
+                                       WHERE item.it-codigo = item-fabric.it-codigo,
+                                    EACH int-item NO-LOCK
+                                       WHERE int-item.it-codigo = item.it-codigo,
+                                    FIRST item-ean FIELDS (cod-ean13) NO-LOCK
+                                       WHERE item-ean.it-codigo = item.it-codigo OUTER-JOIN,
+									FIRST item-mat FIELDS (it-codigo cod-ean) no-lock
+									   WHERE item-mat.it-codigo = item.it-codigo OUTER-JOIN ".
+
+      hQuery:SET-BUFFERS(BUFFER item-fabric:Handle, BUFFER fabricante:Handle, BUFFER item:Handle, BUFFER int-item:Handle, BUFFER item-ean:Handle, BUFFER item-mat:handle).
+   END.
+   ELSE IF (c-tipo-pesquisa = "fabricante") THEN DO:
+      ASSIGN c-where = "EACH fabricante FIELDS (nome-abrev) NO-LOCK ".
+      IF (c-tipo-pesquisa = "fabricante") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE fabricante.nome-abrev MATCHES '*" + c-query-de + "*' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE fabricante.nome-abrev >= '" + c-query-de + "'
+                                          AND fabricante.nome-abrev <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY fabricante.nome-abrev BY item.it-codigo BY item-fabric.it-fabric ".
+      END.
+
+      ASSIGN c-where = c-where + ", EACH item-fabric FIELDS (it-fabric it-codigo) NO-LOCK
+                                       WHERE item-fabric.cod-fabric = fabricante.cod-fabric,
+                                    EACH item FIELDS (it-codigo desc-item class-fiscal fm-codigo fm-cod-com aliquota-ipi cod-obsoleto log-necessita-li) NO-LOCK
+                                       WHERE item.it-codigo = item-fabric.it-codigo,
+                                    EACH int-item NO-LOCK
+                                       WHERE int-item.it-codigo = item.it-codigo,
+                                    FIRST item-ean FIELDS (cod-ean13) NO-LOCK
+                                       WHERE item-ean.it-codigo = item.it-codigo OUTER-JOIN,
+									FIRST item-mat FIELDS (it-codigo cod-ean) no-lock
+									   WHERE item-mat.it-codigo = item.it-codigo OUTER-JOIN ".
+
+      hQuery:SET-BUFFERS(BUFFER fabricante:Handle, BUFFER item-fabric:Handle, BUFFER item:Handle, BUFFER int-item:Handle, BUFFER item-ean:Handle, BUFFER item-mat:handle).
+   END.
+   ELSE IF (c-tipo-pesquisa = "cod-ean13") THEN DO:
+      ASSIGN c-where = "EACH item-mat FIELDS (it-codigo cod-ean) NO-LOCK ".
+      IF (c-tipo-pesquisa = "cod-ean13") THEN DO:
+         IF (c-query-ate = "") THEN
+            ASSIGN c-where = c-where + "WHERE item-mat.cod-ean MATCHES '*" + c-query-de + "*' ".
+         ELSE
+            ASSIGN c-where = c-where + "WHERE item-mat.cod-ean >= '" + c-query-de + "'
+                                          AND item-mat.cod-ean <= '" + c-query-ate + "' ".
+         ASSIGN c-sort  = " BY item-mat.cod-ean BY item.it-codigo ".
+      END.
+
+      ASSIGN c-where = c-where + ", EACH item FIELDS (it-codigo desc-item class-fiscal fm-codigo fm-cod-com aliquota-ipi cod-obsoleto log-necessita-li) NO-LOCK 
+                                       WHERE item.it-codigo = item-mat.it-codigo,
+                                    EACH int-item NO-LOCK
+                                       WHERE int-item.it-codigo = item.it-codigo,
+                                    EACH item-fabric FIELDS (it-fabric) NO-LOCK
+                                       WHERE item-fabric.it-codigo = item.it-codigo OUTER-JOIN,
+                                    EACH fabricante FIELDS (nome-abrev) NO-LOCK
+                                       WHERE fabricante.cod-fabric = item-fabric.cod-fabric OUTER-JOIN,
+									EACH item-ean FIELDS (it-codigo cod-ean13) NO-LOCK
+										WHERE item-ean.it-codigo = item.it-codigo OUTER-JOIN ".
+
+      hQuery:SET-BUFFERS(BUFFER item-MAT:Handle, BUFFER item:Handle, BUFFER int-item:Handle, BUFFER item-fabric:Handle, BUFFER fabricante:Handle, BUFFER item-ean:handle).
+   END.
+MESSAGE c-where.
+   IF (hQuery:QUERY-PREPARE("PRESELECT " + c-where + c-sort) = FALSE) THEN DO:
+</script>
+<div style="text-align: center;">
+  Erro na pesquisa - entre em contato com o Dep. de Inform&aacute;tica
+</div>
+<script language="SpeedScript">
+   END.
+   ELSE DO:
+     hQuery:QUERY-OPEN.
+
+     IF (hQuery:NUM-RESULTS = 0) THEN DO:
+</script>
+<div style="text-align: center;">
+  Item n&atilde;o encontrado
+</div>
+<script language="SpeedScript">
+     END.
+     ELSE DO:
+</script>
+<p style="clear: both;" />
+<div id="resultado">
+  <table border="0" cellspacing="0" width="95%">
+    <colgroup>
+      <col width="5%" />    
+      <col width="18%" />
+      <col width="14%" />
+      <col width="7%" />
+      <col width="7%" />
+      <col width="7%" />
+      <col width="7%" />
+      <col width="7%" />
+      <col width="3%" />
+      <col width="8%" />
+      <col width="5%" />
+      <col width="5%" />
+      <col width="7%" />
+    </colgroup>
+    <tr>
+      <th>Item</th>
+      <th>Descri&ccedil;&atilde;o</th>
+      <th>Situa&ccedil;&atilde;o</th>
+      <th>Fam&iacute;lia</th>
+      <th>Fm. Comercial</th>
+      <th>NCM</th>
+      <th>NVE</th>
+      <th>Ex. Tarif&aacute;rio</th>
+      <th>IPI</th>
+      <th>Part-number</th>
+      <th>Fabricante</th>
+      <th>Necessita LI</th>
+      <th>EAN-13</th>
+    </tr>
+<script language="SpeedScript">
+        REPEAT:
+           hQuery:GET-NEXT.
+           IF (hQuery:QUERY-OFF-END) THEN DO:
+</script>
+  </table>
+</div>
+<script language="SpeedScript">
+              LEAVE.
+           END.
+
+           RUN html-entities IN h-util (INPUT TRIM(item.desc-item), OUTPUT c-desc-item).
+
+           IF (c-color = "light") THEN
+              ASSIGN c-color = "dark".
+           ELSE
+              ASSIGN c-color = "light".
+
+           ASSIGN c-it-fabric  = IF AVAILABLE (item-fabric) THEN item-fabric.it-fabric ELSE ''
+                  c-nome-abrev = IF AVAILABLE (fabricante)  THEN fabricante.nome-abrev ELSE ''
+                  c-cod-ean13  = IF AVAILABLE (item-mat)    THEN item-mat.cod-ean      ELSE ''
+                  c-ativo      = {ininc/i17in172.i 04 item.cod-obsoleto}.
+
+           RUN html-entities IN h-util (INPUT c-it-fabric, OUTPUT c-it-fabric).
+           RUN html-entities IN h-util (INPUT c-nome-abrev, OUTPUT c-nome-abrev).
+           RUN html-entities IN h-util (INPUT c-cod-ean13, OUTPUT c-cod-ean13).
+
+           IF (c-it-codigo <> item.it-codigo) THEN DO:
+              ASSIGN c-it-codigo = item.it-codigo.
+</script>
+    <tr class="`c-color`">
+      <td style="text-align: center;"><a href="http://item.intelbras.com.br/SitePages/Cadastro%20de%20Item.aspx?coditem=`item.it-codigo`">`item.it-codigo`</a></td>
+      <td style="text-align: left;">`c-desc-item`</td>
+      <td style="text-align: center;">`c-ativo`</td>
+      <td style="text-align: center;">`item.fm-codigo`</td>
+      <td style="text-align: center;">`item.fm-cod-com`</td>
+      <td style="text-align: center;">`item.class-fiscal FORMAT "9999.99.99"`</td>
+      <td style="text-align: center;">`int-item.nve`</td>
+      <td style="text-align: center;">`int-item.ex-tarifario`</td>
+      <td style="text-align: center;">`item.aliquota-ipi`%</td>
+      <td style="text-align: center;">`c-it-fabric`</td>
+      <td style="text-align: center;">`c-nome-abrev`</td>
+      <td style="text-align: center;">`item.log-necessita-li FORMAT "Sim/N&atilde;o"`</td>
+      <td style="text-align: center;">`c-cod-ean13`</td>
+    </tr>
+<script language="SpeedScript">
+           END. /** IF **/
+           ELSE DO:
+</script>
+    <tr class="`c-color`">
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td style="text-align: center;">`c-it-fabric`</td>
+      <td style="text-align: center;">`c-nome-abrev`</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+<script language="SpeedScript">
+           END. /** ELSE DO **/
+        END. /** REPEAT **/
+     END. /** ELSE DO **/
+  END. /** IF **/
+
+  hQuery:QUERY-CLOSE().
+  DELETE OBJECT hQuery.
+END. /** IF **/
+</script>
+
+</body>
+</html>
+

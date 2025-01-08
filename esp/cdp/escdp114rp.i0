@@ -1,0 +1,105 @@
+procedure pi-ordens:
+    assign i-cont = 0.
+
+    if valid-handle(h-acomp)
+    then run pi-seta-titulo in h-acomp (input "Selecionando OPs...").
+
+    for each ord-prod fields(nr-ord-produ it-codigo qt-ordem cod-estabel estado cod-unid-negoc) use-index estado no-lock
+       where ord-prod.estado < 7,
+       first item fields(it-codigo codigo-refer desc-item ge-codigo) no-lock
+       where item.it-codigo = ord-prod.it-codigo:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 50 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        create tt-ops.
+        assign tt-ops.it-codigo     = item.it-codigo
+               tt-ops.desc-item     = item.desc-item
+               tt-ops.nr-ord-produ  = ord-prod.nr-ord-produ
+               tt-ops.qt-ordem      = ord-prod.qt-ordem
+               tt-ops.cod-estabel   = ord-prod.cod-estabel
+               tt-ops.estado        = c-estado[ord-prod.estado]
+               tt-ops.sem-operacao  = not can-find(first operacao where
+                                                         operacao.it-codigo = item.it-codigo
+                                                         no-lock)
+               tt-ops.sem-reserva   = not can-find(first reservas where
+                                                         reservas.nr-ord-produ = ord-prod.nr-ord-produ
+                                                         no-lock)
+               tt-ops.sem-estrutura = ord-prod.cod-unid-negoc <> "ENS" and
+                                      item.ge-codigo          <> 40    and
+                                      item.ge-codigo          <> 42    and
+                                      item.ge-codigo          <> 45    and
+                                      not can-find(first estrutura use-index onde-se-usa where
+                                                         estrutura.es-codigo     = item.it-codigo
+                                                     and estrutura.data-termino >= today
+                                                         no-lock).
+    end. /* for each ord-prod */
+    find current tt-ops no-error.
+
+    return "OK".
+end procedure. /* procedure pi-ordens */
+
+procedure pi-carrega-it-est:
+    def input parameter p-gm-codigo like operacao.gm-codigo no-undo.
+
+    for each operacao fields(it-codigo) use-index grup-maquina no-lock
+       where operacao.gm-codigo begins p-gm-codigo
+         and operacao.data-termino >= today,
+       first item fields(desc-item) no-lock 
+       where item.it-codigo = operacao.it-codigo,
+       first tt-digita 
+       where tt-digita.cod-estabel = item.cod-estabel
+         and tt-digita.id-brw      = 0,
+       first item-uni-estab fields(nr-linha) no-lock
+       where item-uni-estab.it-codigo    = item.it-codigo
+         and item-uni-estab.cod-estabel  = item.cod-estabel
+         and item-uni-estab.cod-obsoleto < 4:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 25 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        assign c-observacao = "".
+
+        for first int-item 
+            where int-item.it-codigo = operacao.it-codigo
+                  no-lock: end.
+
+        if p-gm-codigo = "INJ"
+        then if  not avail int-item
+             or (int-item.cod-cor     = ""
+             and int-item.cod-tipo-mp = "")
+             then assign c-observacao = "Falta Cor e Tipo MP".
+             else if int-item.cod-cor = ""
+                  then assign c-observacao = "Falta Cor".
+                  else if int-item.cod-tipo-mp = ""
+                       then assign c-observacao = "Falta Tipo MP".
+                       else next.
+        else if  not avail int-item
+             or (int-item.cod-cor          = ""
+             and int-item.cod-tipo-mp      = ""
+             and int-item.cod-modelo-placa = ""
+             and int-item.cod-tam-placa    = ""
+             and int-item.cod-potencia     = "")
+             then.
+             else next.
+
+        if not can-find(first tt-item-uni-estab where
+                              tt-item-uni-estab.cod-estabel = tt-digita.cod-estabel
+                          and tt-item-uni-estab.it-codigo   = operacao.it-codigo)
+        then do:
+             create tt-item-uni-estab.
+             assign tt-item-uni-estab.cod-estabel = tt-digita.cod-estabel
+                    tt-item-uni-estab.it-codigo   = operacao.it-codigo
+                    tt-item-uni-estab.desc-item   = item.desc-item
+                    tt-item-uni-estab.nr-linha    = item-uni-estab.nr-linha
+                    tt-item-uni-estab.observacao  = c-observacao.
+             find current tt-item-uni-estab no-error.
+        end.
+    end. /* for each operacao */
+
+    return "OK".
+end procedure. /* procedure pi-carrega-it-est */

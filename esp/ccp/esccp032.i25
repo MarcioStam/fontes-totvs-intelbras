@@ -1,0 +1,29 @@
+/*****************************************************************************
+**
+**   cpapi020.i1 - Defini‡Æo das Fun‡äes
+**
+******************************************************************************/
+
+def var h-cpapi020 as handle no-undo.
+
+function f-conv-un returns decimal
+    (p-qtde       as dec,
+     p-it-codigo  as char,
+     p-it-veiculo as char,
+     p-un-orig    as char,
+     p-un-dest    as char) in h-cpapi020.
+
+function f-retorna-fator returns decimal
+    (p-it-codigo  as char,
+     p-it-veiculo as char,
+     p-un-orig    as char,
+     p-un-dest    as char) in h-cpapi020.
+
+function f-conv-qtde returns decimal
+    (p-qtde       as dec,
+     p-fator-orig as dec,
+     p-fator-dest as dec) in h-cpapi020.
+
+function f-conv-per-ppm returns decimal
+    (p-valor as dec,
+     p-acao  as int) in h-cpapi020.

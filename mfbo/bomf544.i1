@@ -1,0 +1,2 @@
+define  temp-table  tt-rep-ic-ctrab     no-undo like rep-ic-ctrab.
+define  temp-table  tt-rep-ic-ctrab-tab no-undo like rep-ic-ctrab-tab.

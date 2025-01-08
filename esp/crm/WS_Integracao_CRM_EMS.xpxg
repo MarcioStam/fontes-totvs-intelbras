@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<WSAD xmlns="urn:schemas-progress-com:WSAD:0004" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <AppObject>
+    <PGVersion>
+      <PXGVersion>03</PXGVersion>
+    </PGVersion>
+    <PGGenInfo isSessionFree="true">
+      <Author />
+      <VersionString />
+      <VersionNumber>1</VersionNumber>
+      <Package />
+      <Service>WS_Integracao_CRM_EMS</Service>
+      <WorkDir>c:\temp\</WorkDir>
+      <VerboseLogging>true</VerboseLogging>
+      <SaveBeforeGen>true</SaveBeforeGen>
+      <DotNetClient>false</DotNetClient>
+      <JavaClient>false</JavaClient>
+      <WebServicesClient>true</WebServicesClient>
+      <UserDefinedAppService>false</UserDefinedAppService>
+      <JavaCompilerType>1</JavaCompilerType>
+      <JavaCompiler>&lt;Install Dir&gt;\jdk\bin\javac</JavaCompiler>
+      <JavaSwitches />
+      <JavaClasspathSwitch>-classpath</JavaClasspathSwitch>
+      <JavaClasspath>&lt;Proxy Dir&gt;;&lt;Install Dir&gt;\java\progress.jar;&lt;Install Dir&gt;\java\messages.jar;;&lt;Default classes.zip&gt;</JavaClasspath>
+      <DotNetCompilerType>4</DotNetCompilerType>
+      <DotNetCompiler>csc</DotNetCompiler>
+      <DotNetSwitches />
+      <DotNetXSDGenerator>xsd</DotNetXSDGenerator>
+      <DotNetNamespace />
+      <DotNetTitle />
+      <DotNetVersion />
+      <DotNetDesc />
+      <DotNetCompany />
+      <DotNetProduct />
+      <DotNetPublicKey />
+      <DotNetDelaySign>false</DotNetDelaySign>
+      <DotNetStrongNamedRuntime>false</DotNetStrongNamedRuntime>
+    </PGGenInfo>
+    <DeploymentWizard>
+      <CurrentEncoding>1</CurrentEncoding>
+      <SoapEndpointURL>http://sjo-web-02.intelbras.com.br:8080/wsa/wsa1</SoapEndpointURL>
+      <WebServiceNamespace userDefined="true">urn:crm.intelbras.com.br</WebServiceNamespace>
+      <SoapAction appendToSoapAction="false" />
+      <TestWSDL RPCEncoded="false" RPCLiteral="false" DocLiteral="false" />
+    </DeploymentWizard>
+    <Name>WS_Integracao_CRM_EMS</Name>
+    <ProPath>\\intel200\erp$\teste\ems204\</ProPath>
+    <HelpString />
+    <ODLHelpString />
+    <ObjectType>false</ObjectType>
+    <AllowUnknown>false</AllowUnknown>
+    <IsTTResultSet>false</IsTTResultSet>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm003</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\intel200\erp$\teste\ems204\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true">
+        <Name>Buscar_DadosCEP</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1">
+          <Name>piCep</Name>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2">
+          <Name>ttRetornoCEP</Name>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>Endereco</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Bairro</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Cidade</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>UF</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+  </AppObject>
+</WSAD>

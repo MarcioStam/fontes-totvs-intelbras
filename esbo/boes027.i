@@ -1,0 +1,2 @@
+DEFINE TEMP-TABLE {1} NO-UNDO LIKE zona-separa
+    FIELD r-rowid AS ROWID.

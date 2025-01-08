@@ -1,0 +1,5 @@
+DEFINE TEMP-TABLE {1} NO-UNDO 
+  FIELD cashTransTypeCode AS character
+  FIELD cashTransTypeDesc AS character
+
+.

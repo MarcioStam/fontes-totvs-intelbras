@@ -1,0 +1,329 @@
+<script language="SpeedScript">
+procedure output-header:
+   if (get-cgi("HTTP_ACCEPT") matches "*application/xhtml+xml*") then
+      output-content-type("application/xhtml+xml; charset=utf-8").
+   else
+      output-content-type("text/html; charset=utf-8").
+end.
+
+session:numeric-format = 'EUROPEAN'.
+
+define temp-table tt-estoq
+   field cod-estabel like saldo-estoq.cod-estabel
+   field cod-depos   like saldo-estoq.cod-depos
+   field cod-localiz like saldo-estoq.cod-localiz
+   field it-codigo   like saldo-estoq.it-codigo
+   field qtidade-atu like saldo-estoq.qtidade-atu
+   field ge-codigo   like grup-estoq.ge-codigo
+   field vl-medio    as decimal format '->>>,>>>,>>>,>>9.99'
+   index ch-pri as primary unique cod-estabel cod-depos cod-localiz it-codigo
+   index ch-item it-codigo.
+
+define temp-table tt-saida
+   field cod-estabel like saldo-estoq.cod-estabel
+   field cod-depos   like saldo-estoq.cod-depos
+   field it-codigo   like saldo-estoq.it-codigo
+   field ge-codigo   like grup-estoq.ge-codigo
+   field qtidade-atu like saldo-estoq.qtidade-atu
+   field vl-medio    as decimal format '->>>,>>>,>>>,>>9.99'
+   field consumo-med like consumo-itens.consumo-medio
+   field vl-cons-med like consumo-itens.vl-cons-med
+   index ch-pri as primary unique cod-estabel cod-depos it-codigo
+   index ch-item it-codigo.
+
+define variable h-util as handle no-undo.
+run html-util.p persistent set h-util.
+
+define variable c-cod-estabel as character no-undo format 'x(3)'.
+define variable c-it-codigo   as character no-undo format 'x(16)'.
+define variable c-color       as character no-undo.
+define variable dt-inicial    as date no-undo format '99/99/9999'.
+define variable dt-final      as date no-undo format '99/99/9999'.
+define variable de-qtidade-atu like saldo-estoq.qtidade-atu.
+define variable c-descricao   as character no-undo.
+define variable c-grup-estoq  as character no-undo.
+define variable c-grupos      as character no-undo.
+define variable c-cod-depos   as character no-undo.
+define variable de-localiz    as decimal extent 2 no-undo.
+define variable de-subtotal   as decimal extent 4 no-undo.
+define variable de-total      as decimal extent 4 no-undo.
+</script>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt_BR">
+<head>
+  <title>Saldos do Estoque</title>
+  <style type="text/css">
+body {
+  text-align: center;
+  background-color: #ffffff;
+  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-size: 0.8em;
+}
+a {
+  text-decoration: none;
+}
+h2 {
+  font-size: 1.8em;
+}
+h5 {
+  font-size: 1em;
+}
+h6 {
+  font-size: 0.9em;
+}
+table {
+  font-size: 1em;
+  margin: auto;
+}
+th {
+  background-color: #aaaaaa;
+}
+.light {
+  background-color: #ffffff;
+}
+.dark {
+  background-color: #e7e7e7;
+}
+.total {
+  background-color: #cccccc;
+  font-weight: bold;
+}
+input {
+  font-size: 0.9em;
+}
+select {
+  font-size: 0.9em;
+}
+fieldset {
+  height: 5em;
+}
+legend {
+  margin-bottom: 0.5em;
+}
+#ajuda {
+  margin: auto;
+  width: 600px;
+}
+#estoque {
+  font-size: 0.9em;
+  margin: auto;
+  width: 600px;
+}
+#estoque .col1 {
+  clear: both;
+  display: block;
+  float: left;
+  width: 20%;
+}
+#estoque .col2 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#estoque .col3 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#estoque .col4 {
+  display: block;
+  float: left;
+  text-align: center;
+  width: 10%;
+}
+#resultado {
+  font-size: 0.9em;
+  padding-top: 1em;
+}
+</style>
+</head>
+
+<body>
+<script language="SpeedScript">
+assign c-cod-estabel = get-value("e")
+       c-cod-depos   = get-value("d")
+       c-grupos      = get-value("g").
+</script>
+<h2>Saldo do Estoque</h2>
+<p/>
+<script language="SpeedScript">
+if (c-cod-estabel <> ?) and (c-cod-estabel <> '') and (c-cod-depos <> ?) and (c-cod-depos <> '') and (c-grupos <> ?) and (c-grupos <> '') then do:
+
+   for each saldo-estoq fields (cod-estabel cod-depos cod-localiz it-codigo qtidade-atu) no-lock
+      where saldo-estoq.cod-depos   = c-cod-depos
+        and saldo-estoq.cod-estabel = c-cod-estabel
+        and saldo-estoq.qtidade-atu > 0:
+   
+      create tt-estoq.
+      buffer-copy saldo-estoq to tt-estoq.
+   end.
+
+   for each item fields (ge-codigo) no-lock,
+      each tt-estoq use-index ch-item
+         where tt-estoq.it-codigo = item.it-codigo,
+      each item-estab fields (val-unit-ggf-m val-unit-mat-m val-unit-mob-m) no-lock
+         where item-estab.it-codigo   = tt-estoq.it-codigo
+           and item-estab.cod-estabel = tt-estoq.cod-estabel:
+    
+      if lookup(string(item.ge-codigo), c-grupos) = 0 then
+         delete tt-estoq.
+      else
+         assign tt-estoq.ge-codigo = item.ge-codigo
+                tt-estoq.vl-medio  = tt-estoq.qtidade-atu *
+                                     (item-estab.val-unit-ggf-m[1] +
+                                      item-estab.val-unit-mat-m[1] +
+                                      item-estab.val-unit-mob-m[1]).
+   end.
+
+   for each tt-estoq no-lock:
+      find first tt-saida
+         where tt-saida.cod-estabel = tt-estoq.cod-estabel
+           and tt-saida.cod-depos   = tt-estoq.cod-depos
+           and tt-saida.it-codigo   = tt-estoq.it-codigo no-error.
+
+      if not available (tt-saida) then do:
+         create tt-saida.
+         assign tt-saida.cod-estabel = tt-estoq.cod-estabel
+                tt-saida.cod-depos   = tt-estoq.cod-depos
+                tt-saida.it-codigo   = tt-estoq.it-codigo
+                tt-saida.ge-codigo   = tt-estoq.ge-codigo.
+      end.
+
+      assign tt-saida.qtidade-atu = tt-saida.qtidade-atu + tt-estoq.qtidade-atu
+             tt-saida.vl-medio    = tt-saida.vl-medio + tt-estoq.vl-medio.
+   end.
+
+   for each tt-saida:
+      find first consumo-itens no-lock
+         where consumo-itens.cod-estabel = tt-saida.cod-estabel
+           and consumo-itens.it-codigo   = tt-saida.it-codigo no-error.
+   
+      if avail consumo-itens then
+         assign tt-saida.consumo-med = tt-saida.consumo-med + consumo-itens.consumo-medio
+                tt-saida.vl-cons-med = tt-saida.vl-cons-med + consumo-itens.vl-cons-med.
+   end.
+</script>
+<div id="resultado">
+<script language="SpeedScript">
+   find first deposito no-lock
+      where deposito.cod-depos = c-cod-depos no-error.
+</script>
+   <h4>Estab. `c-cod-estabel` - Dep&oacute;sito: `deposito.nome`</h4>
+<script language="SpeedScript">
+   for each tt-saida no-lock use-index ch-item,
+      first grup-estoq no-lock
+         where grup-estoq.ge-codigo = tt-saida.ge-codigo,
+      first item no-lock
+         where item.it-codigo = tt-saida.it-codigo,
+      last movto-estoq no-lock
+         where movto-estoq.cod-estabel = c-cod-estabel
+           and movto-estoq.it-codigo   = item.it-codigo
+           and movto-estoq.tipo-trans  = 2
+      break by tt-saida.ge-codigo
+            by tt-saida.vl-medio desc:
+   
+      if (c-color = "light") then
+         assign c-color = "dark".
+      else
+         assign c-color = "light".
+
+      assign c-descricao = item.descricao-1 + item.descricao-2.
+   
+      run html-entities in h-util (input c-descricao, output c-descricao).
+      run html-entities in h-util (input grup-estoq.descricao, output c-grup-estoq).
+      run html-entities in h-util (input item.it-codigo, output c-it-codigo).
+
+      if first-of (tt-saida.ge-codigo) then do:
+         assign de-subtotal = 0.
+</script>
+  <h4>Grupo de estoque `grup-estoq.ge-codigo` - `c-grup-estoq`</h4>
+  <table border="0" cellspacing="0" width="98%">
+    <colgroup>
+      <col width="11%" />
+      <col width="32%" />
+      <col width="10%" />
+      <col width="10%" />
+      <col width="10%" />
+      <col width="10%" />
+      <col width="10%" />
+      <col width="7%" />
+    </colgroup>
+    <tr>
+      <th>Item</th>
+      <th>Descri&ccedil;&atilde;o</th>
+      <th>Dt. Ult. Sa&iacute;da</th>
+      <th>Consumo M&eacute;dio 3 meses</th>
+      <th>Vl Consumo M&eacute;dio</th>
+      <th>Saldo</th>
+      <th>Valor Saldo</th>
+      <th>%</th>
+    </tr>
+<script language="SpeedScript">
+      end.
+
+      assign de-total[1]    = de-total[1] + tt-saida.qtidade-atu
+             de-total[2]    = de-total[2] + tt-saida.vl-medio
+             de-total[3]    = de-total[3] + tt-saida.consumo-med
+             de-total[3]    = de-total[3] + tt-saida.vl-cons-med
+             de-subtotal[1] = de-subtotal[1] + tt-saida.qtidade-atu
+             de-subtotal[2] = de-subtotal[2] + tt-saida.vl-medio
+             de-subtotal[3] = de-subtotal[3] + tt-saida.consumo-med
+             de-subtotal[3] = de-subtotal[3] + tt-saida.vl-cons-med.
+</script>
+    <tr class="`c-color`">
+      <td style="text-align: left;">`c-it-codigo`</td>
+      <td style="text-align: left;">`c-descricao`</td>
+      <td>`movto-estoq.dt-trans format '99/99/9999'`</td>
+      <td style="text-align: right;">`string(tt-saida.consumo-med, '->>>,>>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string(tt-saida.vl-cons-med, '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(tt-saida.qtidade-atu, "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(tt-saida.vl-medio, "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(tt-saida.qtidade-atu / tt-saida.consumo-med, '->>9.99')`</td>
+    </tr>
+<script language="SpeedScript">
+      if last-of (tt-saida.ge-codigo) then do:
+</script>
+    <tr class="total">
+      <td style="text-align: right;" colspan="3">Subtotal</td>
+      <td style="text-align: right;">`string(de-subtotal[3], "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(de-subtotal[4], "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(de-subtotal[1], "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(de-subtotal[2], "->>>,>>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+    </tr>
+    </table>
+<script language="SpeedScript">
+      end. /** for each **/
+   end.
+</script>
+  <table border="0" cellspacing="0" width="98%">
+    <colgroup>
+      <col width="53%" />
+      <col width="10%" />
+      <col width="10%" />
+      <col width="10%" />
+      <col width="10%" />
+      <col width="7%" />
+    </colgroup>
+    <tr class="total">
+      <td style="text-align: right;">Total geral</td>
+      <td style="text-align: right;">`string(de-total[3], "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(de-total[4], "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(de-total[1], "->>>,>>>,>>>,>>9.99")`</td>
+      <td style="text-align: right;">`string(de-total[2], "->>>,>>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+    </tr>
+  </table>
+</div>
+<script language="SpeedScript">
+end. /** if **/
+
+if valid-handle(h-util) then
+   delete object h-util.
+</script>
+
+</body>
+</html>

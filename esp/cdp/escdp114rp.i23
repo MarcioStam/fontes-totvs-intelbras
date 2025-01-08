@@ -1,0 +1,159 @@
+procedure pi-procedimento-23:
+    form tt-estrutura.es-codigo    format "x(16)"       column-label "Componente"
+         tt-estrutura.sequencia    format ">>>>9"       column-label "Seq"
+         tt-estrutura.it-codigo    format "x(16)"       column-label "Item"    
+         tt-estrutura.dt-ini-estr  format "99/99/9999"  column-label "Dt In¡c Estr"
+         tt-estrutura.dt-term-estr format "99/99/9999"  column-label "Dt T‚rm Estr"
+         tt-estrutura.nr-ord-produ format ">>>,>>>,>>9" column-label "Ord Prod"
+         tt-estrutura.it-op        format "x(16)"       column-label "Item Ord Prod"
+         tt-estrutura.dt-ini-op    format "99/99/9999"  column-label "Dt In¡c OP"
+         tt-estrutura.dt-term-op   format "99/99/9999"  column-label "Dt T‚rm OP"
+         tt-estrutura.cod-estabel  format "x(5)"        column-label "Estab"
+         with width 132 down no-box stream-io frame f-23.
+
+    empty temp-table tt-estrutura.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "reservas-op-sem-estr-ativ.txt"
+           c-titulo-relat = "Reservas OPs s/ estrutura ativa".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Reservas OPs s/ estrutura ativa...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+    
+    for each ord-prod no-lock
+       where ord-prod.estado < 7:
+        if not can-find(first reservas where
+                              reservas.nr-ord-produ = ord-prod.nr-ord-produ
+                              no-lock)
+        then next.
+        
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 15 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+    
+        for each reservas no-lock
+           where reservas.nr-ord-produ = ord-prod.nr-ord-produ:
+            if can-find(first estrutura use-index onde-se-usa where
+                              estrutura.es-codigo     = reservas.it-codigo
+                          and estrutura.it-codigo     = reservas.item-pai
+                          and estrutura.data-inicio  <= ord-prod.dt-inicio
+                          and estrutura.data-termino >= ord-prod.dt-inicio
+                              no-lock)
+            then next.
+    
+            if  reservas.item-pai <> ord-prod.it-codigo
+            and can-find(first estrutura use-index onde-se-usa where
+                               estrutura.es-codigo     = reservas.item-pai
+                           and estrutura.it-codigo     = ord-prod.it-codigo
+                           and estrutura.fantasma      = no
+                           and estrutura.data-inicio  <= ord-prod.dt-inicio
+                           and estrutura.data-termino >= ord-prod.dt-inicio
+                               no-lock)
+            then next.
+    
+            for each estrutura use-index onde-se-usa no-lock
+               where estrutura.es-codigo     = reservas.it-codigo
+                 and estrutura.it-codigo     = reservas.item-pai:
+                if  estrutura.data-inicio  <= ord-prod.dt-inicio
+                and estrutura.data-termino >= ord-prod.dt-inicio
+                then next.
+    
+                if can-find(first tt-estrutura where
+                                  tt-estrutura.es-codigo    = estrutura.es-codigo
+                              and tt-estrutura.nr-ord-produ = ord-prod.nr-ord-produ
+                              and tt-estrutura.sequencia    = estrutura.sequencia
+                              and tt-estrutura.it-codigo    = estrutura.it-codigo)
+                then next.
+    
+                create tt-estrutura.
+                assign tt-estrutura.es-codigo    = estrutura.es-codigo
+                       tt-estrutura.it-codigo    = estrutura.it-codigo
+                       tt-estrutura.sequencia    = estrutura.sequencia
+                       tt-estrutura.dt-ini-estr  = estrutura.data-inicio
+                       tt-estrutura.dt-term-estr = estrutura.data-termino
+                       tt-estrutura.it-op        = ord-prod.it-codigo
+                       tt-estrutura.nr-ord-produ = ord-prod.nr-ord-produ
+                       tt-estrutura.dt-ini-op    = ord-prod.dt-inicio
+                       tt-estrutura.dt-term-op   = ord-prod.dt-termino
+                       tt-estrutura.cod-estabel  = ord-prod.cod-estabel.
+            end. /* for each estrutura */
+    
+            if reservas.item-pai <> ord-prod.it-codigo
+            then for each estrutura use-index onde-se-usa no-lock
+                    where estrutura.es-codigo     = reservas.item-pai
+                      and estrutura.it-codigo     = ord-prod.it-codigo
+                      and estrutura.fantasma      = no:
+                     if  estrutura.data-inicio  <= ord-prod.dt-inicio
+                     and estrutura.data-termino >= ord-prod.dt-inicio
+                     then next.
+    
+                     if can-find(first tt-estrutura where
+                                       tt-estrutura.es-codigo    = estrutura.es-codigo
+                                   and tt-estrutura.nr-ord-produ = ord-prod.nr-ord-produ
+                                   and tt-estrutura.sequencia    = estrutura.sequencia
+                                   and tt-estrutura.it-codigo    = estrutura.it-codigo)
+                     then next.
+    
+                     create tt-estrutura.
+                     assign tt-estrutura.es-codigo    = estrutura.es-codigo
+                            tt-estrutura.it-codigo    = estrutura.it-codigo
+                            tt-estrutura.sequencia    = estrutura.sequencia
+                            tt-estrutura.dt-ini-estr  = estrutura.data-inicio
+                            tt-estrutura.dt-term-estr = estrutura.data-termino
+                            tt-estrutura.it-op        = ord-prod.it-codigo
+                            tt-estrutura.nr-ord-produ = ord-prod.nr-ord-produ
+                            tt-estrutura.dt-ini-op    = ord-prod.dt-inicio
+                            tt-estrutura.dt-term-op   = ord-prod.dt-termino
+                            tt-estrutura.cod-estabel  = ord-prod.cod-estabel.
+    
+                 end. /* for each estrutura */
+        end. /* for each reservas */
+    end. /* for each ord-prod */
+    find current tt-estrutura no-error.
+    release tt-estrutura.
+    
+    for each tt-estrutura
+             break by tt-estrutura.es-codigo:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 50 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).             
+
+        if first-of(tt-estrutura.es-codigo)
+        then disp stream st-relat 
+                  tt-estrutura.es-codigo   
+                  with frame f-23.
+    
+        disp stream st-relat
+             tt-estrutura.sequencia   
+             tt-estrutura.it-codigo   
+             tt-estrutura.dt-ini-estr 
+             tt-estrutura.dt-term-estr
+             tt-estrutura.nr-ord-produ
+             tt-estrutura.it-op       
+             tt-estrutura.dt-ini-op   
+             tt-estrutura.dt-term-op  
+             tt-estrutura.cod-estabel 
+             with frame f-23.
+        down stream st-relat with frame f-23.
+    end. /* for each tt-estrutura */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-23 */
+

@@ -1,0 +1,431 @@
+/**************************************************************************
+**
+**  Include: escd0420.i11 - Define vari veis, temp-tables e frames
+**
+**************************************************************************/
+DEFINE TEMP-TABLE tt-param NO-UNDO
+    FIELD destino          AS INTEGER
+    FIELD arquivo          AS CHARACTER FORMAT "x(30)"
+    FIELD usuario          AS CHARACTER FORMAT "x(12)"
+    FIELD data-exec        AS DATE
+    FIELD hora-exec        AS INTEGER
+    FIELD classifica       AS INTEGER 
+    FIELD c-estab-ini      AS CHARACTER
+    FIELD c-estab-fim      AS CHARACTER
+    FIELD i-linha-ini      AS INTEGER
+    FIELD i-linha-fim      AS INTEGER
+    FIELD c-item-ini       AS CHARACTER
+    FIELD c-item-fim       AS CHARACTER
+    FIELD c-fami-ini       AS CHARACTER
+    FIELD c-fami-fim       AS CHARACTER
+    FIELD c-plan-ini       AS CHARACTER
+    FIELD c-plan-fim       AS CHARACTER
+    FIELD i-ge-ini         AS INTEGER
+    FIELD i-ge-fim         AS INTEGER
+    FIELD c-comp-ini       AS CHARACTER
+    FIELD c-comp-fim       AS CHARACTER
+    &IF DEFINED(bf_man_206b) &THEN
+        FIELD c-cod-unid-negoc-ini LIKE unid-negoc.cod-unid-negoc
+        FIELD c-cod-unid-negoc-fim LIKE unid-negoc.cod-unid-negoc
+    &ENDIF
+    FIELD c-ci-estab-ini   AS CHARACTER
+    FIELD c-ci-estab-fim   AS CHARACTER
+    FIELD i-ci-linha-ini   AS INTEGER
+    FIELD i-ci-linha-fim   AS INTEGER
+    FIELD c-ci-item-ini    AS CHARACTER
+    FIELD c-ci-item-fim    AS CHARACTER
+    FIELD c-ci-fami-ini    AS CHARACTER
+    FIELD c-ci-fami-fim    AS CHARACTER
+    FIELD c-ci-plan-ini    AS CHARACTER
+    FIELD c-ci-plan-fim    AS CHARACTER
+    FIELD i-ci-ge-ini      AS INTEGER
+    FIELD i-ci-ge-fim      AS INTEGER
+    FIELD c-ci-comp-ini    AS CHARACTER
+    FIELD c-ci-comp-fim    AS CHARACTER
+    &IF DEFINED(bf_man_206b) &THEN
+        FIELD c-ci-cod-unid-negoc-ini LIKE unid-negoc.cod-unid-negoc
+        FIELD c-ci-cod-unid-negoc-fim LIKE unid-negoc.cod-unid-negoc
+    &ENDIF
+    FIELD apenas-oem       AS LOGICAL
+    FIELD l-comprado       AS LOGICAL
+    FIELD l-fabricado      AS LOGICAL
+    FIELD da-corte         AS DATE
+    FIELD da-op-corte      AS DATE
+    FIELD l-planejada      AS LOGICAL
+    FIELD l-ord-com        AS LOGICAL
+    FIELD l-ord-prod       AS LOGICAL
+    FIELD l-res-com        AS LOGICAL
+    FIELD l-res-pla        AS LOGICAL
+    FIELD l-sld-est        AS LOGICAL
+    FIELD l-sld-ter        AS LOGICAL
+    FIELD l-ped-crt        AS LOGICAL
+    FIELD l-it-sem-mov     AS LOGICAL
+    FIELD l-componente     AS LOGICAL
+    FIELD l-deposito       AS LOGICAL
+    FIELD i-niveis         AS INTEGER
+    FIELD l-cred-aprov     AS LOGICAL
+    FIELD l-comp-fabr      AS LOGICAL
+    FIELD l-comp-comp      AS LOGICAL
+    FIELD l-remessa        AS LOGICAL 
+    FIELD l-entrada        AS LOGICAL
+    FIELD l-transfer       AS LOGICAL 
+    FIELD l-re-con         AS LOGICAL
+    FIELD l-en-con         AS LOGICAL
+    FIELD i-obsoleto       AS INTEGER
+    FIELD i-beneficio      AS INTEGER
+    FIELD i-tipo           AS INTEGER
+    FIELD i-formato        AS INTEGER
+    FIELD i-cod-plano      AS INTEGER
+    FIELD c-obsoleto       AS CHARACTER
+    FIELD c-beneficio      AS CHARACTER
+    FIELD c-tipo           AS CHARACTER
+    FIELD c-formato        AS CHARACTER
+    FIELD c-classe         AS CHARACTER
+    FIELD c-destino        AS CHARACTER
+    FIELD l-impr-parametro AS LOGICAL.
+
+DEFINE TEMP-TABLE tt-digita NO-UNDO
+    FIELD c-it-codigo    LIKE ITEM.it-codigo
+    FIELD c-cod-refer    LIKE ref-item.cod-refer
+    FIELD c-desc-item    LIKE ITEM.desc-item
+    FIELD fm-codigo      LIKE ITEM.fm-codigo
+    FIELD cd-planejado   LIKE ITEM.cd-planejado
+    FIELD ge-codigo      LIKE ITEM.ge-codigo
+    FIELD cod-comprado   LIKE ITEM.cod-comprado
+    &IF DEFINED(bf_man_206b) &THEN
+        FIELD cod-unid-negoc LIKE unid-negoc.cod-unid-negoc
+    &ENDIF
+    FIELD c-un           LIKE ITEM.un
+    FIELD l-dep          AS LOGICAL
+    FIELD c-estab        AS CHARACTER
+    FIELD c-depos        AS CHARACTER
+    INDEX id IS PRIMARY  UNIQUE c-it-codigo c-cod-refer.
+
+DEFINE TEMP-TABLE tt-depositos NO-UNDO
+    FIELD cod-estabel    LIKE estabelec.cod-estabel
+    FIELD cod-depos      LIKE deposito.cod-depos.
+
+DEFINE TEMP-TABLE tt-estoq NO-UNDO
+    FIELD quantidade     AS DECIMAL   FORMAT "->>>>,>>9.9999"
+    FIELD tempo          AS CHARACTER
+    FIELD tipo           AS CHARACTER FORMAT "x(8)"
+    FIELD referencia     AS CHARACTER FORMAT "x(30)"
+    FIELD dt-inicio      AS DATE      FORMAT "99/99/9999"
+    FIELD dt-termino     AS DATE      FORMAT "99/99/9999"
+    FIELD item-pai       AS CHARACTER
+    FIELD saldo          AS DECIMAL    
+    &IF DEFINED(bf_man_206b) &THEN
+        FIELD unid-negoc     LIKE unid-negoc.cod-unid-negoc
+    &ENDIF 
+    INDEX codigo         IS PRIMARY tempo dt-termino tipo.
+    
+DEFINE TEMP-TABLE tt-item NO-UNDO LIKE ITEM.
+    
+DEFINE TEMP-TABLE tt-digita-2 NO-UNDO LIKE tt-digita
+    FIELD niv-mais-bai   LIKE ITEM.niv-mais-bai
+    INDEX niv  niv-mais-bai.
+
+DEFINE BUFFER b-tt-estoq    FOR tt-estoq.
+DEFINE BUFFER b-periodo     FOR periodo.
+DEFINE BUFFER b-ped-item    FOR ped-item.
+DEFINE BUFFER b-item        FOR ITEM.
+DEFINE BUFFER b1-item       FOR ITEM.
+DEFINE BUFFER b2-item       FOR ITEM.
+DEFINE BUFFER b-ped-ent     FOR ped-ent.
+DEFINE BUFFER b3-item       FOR ITEM.
+
+DEFINE QUERY q-digita       FOR tt-digita-2 SCROLLING.
+
+DEFINE VARIABLE de-saldo       LIKE reservas.quant-orig   NO-UNDO FORMAT "->>>>>,>>9.9999".
+DEFINE VARIABLE de-quant-segur LIKE ITEM.quant-segur      NO-UNDO.
+DEFINE VARIABLE c-descricao    LIKE ITEM.desc-item        NO-UNDO.
+DEFINE VARIABLE c-fm-codigo    LIKE familia.fm-codigo     NO-UNDO.
+DEFINE VARIABLE c-fm-desc      LIKE familia.descricao     NO-UNDO.
+DEFINE VARIABLE c-planej       LIKE planejad.cd-planejado NO-UNDO.
+DEFINE VARIABLE c-plan-desc    LIKE planejad.nome         NO-UNDO.
+DEFINE VARIABLE c-grupo        LIKE ITEM.ge-codigo        NO-UNDO.
+DEFINE VARIABLE c-comprado     LIKE ITEM.cod-comprado     NO-UNDO.
+&IF DEFINED(bf_man_206b) &THEN
+    DEFINE VARIABLE c-unid-negoc LIKE unid-negoc.cod-unid-negoc NO-UNDO.
+&ENDIF
+DEFINE VARIABLE c-comp-desc        like comprador.nome no-undo.
+DEFINE VARIABLE de-quantidade      as decimal no-undo format "->>>>,>>9.9999"  init 0.
+DEFINE VARIABLE de-saldo-item      as decimal no-undo format "->>>>>,>>9.9999" init 0.
+DEFINE VARIABLE de-saldo-aloc      as decimal no-undo format "->>>>>,>>9.9999" init 0.
+DEFINE VARIABLE de-saldo-inic      as decimal no-undo format "->>>>,>>9.9999".
+DEFINE VARIABLE de-saldo-terc      as decimal no-undo format "->>>>,>>9.9999".
+DEFINE VARIABLE de-saldo-inic-teor as decimal no-undo format "->>>>,>>9.9999".
+DEFINE VARIABLE de-saldo-terc-teor as decimal no-undo format "->>>>,>>9.9999".
+DEFINE VARIABLE de-ped-saldo       as decimal no-undo.
+DEFINE VARIABLE i-res-var          as integer no-undo.
+DEFINE VARIABLE i-tam-per          as integer no-undo.
+DEFINE VARIABLE i-nr-dias          as integer no-undo.
+DEFINE VARIABLE i-ressup           as integer no-undo.
+DEFINE VARIABLE i-resto            as integer no-undo.
+DEFINE VARIABLE i-ind              as integer no-undo.
+DEFINE VARIABLE i-nivel            as integer no-undo.
+DEFINE VARIABLE i-sequencia        as integer no-undo.
+DEFINE VARIABLE l-imprimiu         as logical no-undo init no.
+DEFINE VARIABLE l-lista            as logical no-undo init no.
+DEFINE VARIABLE l-zero             as logical no-undo init no.
+DEFINE VARIABLE l-seg              as logical no-undo init no.
+DEFINE VARIABLE l-res-estabel      as logical no-undo.
+DEFINE VARIABLE r-end-ret          as rowid   no-undo extent 20.
+DEFINE VARIABLE da-inicio          as date    no-undo format "99/99/9999".
+DEFINE VARIABLE da-termino         as date    no-undo format "99/99/9999".
+DEFINE VARIABLE c-item             as char    no-undo format "x(12)" extent 20.
+DEFINE VARIABLE c-referencia-1     as char    no-undo format "x(30)".
+DEFINE VARIABLE c-referencia-2     as char    no-undo format "x(8)".
+def var c-observ           as char    no-undo format "x(5)".
+def var c-tempo            as char    no-undo.
+def var c-tempo2           as char    no-undo.
+def var c-tipo-ant         as char    no-undo.
+def var c-estado           as char    no-undo.
+def var c-cod-item         as char    no-undo.
+def var c-un               as char    no-undo.
+def var c-desc-cab         as char    no-undo.
+def var h-acomp            as handle  no-undo.
+def var i-nr-linha-ini     as int     no-undo.
+def var i-nr-linha-fim     as int     no-undo.
+&if defined(bf_man_206b) &then
+def var c-un-neg-ini       as char    no-undo format "x(3)".
+def var c-un-neg-fim       as char    no-undo format "x(3)".
+&endif 
+
+def var c-liter        as char format "x(18)" extent 15 no-undo.
+
+def var l-sald-est     as logical init yes no-undo.
+def var l-remessa-con  as logical init yes no-undo.
+def var l-ent-con      as logical init yes no-undo.
+def var da-dt-corte    as date format "99/99/9999" init "12/31/9999". 
+def var l-ord-comp     as logical init yes no-undo.
+def var l-res-comp     as logical init yes no-undo.
+def var l-pedidos      as logical init yes no-undo.
+def var l-res-plan     as logical init yes no-undo.
+def var da-dt-plan     as date format "99/99/9999" init "12/31/9999".
+def var da-dat         as date format "99/99/9999" no-undo.
+def var da-dat-in      as date format "99/99/9999" no-undo.
+def var de-qt-min      as decimal no-undo.
+def var de-qt-dlt      as decimal no-undo.
+def var i-dias-dlt     as integer no-undo.
+def var de-vezes       as decimal no-undo.
+def var de-qt-seg      as decimal no-undo.
+def var c-cod-refer    like ref-item.cod-refer     no-undo.
+def var c-ref-pai      as char    no-undo.
+def var c-ref-filho    as char    no-undo.
+def var l-util-item    as logical no-undo.
+def var l-controla-ref as logical no-undo.
+def var l-ref          as logical no-undo.
+
+/* Defini‡Æo de Vari veis p/ Tradu‡Æo */
+
+def var c-lb-item   as char extent 2 no-undo.
+def var c-lb-ref    as char no-undo format "x(8)".
+def var c-lb-qt-seg as char no-undo format "x(10)".
+def var c-lb-un     as char no-undo format "x(2)".
+def var c-lb-desc   as char no-undo format "x(10)".
+def var c-lb-sld    as char no-undo format "x(13)".
+def var c-lb-s-teor as char no-undo format "x(13)".
+def var c-lb-tipo   as char no-undo.
+def var c-lb-refer  as char no-undo format "x(15)".
+def var c-lb-qtde   as char no-undo format "x(10)".
+def var c-lb-dat-i  as char no-undo format "x(10)".
+def var c-lb-dat-f  as char no-undo format "x(10)".
+def var c-lb-disp   as char no-undo format "x(10)".
+def var c-lb-obs    as char no-undo format "x(10)".
+def var c-lb-fam    as char no-undo format "x(10)" extent 2.
+def var c-lb-plan   as char no-undo format "x(12)" extent 2.
+def var c-lb-ge     as char no-undo format "x(15)" extent 2.
+def var c-lb-comp   as char no-undo format "x(10)" extent 2.
+&if defined(bf_man_206b) &then
+def var c-lb-cod-unid-negoc as char no-undo format "x(15)" extent 2.
+def var c-lb-un-negoc-abrev as char no-undo.
+&endif
+def var da-op-corte as date no-undo format "99/99/9999".
+
+{utp/ut-field.i mgind ref-item cod-refer 2}
+assign c-lb-ref = trim (return-value).
+{utp/ut-field.i mgind item it-codigo 1}
+assign c-lb-item = trim(return-value).
+{utp/ut-field.i mgind item quant-segur 1}
+assign c-lb-qt-seg = trim(return-value).
+{utp/ut-field.i mgind item un 2}
+assign c-lb-un = trim(return-value).
+{utp/ut-field.i mgind item desc-item 1}
+assign c-lb-desc = trim(return-value).
+&IF defined(bf_man_205) &THEN
+IF CAN-FIND(FIRST param-global WHERE param-global.modulo-per-ppm) THEN DO:
+    {utp/ut-liter.i Saldo_I.Inicial * l}
+    assign c-lb-sld = trim(return-value).
+end.
+else do:
+&endif
+    {utp/ut-liter.i Saldo_Inicial * l}
+    assign c-lb-sld = trim(return-value).
+&IF defined(bf_man_205) &THEN
+end.
+IF CAN-FIND(FIRST param-global WHERE param-global.modulo-per-ppm) THEN DO:
+    {utp/ut-liter.i Saldo_I.Te¢rico * l}
+    assign c-lb-s-teor = trim(return-value).
+end.
+&endif
+{utp/ut-liter.i Tipo * r}
+assign c-lb-tipo = trim(return-value).
+{utp/ut-liter.i Referˆncia * r}
+assign c-lb-refer = trim(return-value).
+{utp/ut-liter.i Quantidade * r}
+assign c-lb-qtde = trim(return-value).
+{utp/ut-liter.i Dt_In¡cio * r}
+assign c-lb-dat-i = trim(return-value).
+{utp/ut-liter.i Dt_T‚rmino * r}
+assign c-lb-dat-f = trim(return-value).
+&IF defined(bf_man_205) &THEN
+IF CAN-FIND(FIRST param-global WHERE param-global.modulo-per-ppm) THEN DO:
+    {utp/ut-liter.i Dispon¡vel_Te¢r * r}
+    assign c-lb-disp = trim(return-value).
+end.
+else do:
+&ENDIF
+    {utp/ut-liter.i Dispon¡vel * r}
+    assign c-lb-disp = trim(return-value).
+&IF defined(bf_man_205) &THEN
+end.
+&ENDIF
+{utp/ut-liter.i Observa‡Æo * r}
+assign c-lb-obs = trim(return-value).
+{utp/ut-field.i mgind familia fm-codigo 1}
+assign c-lb-fam = trim(return-value) /*+ ":"*/.
+{utp/ut-field.i mgind item cd-planejado 1}
+assign c-lb-plan = trim(return-value) /*+ ":"*/.
+{utp/ut-field.i mgind item ge-codigo 1}
+assign c-lb-ge = trim(return-value) /*+ ":"*/.
+{utp/ut-field.i mgind comprador cod-comprado 1}
+assign c-lb-comp = trim(return-value) /*+ ":"*/.
+&if defined(bf_man_206b) &then
+    {utp/ut-field.i mgind unid-negoc cod-unid-negoc 1}
+    assign c-lb-cod-unid-negoc = trim(return-value).
+    
+    {utp/ut-liter.i U._Neg *}
+    assign c-lb-un-negoc-abrev = trim(return-value). /* Label abreviado da Unidade de Negocio */
+    
+&endif
+
+
+&if defined(bf_man_206b) &then
+    if l-usa-unid-negoc then do:
+        form header
+            c-lb-item[1]
+            c-lb-qt-seg    to 33
+            c-lb-un        at 37
+            c-lb-ref       at 41
+            c-lb-desc      at 50
+            c-lb-s-teor    at 103
+            c-lb-sld       to 132
+            c-lb-tipo      at 6
+            c-lb-refer     at 15
+            c-lb-qtde      to 71        
+            c-lb-dat-i     at 73
+            c-lb-dat-f     at 84
+            c-lb-disp      to 112
+            c-lb-obs       at 114
+            c-lb-un-negoc-abrev  at 125
+            fill("-", 132) format "x(132)"
+            with stream-io no-box no-label width 132 page-top frame f-cab-sml-un.
+            run utp/ut-trfrrp.p (input frame f-cab-sml-un:handle).
+    end.
+    else do:
+&endif
+    form header
+        c-lb-item[1]
+        c-lb-qt-seg    to 33
+        c-lb-un        at 37
+        c-lb-ref       at 41
+        c-lb-desc      at 50
+        c-lb-s-teor    at 103
+        c-lb-sld       to 132
+        c-lb-tipo      at 6
+        c-lb-refer     at 15
+        c-lb-qtde      to 71        
+        c-lb-dat-i     at 73
+        c-lb-dat-f     at 84
+        c-lb-disp      to 112
+        c-lb-obs       at 114 
+        fill("-", 132) format "x(132)"
+        with stream-io no-box no-label width 132 page-top frame f-cab-sml.
+        run utp/ut-trfrrp.p (input frame f-cab-sml:handle).
+
+&IF defined(bf_man_206b) &THEN
+    end.
+&ENDIF
+
+form header
+     c-lb-fam[1]
+     c-fm-codigo "-"
+     c-fm-desc   skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-cab-fam.
+run utp/ut-trfrrp.p (input frame f-cab-fam:handle).     
+
+form header
+     c-lb-item[1]  space(0) ":"
+     c-cod-item format "x(16)" "-"
+     c-desc-cab format "x(60)" "-"
+     c-un       skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-cab-item.
+run utp/ut-trfrrp.p (input frame f-cab-item:handle).     
+
+form header
+     c-lb-plan[1]
+     c-planej    "-"
+     c-plan-desc skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-cab-plan.
+run utp/ut-trfrrp.p (input frame f-cab-plan:handle).     
+
+form header
+     c-lb-ge[1]
+     c-grupo   "-"
+     c-fm-desc skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-cab-ge.
+run utp/ut-trfrrp.p (input frame f-cab-ge:handle).     
+
+form header
+     c-lb-comp[1]
+     c-comprado  "-"
+     c-comp-desc skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-cab-comp.
+run utp/ut-trfrrp.p (input frame f-cab-comp:handle).     
+
+form header
+     c-lb-fam[1]
+     c-fm-codigo "-"
+     c-fm-desc
+     c-lb-item[1]   space(0) ":"
+     c-cod-item  "-"
+     c-desc-cab  "-"
+     c-un        skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-fam-estr.
+run utp/ut-trfrrp.p (input frame f-fam-estr:handle).     
+
+form header
+     c-lb-plan[1]
+     c-planej   "-"
+     c-plan-desc
+     c-lb-item[1]  space(0) ":"
+     c-cod-item "-"
+     c-desc-cab "-"
+     c-un       skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-plan-estr.
+run utp/ut-trfrrp.p (input frame f-plan-estr:handle).     
+
+form header
+     c-lb-comp[1]
+     c-comprado "-"
+     c-comp-desc
+     c-lb-item[1]  space(0) ":"
+     c-cod-item "-"
+     c-desc-cab "-"
+     c-un       skip(1)
+     with stream-io no-box no-label width 132 page-top frame f-comp-estr.
+
+RUN utp/ut-trfrrp.p (INPUT FRAME f-comp-estr:HANDLE).
+
+/* Fim Include */

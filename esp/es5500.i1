@@ -1,0 +1,15 @@
+ASSIGN tt-consulta-res.c-per-ano{1} = movto_real_orcto.num_period_ctbl + movto_real_orcto.cod_exerc_ctbl                      
+       tt-consulta-res.valor_rea{1} = tt-consulta-res.valor_rea{1} + (IF movto_real_orcto.ind_natur_lancto_ctbl = "DB" THEN movto_real_orcto.val_realiz_per ELSE movto_real_orcto.val_realiz_per * -1)
+       tt-consulta-res.valor_orc{1} = if avail sdo_orcto_ctbl_bgc then sdo_orcto_ctbl_bgc.val_orcado else 0
+       tt-consulta-res.de-var{1}    = IF tt-consulta-res.valor_orc{1} > 0 AND tt-consulta-res.valor_rea{1} > 0 THEN (tt-consulta-res.valor_rea{1} / tt-consulta-res.valor_orc{1}) * 100 ELSE 0.       
+      
+/*********
+ASSIGN tt-totais.valor_rea{1}       = tt-totais.valor_rea{1} + tt-consulta-res.valor_rea{1}
+       tt-totais.valor_orc{1}       = tt-totais.valor_orc{1} + tt-consulta-res.valor_orc{1} 
+       tt-totais.de-var{1}          = IF tt-totais.valor_orc{1} > 0 AND tt-totais.valor_rea{1} > 0 THEN (tt-totais.valor_rea{1} / tt-totais.valor_orc{1}) * 100 ELSE 0.
+       
+ASSIGN b-tt-totais.valor_rea{1}       = b-tt-totais.valor_rea{1} + tt-consulta-res.valor_rea{1}
+       b-tt-totais.valor_orc{1}       = b-tt-totais.valor_orc{1} + tt-consulta-res.valor_orc{1} 
+       b-tt-totais.de-var{1}          = IF b-tt-totais.valor_orc{1} > 0 AND b-tt-totais.valor_rea{1} > 0 THEN (b-tt-totais.valor_rea{1} / b-tt-totais.valor_orc{1}) * 100 ELSE 0.
+       
+*****/

@@ -1,0 +1,302 @@
+procedure pi-procedimento-01:
+    def var i-num-pedido as inte no-undo.
+    def var c-lote       as char no-undo.
+    
+    form tt-relat-01.it-codigo    format "x(10)"        column-label "Item"
+         tt-relat-01.desc-item    format "x(53)"        column-label "Descri‡Æo"
+         tt-relat-01.ge-codigo    format ">9"           column-label "GE"
+         tt-relat-01.quantidade   format "->>>>,>>9.99" column-label "Qtde Atual"
+         tt-relat-01.lote         format "x(15)"        column-label "Lote/S‚rie"
+         tt-relat-01.cod-depos    format "x(3)"         column-label "Dep"
+         tt-relat-01.cod-estabel  format "x(5)"         column-label "Estab"
+         tt-relat-01.observacao   format "x(41)"        column-label "Observa‡Æo"
+         tt-relat-01.num-pedido   format ">>>>>,>>9"    column-label "Pedido"
+         tt-relat-01.numero-ordem format "zzzzz9,99"    column-label "Ordem"
+         with width 172 down no-box stream-io frame f-01.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "itens-estoque-analise.txt"
+           c-titulo-relat = "Analisa Item CKD-SKD pendente de informa‡Æo".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "CKD-SKD pendente info (carregando)...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-172.
+    view stream st-relat frame f-rodape-172.
+
+    for each item fields(desc-item ge-codigo) no-lock,
+        each tt-digita use-index id2
+       where tt-digita.id-brw = 0,
+        each saldo-estoq use-index estabel-item no-lock
+       where saldo-estoq.cod-estabel = tt-digita.cod-estabel
+         and saldo-estoq.it-codigo   = item.it-codigo
+         and saldo-estoq.qtidade-atu > 0:
+        assign i-cont       = i-cont + 1
+               c-observacao = ""
+               c-lote       = trim(saldo-estoq.lote)
+               i-num-pedido = 0.
+
+        if  i-cont mod 30 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if  saldo-estoq.cod-depos <> "ACA"
+        and saldo-estoq.cod-depos <> "WEX"
+        and saldo-estoq.cod-depos <> "EXP"
+       //and saldo-estoq.cod-depos <> "EPV"
+        and not can-find(first deposito where
+                               deposito.cod-depos  = saldo-estoq.cod-depos
+                           and deposito.cons-saldo = yes
+                               no-lock)
+        then next.
+
+        case item.ge-codigo:
+            when 12
+            then if not c-lote begins "PO"
+                 then do:
+                      create tt-relat-01.
+                      assign tt-relat-01.it-codigo   = saldo-estoq.it-codigo            
+                             tt-relat-01.cod-estabel = saldo-estoq.cod-estabel
+                             tt-relat-01.rotina      = 1
+                             tt-relat-01.num-pedido  = ?
+                             tt-relat-01.desc-item   = item.desc-item                   
+                             tt-relat-01.ge-codigo   = item.ge-codigo                   
+                             tt-relat-01.quantidade  = saldo-estoq.qtidade-atu          
+                             tt-relat-01.lote        = saldo-estoq.lote                 
+                             tt-relat-01.cod-depos   = saldo-estoq.cod-depos
+                             tt-relat-01.cod-localiz = saldo-estoq.cod-localiz
+                             tt-relat-01.cod-refer   = saldo-estoq.cod-refer
+                             tt-relat-01.observacao  = "Saldo em Estoque sem PO".
+                      find current tt-relat-01 no-error.
+                 end. /* else do */
+            when 42
+            then do:
+                 for each b-tt-digita use-index id2
+                    where b-tt-digita.id-brw = 0,
+                     each ordem-compra fields(num-pedido  numero-ordem
+                                              cod-estabel it-codigo situacao) use-index estab-item-sit no-lock
+                    where ordem-compra.cod-estabel = b-tt-digita.cod-estabel
+                      and ordem-compra.it-codigo   = saldo-estoq.it-codigo
+                      and ordem-compra.situacao   <> 4 /* Eliminada */
+                      and ordem-compra.situacao   <> 6 /* Recebida */ ,
+                    first prazo-compra fields(numero-ordem situacao) no-lock
+                    where prazo-compra.numero-ordem = ordem-compra.numero-ordem
+                      and prazo-compra.situacao    <> 4
+                      and prazo-compra.situacao    <> 6:
+                     for first int-pedido-compr fields(num-pedido qtd-pedido-ckd cod-produto-ckd)
+                         where int-pedido-compr.num-pedido = ordem-compra.num-pedido
+                               no-lock: end.
+
+                     if  avail int-pedido-compr
+                     and int-pedido-compr.qtd-pedido-ckd   > 0 
+                     and int-pedido-compr.cod-produto-ckd <> ""
+                     then next.
+
+                     for first tt-relat-01
+                         where tt-relat-01.it-codigo    = saldo-estoq.it-codigo
+                           and tt-relat-01.cod-estabel  = saldo-estoq.cod-estabel
+                           and tt-relat-01.rotina       = 2
+                           and tt-relat-01.num-pedido   = ordem-compra.num-pedido
+                           and tt-relat-01.numero-ordem = ordem-compra.numero-ordem
+                           and tt-relat-01.cod-depos    = saldo-estoq.cod-depos
+                           and tt-relat-01.lote         = saldo-estoq.lote
+                           and tt-relat-01.cod-localiz  = saldo-estoq.cod-localiz
+                           and tt-relat-01.cod-refer    = saldo-estoq.cod-refer: end.
+
+                     if not avail tt-relat-01
+                     then do:
+                          create tt-relat-01.
+                          assign tt-relat-01.it-codigo    = saldo-estoq.it-codigo            
+                                 tt-relat-01.cod-estabel  = saldo-estoq.cod-estabel
+                                 tt-relat-01.rotina       = 2
+                                 tt-relat-01.num-pedido   = ordem-compra.num-pedido
+                                 tt-relat-01.numero-ordem = ordem-compra.numero-ordem
+                                 tt-relat-01.desc-item    = item.desc-item                   
+                                 tt-relat-01.ge-codigo    = item.ge-codigo         
+                                 tt-relat-01.cod-depos    = saldo-estoq.cod-depos
+                                 tt-relat-01.lote         = saldo-estoq.lote
+                                 tt-relat-01.cod-localiz  = saldo-estoq.cod-localiz
+                                 tt-relat-01.cod-refer    = saldo-estoq.cod-refer
+                                 tt-relat-01.quantidade   = saldo-estoq.qtidade-atu.     
+                     end. /* if not avail tt-relat-01 */
+
+                     assign tt-relat-01.observacao = "Pedido s/ info de Prod CKD e Qtd CKD".
+
+                     if avail int-pedido-compr
+                     then do:
+                          if int-pedido-compr.cod-produto-ckd <> ""
+                          then assign tt-relat-01.observacao = "Pedido s/ info de Qtd CKD".
+        
+                          if int-pedido-compr.qtd-pedido-ckd > 0
+                          then assign tt-relat-01.observacao = "Pedido s/ info de Prod CKD". 
+                     end. /* if avail int-pedido-compr */
+
+                     find current tt-relat-01 no-error.
+                     release tt-relat-01.
+                 end. /* for each ordem-compra */
+            end. /* when 42 */
+        end case. /* case item.ge-codigo */
+
+        if not c-lote begins "PO"
+        then next.
+
+        assign i-num-pedido = inte(substr(c-lote,3,length(c-lote))) no-error.
+
+        if  not error-status:error
+        and i-num-pedido > 0
+        then.
+        else next.
+
+        for first pedido-compr fields(num-pedido situacao cod-estabel)
+            where pedido-compr.num-pedido = i-num-pedido
+              and pedido-compr.situacao  <> 3 /* Eliminado */
+                  no-lock: end.
+
+        if  avail pedido-compr
+        and can-find(first b-tt-digita use-index id2 where
+                           b-tt-digita.id-brw      = 0
+                       and b-tt-digita.cod-estabel = pedido-compr.cod-estabel)
+        then.
+        else next.
+
+        for first int-pedido-compr fields(num-pedido qtd-pedido-ckd cod-produto-ckd) 
+            where int-pedido-compr.num-pedido = pedido-compr.num-pedido
+                  no-lock: end.
+
+        assign c-observacao = "Saldo Estoq s/ info do pai CKD: Prod, Qtd".
+
+        if avail int-pedido-compr
+        then if  int-pedido-compr.qtd-pedido-ckd   > 0 
+             and int-pedido-compr.cod-produto-ckd <> ""
+             then next.
+             else assign c-observacao = if int-pedido-compr.cod-produto-ckd <> ""
+                                        then "Saldo Estoq s/ info do pai CKD: Qtd"
+                                        else if int-pedido-compr.qtd-pedido-ckd > 0
+                                             then "Saldo Estoq s/ info do pai CKD: Prod"
+                                             else c-observacao.
+
+     
+
+        for each ordem-compra fields(num-pedido  numero-ordem
+                                     cod-estabel it-codigo situacao) no-lock
+           where ordem-compra.num-pedido  = pedido-compr.num-pedido
+             and ordem-compra.it-codigo   = saldo-estoq.it-codigo
+             and ordem-compra.situacao   <> 4 /* Eliminada */ ,
+           first prazo-compra fields(numero-ordem situacao) no-lock
+           where prazo-compra.numero-ordem = ordem-compra.numero-ordem
+             and prazo-compra.situacao    <> 4:
+            for first tt-relat-01
+                where tt-relat-01.it-codigo    = saldo-estoq.it-codigo
+                  and tt-relat-01.cod-estabel  = saldo-estoq.cod-estabel
+                  and tt-relat-01.rotina       = 3
+                  and tt-relat-01.num-pedido   = pedido-compr.num-pedido
+                  and tt-relat-01.numero-ordem = ordem-compra.numero-ordem
+                  and tt-relat-01.cod-depos    = saldo-estoq.cod-depos
+                  and tt-relat-01.lote         = saldo-estoq.lote
+                  and tt-relat-01.cod-localiz  = saldo-estoq.cod-localiz
+                  and tt-relat-01.cod-refer    = saldo-estoq.cod-refer: end.
+    
+            if not avail tt-relat-01
+            then do:
+                 create tt-relat-01.
+                 assign tt-relat-01.it-codigo    = saldo-estoq.it-codigo            
+                        tt-relat-01.cod-estabel  = saldo-estoq.cod-estabel
+                        tt-relat-01.rotina       = 3
+                        tt-relat-01.num-pedido   = pedido-compr.num-pedido
+                        tt-relat-01.numero-ordem = ordem-compra.numero-ordem
+                        tt-relat-01.desc-item    = item.desc-item                   
+                        tt-relat-01.ge-codigo    = item.ge-codigo
+                        tt-relat-01.cod-depos    = saldo-estoq.cod-depos        
+                        tt-relat-01.lote         = saldo-estoq.lote
+                        tt-relat-01.cod-localiz  = saldo-estoq.cod-localiz
+                        tt-relat-01.cod-refer    = saldo-estoq.cod-refer                   
+                        tt-relat-01.quantidade   = saldo-estoq.qtidade-atu.     
+            end. /* if not avail tt-relat-01 */
+    
+            assign tt-relat-01.observacao = c-observacao.
+            find current tt-relat-01 no-error.
+            release tt-relat-01.
+        end. /* for each ordem-compra */
+
+        if can-find(first tt-relat-01 use-index id2 where
+                          tt-relat-01.rotina      > 2
+                      and tt-relat-01.num-pedido  = pedido-compr.num-pedido
+                      and tt-relat-01.it-codigo   = saldo-estoq.it-codigo
+                      and tt-relat-01.cod-estabel = saldo-estoq.cod-estabel
+                      and tt-relat-01.cod-depos   = saldo-estoq.cod-depos
+                      and tt-relat-01.lote        = saldo-estoq.lote
+                      and tt-relat-01.cod-localiz = saldo-estoq.cod-localiz
+                      and tt-relat-01.cod-refer   = saldo-estoq.cod-refer)
+        then next.
+
+        create tt-relat-01.
+        assign tt-relat-01.it-codigo    = saldo-estoq.it-codigo            
+               tt-relat-01.cod-estabel  = saldo-estoq.cod-estabel
+               tt-relat-01.rotina       = 4
+               tt-relat-01.num-pedido   = pedido-compr.num-pedido
+               tt-relat-01.desc-item    = item.desc-item                   
+               tt-relat-01.ge-codigo    = item.ge-codigo
+               tt-relat-01.cod-depos    = saldo-estoq.cod-depos
+               tt-relat-01.lote         = saldo-estoq.lote
+               tt-relat-01.cod-localiz  = saldo-estoq.cod-localiz
+               tt-relat-01.cod-refer    = saldo-estoq.cod-refer
+               tt-relat-01.quantidade   = saldo-estoq.qtidade-atu
+               tt-relat-01.observacao   = c-observacao.
+        find current tt-relat-01 no-error.
+        release tt-relat-01.
+    end. /* for each item */
+
+    if valid-handle(h-acomp)
+    then run pi-seta-titulo in h-acomp (input "CKD-SKD pendente info (imprimindo)...").
+
+    for each tt-relat-01:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 50 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if tt-relat-01.rotina = 1
+        then do:
+             disp stream st-relat
+                  tt-relat-01.it-codigo
+                  tt-relat-01.desc-item
+                  tt-relat-01.ge-codigo
+                  tt-relat-01.quantidade
+                  tt-relat-01.lote
+                  tt-relat-01.cod-depos
+                  tt-relat-01.cod-estabel
+                  tt-relat-01.observacao
+                  with frame f-01.
+             down stream st-relat with frame f-01.
+
+             next. /* break by + next ok nessa situa‡Æo */
+        end. /* if tt-relat-01.rotina = 1 */
+
+        disp stream st-relat
+             tt-relat-01.it-codigo   
+             tt-relat-01.desc-item   
+             tt-relat-01.ge-codigo   
+             tt-relat-01.quantidade  
+             tt-relat-01.lote        
+             tt-relat-01.cod-depos   
+             tt-relat-01.cod-estabel 
+             tt-relat-01.observacao  
+             tt-relat-01.num-pedido
+             tt-relat-01.numero-ordem when tt-relat-01.rotina < 4
+             with frame f-01.
+        down stream st-relat with frame f-01.
+    end. /* for each tt-relat-01 */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-01 */

@@ -1,0 +1,91 @@
+procedure pi-procedimento-22:
+    form tt-recurso.it-codigo      format "x(16)" column-label "Item"
+         tt-recurso.op-codigo      format ">>>>9" column-label "Oper"
+         tt-recurso.descricao      format "x(34)" column-label "Descri‡Æo"
+         tt-recurso.gm-codigo      format "x(9)"  column-label "Grupo Maq"
+         tt-recurso.cod-ferr-prod  format "x(16)" column-label "Recurso Oper"
+         tt-recurso.cod-ferr-prod2 format "x(16)" column-label "Recurso GM"
+         with width 132 down no-box stream-io frame f-22.
+
+    empty temp-table tt-recurso.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "oper-mao-obra-gm-incor.txt"
+           c-titulo-relat = "Oper c/ MÆo de Obra em Gr M q incorreto".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Oper c/ MÆo Obra em GM incorreto...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each grup-maquina fields(gm-codigo log-2) no-lock,
+        each operacao fields(num-id-operacao op-codigo descricao) use-index grup-maquina no-lock
+       where operacao.gm-codigo     = grup-maquina.gm-codigo
+         and operacao.data-termino >= today,
+       first item fields(it-codigo) no-lock
+       where item.it-codigo    = operacao.it-codigo
+         and item.cod-obsoleto = 1,
+        each op-ferram fields(ferramenta) no-lock
+       where op-ferram.num-id-operacao = operacao.num-id-operacao,
+       first ferr-prod field(cod-ferr-prod char-1) no-lock
+       where ferr-prod.cod-ferr-prod = op-ferram.ferramenta
+         and trim(ferr-prod.char-1)  = "MÆo de Obra":
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 20 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if not can-find(first int-gm-recurso where
+                              int-gm-recurso.gm-codigo = grup-maquina.gm-codigo
+                              no-lock)
+        then next.
+
+        for each int-gm-recurso no-lock
+           where int-gm-recurso.gm-codigo      = grup-maquina.gm-codigo
+             and int-gm-recurso.cod-ferr-prod <> ferr-prod.cod-ferr-prod,
+           first b-ferr-prod no-lock
+           where b-ferr-prod.cod-ferr-prod = int-gm-recurso.cod-ferr-prod
+             and trim(b-ferr-prod.char-1)  = "MÆo de Obra":
+            create tt-recurso.
+            assign tt-recurso.it-codigo      = item.it-codigo
+                   tt-recurso.op-codigo      = operacao.op-codigo
+                   tt-recurso.descricao      = operacao.descricao
+                   tt-recurso.gm-codigo      = grup-maquina.gm-codigo
+                   tt-recurso.cod-ferr-prod  = ferr-prod.cod-ferr-prod
+                   tt-recurso.cod-ferr-prod2 = b-ferr-prod.cod-ferr-prod.
+        end. /* for each int-gm-recurso */
+    end. /* for each grup-maquina */
+    find current tt-recurso no-error.
+
+    for each tt-recurso:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 50 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        disp stream st-relat
+             tt-recurso.it-codigo    
+             tt-recurso.op-codigo    
+             tt-recurso.descricao    
+             tt-recurso.gm-codigo    
+             tt-recurso.cod-ferr-prod
+             tt-recurso.cod-ferr-prod2
+             with frame f-22.
+        down stream st-relat with frame f-22.
+    end. /* for each tt-recurso */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-22 */

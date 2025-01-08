@@ -1,0 +1,404 @@
+/********************************************************************************
+ INTEGRAÄ«O DE ATIVOS COM O SALESFORCE 
+
+{
+
+    "accountExternalId":"BR82901000000127", codigo do cliente da nota 
+
+    "product":"4710018", produto da nota
+
+    "manufactureDate":"2020-08-17",  data de fabrica«ı«úo do produto
+
+    "warrantyDays":"1825", Paulo vai verificar 
+
+    "activationDate":"2021-10-22", Paulo vai verificar
+
+    "issuer":"BR82901000000127", Sempre ser«≠ o mesmo codigo do cliente da nota
+
+    "invoiceSerialNumber":"", s«∏rie da nota fiscal
+
+    "fixedAssetCode": "",  codigo do bem patrimonial 
+
+    "issueDate": "2021-10-21", data de emissao da nota
+
+    "invoiceNumber": "1415312", numero da nota fiscal
+
+    "serialNumber": "33DI3304750JC", numero de s«∏rie do produto
+
+    "contract": "00000058" codigo do contrato. 
+    
+    "siteCode': "104" estabelecimento da nota fiscal
+
+}
+
+*******************************************************************************/ 
+
+{esp/wso/eswso0019.i} 
+  
+DEF TEMP-TABLE tt-ativo
+    FIELD accountExternalId   AS CHAR
+    FIELD product             LIKE ITEM.it-codigo
+    FIELD manufactureDate     AS DATE
+    FIELD issuer              AS CHAR
+    FIELD invoiceSerialNumber AS CHAR
+    FIELD fixedAssetCode      AS CHAR
+    FIELD issueDate           AS DATE
+    FIELD invoiceNumber       LIKE nota-fiscal.nr-nota-fis
+    FIELD serialNumber        AS CHAR
+    FIELD siteCode            AS CHAR
+    FIELD contract            AS CHAR.
+
+
+define buffer bf-las-api-log for es-api-log.
+define buffer bf-new-api-log for es-api-log.
+
+define variable c-json-new       as LONGCHAR  no-undo.
+define variable c-json-old       as LONGCHAR  no-undo.
+define variable oJsonAtivo      as JsonObject no-undo.
+
+DEFINE VARIABLE c-origem         LIKE int-ped-venda.origem NO-UNDO.
+DEFINE VARIABLE i-sequencia      AS INT.
+
+def input PARAM c-estabel LIKE nota-fiscal.cod-estabel.
+DEF INPUT PARAM c-serie   LIKE nota-fiscal.serie.
+DEF INPUT PARAM c-nota    LIKE nota-fiscal.nr-nota-fis.
+
+DEF BUFFER b-nota         FOR nota-fiscal.
+DEF BUFFER b-ativo        FOR tt-ativo.
+
+DEF VAR c-arquivo-log1              AS CHAR NO-UNDO.
+
+// VERIFICA BASE LOGADA 
+def var l-producao   AS LOG NO-UNDO.
+DEF TEMP-TABLE tt-prog-ponto NO-UNDO
+    FIELD nome-programa    LIKE ponto-programa.nome-programa
+    FIELD ponto            LIKE ponto-programa.ponto
+    FIELD sequencia        LIKE conteudo-programa.sequencia 
+    FIELD conteudo         LIKE conteudo-programa.conteudo
+    INDEX seq-campo nome-programa ponto sequencia.
+
+EMPTY TEMP-TABLE tt-prog-ponto.
+
+RUN esp/es0018p.p (INPUT "ambiente":U,
+                   INPUT 1,
+                   INPUT 0,
+                   INPUT "":U,
+                   OUTPUT TABLE tt-prog-ponto).
+
+FIND FIRST tt-prog-ponto NO-LOCK NO-ERROR.
+
+IF AVAILABLE tt-prog-ponto               AND
+   tt-prog-ponto.conteudo = "PRODUCAO":U THEN
+   ASSIGN l-producao = YES.
+ELSE
+   ASSIGN l-producao = NO.
+
+
+EMPTY TEMP-TABLE tt-prog-ponto.
+DEF VAR l-log AS LOGICAL.
+
+RUN esp/es0018p.p (INPUT "log-wso2":U,
+                 INPUT 2,
+                 INPUT 0,
+                 INPUT "":U,
+                 OUTPUT TABLE tt-prog-ponto).
+
+FIND FIRST tt-prog-ponto 
+  WHERE ENTRY(1,tt-prog-ponto.conteudo,";") = 'eswso0019' NO-ERROR.
+IF AVAILABLE tt-prog-ponto AND
+  ENTRY(2,tt-prog-ponto.conteudo,";") = "yes":U THEN DO:
+
+    IF OPSYS = 'UNIX' THEN
+       ASSIGN c-arquivo-log1 = '/mnt/spool/totvs/UNIX_eswso0019'.
+    ELSE
+       ASSIGN c-arquivo-log1 = '\\erpapp\spool\totvs\WIN_eswso0019'.
+    
+    IF l-producao THEN
+       ASSIGN c-arquivo-log1 = c-arquivo-log1 + 'PROD.txt'.
+    ELSE 
+       ASSIGN c-arquivo-log1 = c-arquivo-log1 + 'HOMOL.txt'.
+END.
+
+FOR EACH nota-fiscal 
+   WHERE nota-fiscal.cod-estabel = c-estabel
+     AND nota-fiscal.serie       = c-serie
+     AND nota-fiscal.nr-nota-fis = c-nota NO-LOCK,
+    EACH it-nota-fisc OF nota-fiscal NO-LOCK:
+
+  FIND FIRST int_bem_pat_nf
+       WHERE int_bem_pat_nf.cod-estabel     = it-nota-fisc.cod-estabel
+         AND int_bem_pat_nf.serie           = it-nota-fisc.serie      
+         AND int_bem_pat_nf.nr-nota-fis     = it-nota-fisc.nr-nota-fis
+         AND int_bem_pat_nf.nr-seq-fat      = it-nota-fisc.nr-seq-fat 
+         AND int_bem_pat_nf.it-codigo       = it-nota-fisc.it-codigo  NO-LOCK NO-ERROR.
+  IF AVAIL INT_bem_pat_nf THEN DO:
+     FIND FIRST bem_pat
+          WHERE bem_pat.num_bem_pat  = int_bem_pat_nf.num_bem_pat
+            AND bem_pat.num_seq_bem_pat = INT_bem_pat_nf.num_seq_bem_pat NO-LOCK NO-ERROR.
+
+     IF  AVAIL bem_pat THEN DO:
+         
+         if not can-find(first bem_pat_item_docto_entr no-lock
+                   where bem_pat_item_docto_entr.num_id_bem_pat         = bem_pat.num_id_bem_pat
+                   and   bem_pat_item_docto_entr.num_seq_incorp_bem_pat = 0) then do:
+        
+            find first movto_bem_pat no-lock
+                where movto_bem_pat.num_id_bem_pat         = bem_pat.num_id_bem_pat
+                and   movto_bem_pat.ind_trans_calc_bem_pat = "Implantaá∆o"
+                and  (movto_bem_pat.ind_orig_calc_bem_pat  = "Desmembramento" 
+                or    movto_bem_pat.ind_orig_calc_bem_pat  = "Reclassificaá∆o") no-error.
+        
+            if avail movto_bem_pat and movto_bem_pat.num_id_bem_pat_orig <> 0 then do:
+                for each bem_pat_item_docto_entr no-lock
+                    where bem_pat_item_docto_entr.num_id_bem_pat         = movto_bem_pat.num_id_bem_pat_orig
+                    and   bem_pat_item_docto_entr.num_seq_incorp_bem_pat = 0:
+                    
+                    RUN pi-item-serie.
+                END.
+            end.
+            else do:
+                for each bem_pat_item_docto_entr no-lock
+                    where bem_pat_item_docto_entr.num_id_bem_pat         = bem_pat.num_id_bem_pat
+                    and   bem_pat_item_docto_entr.num_seq_incorp_bem_pat = 0:
+                    
+                    RUN pi-item-serie.
+                END.
+            end.
+         END.
+         else do:
+            for each bem_pat_item_docto_entr no-lock
+                where bem_pat_item_docto_entr.num_id_bem_pat         = bem_pat.num_id_bem_pat
+                and   bem_pat_item_docto_entr.num_seq_incorp_bem_pat = 0:
+                
+                RUN pi-item-serie.
+
+            END.
+         END.
+     END.
+  END.
+END.
+
+FOR EACH tt-ativo WHERE serialNumber <> '':
+
+   find first es-api-uri    
+        where es-api-URI.id-URI = 'integraAtivoCRM' no-lock no-error.
+		
+   RUN pi-gerar-dados-extrato (">> Inicio da Integracao ").
+   RUN pi-gerar-dados-extrato (">> Ativo " + string(int_bem_pat_nf.num_bem_pat) + '/' + STRING(INT_bem_pat_nf.num_seq_bem_pat)).
+
+   RUN pi-gerar-dados-extrato (">> Antes de criar Objeto ").
+  
+
+    // geraá∆o do json
+    assign oJsonAtivo = new JsonObject().
+    
+    oJsonAtivo:add("accountExternalId",         tt-ativo.accountExternalId   ).
+    oJsonAtivo:add("product",                   tt-ativo.product             ).
+    oJsonAtivo:add("manufactureDate",           tt-ativo.manufactureDate     ).
+    oJsonAtivo:add("issuer",                    tt-ativo.issuer              ).
+    oJsonAtivo:add("invoiceSerialNumber",       tt-ativo.invoiceSerialNumber ).
+    oJsonAtivo:add("fixedAssetCode",            tt-ativo.fixedAssetCode      ).
+    oJsonAtivo:add("issueDate",                 tt-ativo.issueDate           ).
+    oJsonAtivo:add("invoiceNumber",             tt-ativo.invoiceNumber       ).
+    oJsonAtivo:add("serialNumber",              tt-ativo.serialNumber        ).
+    oJsonAtivo:add("contract",                  tt-ativo.contract            ).
+    oJsonAtivo:add("siteCode",                  tt-ativo.siteCode            ).
+
+   assign c-json-new = oJsonAtivo:getjsontext().
+     
+   RUN pi-gerar-dados-extrato (">> Depois de criar Objeto ").
+      
+   IF AVAIL es-api-URI THEN 
+      IF l-producao
+         THEN ASSIGN c-endereco       = es-api-URI.ent-PRD.
+         ELSE ASSIGN c-endereco       = es-api-URI.end-TST.
+   
+   RUN pi-gerar-dados-extrato (">> URL: " + C-ENDERECO).
+         
+   FIND LAST es-api-log    
+        WHERE es-api-log.id-aplicacao = 'CRM'
+          AND es-api-log.id-codigo    = string(int_bem_pat_nf.num_bem_pat) + '/' + STRING(INT_bem_pat_nf.num_seq_bem_pat)
+          AND es-api-log.id-URI       = 'integraAtivoCRM' EXCLUSIVE-LOCK NO-ERROR.
+   IF NOT AVAIL es-api-log THEN DO:
+      RUN pi-gerar-dados-extrato (">> PRIMEIRA INTEGRACAO DO Ativo").
+      i-sequencia = 10.
+   END.
+   ELSE DO: 
+      c-json-old = es-api-log.cJSON.
+      c-json-old = CODEPAGE-CONVERT(c-json-old, "UTF-8":U).
+      i-sequencia = es-api-log.seqexec + 10.
+
+      RUN pi-gerar-dados-extrato (">> ALTERACAO / MOVIMENTACAO DO ATIVO ").
+   END.
+
+   CREATE es-api-log.
+   FIND LAST bf-las-api-log WHERE bf-las-api-log.id-api-log > 0  NO-LOCK NO-ERROR.
+   IF NOT AVAIL bf-las-api-log THEN 
+       ASSIGN es-api-log.id-api-log = 1.
+   ELSE 
+      ASSIGN es-api-log.id-api-log = bf-las-api-log.id-api-log + 1.
+      
+   ASSIGN es-api-log.seqexec      = i-sequencia
+          es-api-log.id-aplicacao   = 'CRM'
+          es-api-log.id-codigo      = string(int_bem_pat_nf.num_bem_pat) + '/' + STRING(INT_bem_pat_nf.num_seq_bem_pat)
+          es-api-log.id-URI         = 'integraAtivoCRM'
+          es-api-log.end-envio      = c-endereco
+          es-api-log.flg-processado = NO
+          es-api-log.Origem         = 'TOTVS'
+          es-api-log.aux            = string(int_bem_pat_nf.num_bem_pat) + '/' + STRING(INT_bem_pat_nf.num_seq_bem_pat).
+            
+   run piHeader(input 1,
+                input "Addressee",
+                input es-api-log.Origem).
+          
+   RUN pi-gerar-dados-extrato (">> MUDOU JSON ??? "  + STRING(c-json-old <> c-json-new)).
+
+   IF string(c-json-old) <> string(c-json-new) THEN DO:
+      RUN pi-gerar-dados-extrato (">> JSON ANTIGO " + STRING(c-json-old)).
+      RUN pi-gerar-dados-extrato (">> JSON NOVO   " + STRING(c-json-new)).
+   END.
+
+   RUN piIntegraAtivo.
+END.
+
+/***** Fim *****/
+
+                                                               
+
+PROCEDURE piIntegraAtivo:
+    DEFINE VARIABLE cJsonAtual AS LONGCHAR   NO-UNDO.
+
+    RUN pi-gerar-dados-extrato (">> passou piIntegraAtivo ").
+
+    ASSIGN lcEnvio =  c-json-new
+           lcEnvio = CODEPAGE-CONVERT(lcEnvio, "UTF-8":U).
+
+    //RUN pi-gerar-dados-extrato (">>lcEnvio " + lcEnvio).
+    
+    ASSIGN es-api-log.cJson = lcEnvio.
+    
+    COPY-LOB lcEnvio TO es-api-log.cl-envio.
+
+    RUN pi-gerar-dados-extrato (">> Antes da funcao fc-chamada-3 ").
+
+    ASSIGN cjson-aux = c-json-new.
+    
+    IF string(c-json-old) <> string(c-json-new) THEN DO:
+       IF STRING(lcEnvio) > "" THEN 
+          fc-chamada-3().
+    
+
+       RUN pi-gerar-dados-extrato (">> Depois da Funcao fc-chamada-3 ").
+    
+       RUN pi-gerar-dados-extrato (">> RETORNO INTEGRA --- " + string(es-api-log.cod-retorno)).
+    
+       IF es-api-log.cod-retorno = '200' OR 
+          es-api-log.cod-retorno = '201' THEN DO:
+          ASSIGN cjson-aux      			= c-json-new
+                 es-api-log.dh-request 	= NOW
+       		  es-api-log.flg-processado = YES.
+       END.
+    END.
+
+END PROCEDURE.
+
+
+
+PROCEDURE piHeader :
+   DEF INPUT PARAM iSeq   AS i NO-UNDO.
+   DEF INPUT PARAM cChave AS c NO-UNDO.
+   DEF INPUT PARAM cValor AS c NO-UNDO.
+   CREATE ttHeader.
+   ASSIGN
+      ttHeader.Seq   = iSeq  
+      ttHeader.Chave = cChave
+      ttHeader.Valor = cValor
+      .
+
+END PROCEDURE.
+
+
+PROCEDURE pi-gerar-dados-extrato:
+    def input param p-string as char no-undo.
+            
+    if  c-arquivo-log1 <> "" and c-arquivo-log1 <> ? then do:
+    
+        output to value(c-arquivo-log1) append.
+             /* Inicio -- Projeto Internacional */
+             DEFINE VARIABLE c-lbl-liter-ponto-executado AS CHARACTER FORMAT "X(24)" NO-UNDO.
+             {utp/ut-liter.i "Ponto_Executado" *}
+             ASSIGN c-lbl-liter-ponto-executado = TRIM(RETURN-VALUE).
+             put UNFORMATTED "     " + c-lbl-liter-ponto-executado + ": " p-string " - " + STRING(DATETIME(TODAY, MTIME)) skip.
+        output close. 
+    
+    end.
+END.
+
+
+PROCEDURE pi-item-serie.
+
+
+     FIND FIRST b-nota 
+          WHERE b-nota.cod-estabel = bem_pat_item_docto_entr.cod_estab 
+            AND b-nota.serie       = bem_pat_item_docto_entr.cod_ser_nota 
+            AND b-nota.nr-nota-fis = bem_pat_item_docto_entr.cod_docto_entr NO-LOCK NO-ERROR.
+                     
+     FIND FIRST ped-fiscal 
+          WHERE ped-fiscal.cod-estabel = b-nota.cod-estabel
+            AND ped-fiscal.serie       = b-nota.serie
+            AND ped-fiscal.nr-nota-fis = b-nota.nr-nota-fis NO-LOCK NO-ERROR.
+     IF AVAIL ped-fiscal AND 
+        ped-fiscal.nr-contrato <> '' THEN DO:
+
+         FIND FIRST emitente
+                  WHERE emitente.cod-emitente = b-nota.cod-emitente NO-LOCK NO-ERROR.
+                 
+         CREATE tt-ativo.
+         ASSIGN tt-ativo.accountExternalId   = UPPER(substr(emitente.pais,1,2)) + emitente.cgc
+                tt-ativo.issuer              = tt-ativo.accountExternalId
+                tt-ativo.siteCode            = b-nota.cod-estabel
+                tt-ativo.invoiceSerialNumber = b-nota.serie
+                tt-ativo.invoiceNumber       = b-nota.nr-nota-fis
+                tt-ativo.issueDate           = b-nota.dt-emis-nota
+                tt-ativo.fixedAssetCode      = string(int_bem_pat_nf.num_bem_pat) + '/' + STRING(INT_bem_pat_nf.num_seq_bem_pat)
+                tt-ativo.contract            = ped-fiscal.nr-contrato.
+    
+        ASSIGN tt-ativo.product             = SUBSTR(bem_pat_item_docto_entr.des_item_docto_entr,1,7).
+    
+        FOR each num-serie-rast NO-LOCK     
+             WHERE num-serie-rast.cod-estabel = b-nota.cod-estabel 
+               AND num-serie-rast.serie       = b-nota.serie 
+               AND num-serie-rast.nr-nota-fis = b-nota.nr-nota-fis
+               AND num-serie-rast.it-codigo   = tt-ativo.product 
+               BREAK BY tt-ativo.product :
+    
+            IF FIRST-OF(tt-ativo.product) THEN DO:
+               ASSIGN tt-ativo.serialNumber       = num-serie-rast.n-serie.
+    
+               FIND FIRST num-serie
+                    WHERE num-serie.n-serie = num-serie-rast.n-serie NO-LOCK NO-ERROR.
+        
+               IF AVAIL num-serie THEN
+                  ASSIGN tt-ativo.manufactureDate    = num-serie.data.
+            END.
+            ELSE DO:
+              CREATE b-ativo.
+              BUFFER-COPY tt-ativo TO b-ativo.
+              ASSIGN b-ativo.serialNumber       = num-serie-rast.n-serie.
+    
+              FIND FIRST num-serie
+                   WHERE num-serie.n-serie = num-serie-rast.n-serie NO-LOCK NO-ERROR.
+        
+              IF AVAIL num-serie THEN
+                  ASSIGN b-ativo.manufactureDate    = num-serie.data.
+            END.
+        END.
+     END.
+
+END PROCEDURE.
+
+/*
+    
+   
+
+*/

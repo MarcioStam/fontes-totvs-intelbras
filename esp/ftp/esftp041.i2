@@ -1,0 +1,89 @@
+/******************************************************************************
+**  Include.: GFT0507ra.I6
+**  Objetivo: For each do ped-curva
+**            (Opcao detalhado)
+*******************************************************************************/
+DEF VAR c-conta AS CHAR FORMAT "x(12)" NO-UNDO.
+DEF VAR i-empresa AS char.
+
+
+/* FORM                                                             */
+/*    skip(1)                                                       */
+/*    "---------------------------------------------------" at 01   */
+/*    c-grade-cont format "x(28)"                                   */
+/*    "---------------------------------------------------"         */
+/*    c-cab-corpo-1 at 10                                           */
+/*    c-cab-corpo-2 at 41                                           */
+/*    c-cab-corpo-3 at 97                                           */
+/*    c-cab-corpo-4 at 116                                          */
+/*     with stream-io no-labels no-box width 132 frame f-cab-corpo. */
+
+form
+    tt-ped-curva.ct-codigo at 10
+    c-ct-desc at 20
+    tt-ped-curva.sc-codigo at 50
+    c-sc-desc at 61
+    tt-ped-curva.vl-debito  at 95
+    tt-ped-curva.vl-credito at 115
+    with stream-io width 132 no-box no-labels frame f-corpo-imp.
+
+DEFINE VARIABLE de-vl-total-pis-por-unidade AS DECIMAL    NO-UNDO.
+DEFINE VARIABLE de-taxa-pis                 AS DECIMAL    NO-UNDO.
+DEFINE VARIABLE de-vl-pis-grade                   AS DECIMAL    NO-UNDO.
+
+PROCEDURE pi-imprime-grade-contabil:
+    FOR EACH tt-ped-curva:
+        DELETE tt-ped-curva.
+    END.
+        find first param-global no-lock no-error.
+
+         assign r-nota = rowid(nota-fiscal). 
+        if  nota-fiscal.dt-cancela <> ?
+        and nota-fiscal.ind-contabil = no then next.
+        put skip(1).
+        put "Conta                          Descriá∆o da Conta                                      Debito             Credito" at 10 skip
+            "-----------------              ------------------                            ----------------    ----------------" AT 10 SKIP.
+        
+        run esp/ftp/esftp041l.p. /* run "ftp/ft0904l.p" customizacao do ft0904l.p */
+
+        for each tt-ped-curva where
+                 tt-ped-curva.it-codigo = nota-fiscal.cod-estabel and
+                 tt-ped-curva.serie     = nota-fiscal.serie       and
+                 tt-ped-curva.nr-nota   = nota-fiscal.nr-nota-fis break by tt-ped-curva.ct-codigo by tt-ped-curva.sc-codigo:
+          
+            assign i-empresa = param-global.empresa-prin.
+
+            &if defined (bf_dis_consiste_conta) &then
+
+                find estabelec where
+                     estabelec.cod-estabel = nota-fiscal.cod-estabel no-lock no-error.
+
+                run cdp/cd9970.p (input rowid(estabelec),
+                                  output i-empresa).
+            &endif
+            
+             assign c-ct-desc = if tt-ped-curva.ct-desc = ""  then
+                                        "Conta nío Cadastrada"                  
+                                else tt-ped-curva.ct-desc
+                    c-sc-desc = if tt-ped-curva.sc-desc = "" then
+                                        "Centro de Custo n∆o Cadastrado"
+                                else tt-ped-curva.sc-desc.
+
+             if   tt-ped-curva.dec-1 < 0 then 
+                  assign tt-ped-curva.vl-debito  = -(tt-ped-curva.dec-1)
+                         tt-ped-curva.vl-credito = 0.
+             else assign tt-ped-curva.vl-credito = tt-ped-curva.dec-1
+                         tt-ped-curva.vl-debito  = 0.
+             
+             assign tt-ped-curva.ct-codigo:format in frame f-corpo-imp = "x(08)".
+             assign tt-ped-curva.sc-codigo:format in frame f-corpo-imp = "x(05)".
+             disp  tt-ped-curva.ct-codigo 
+                   c-ct-desc
+                   tt-ped-curva.sc-codigo
+                   c-sc-desc                                             
+                   tt-ped-curva.vl-debito                                              
+                   tt-ped-curva.vl-credito                                             
+                   with frame f-corpo-imp.                                  
+             down with frame f-corpo-imp. 
+        end.
+END PROCEDURE.

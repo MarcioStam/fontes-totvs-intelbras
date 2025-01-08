@@ -1,0 +1,207 @@
+DROP TABLE "gko-param-contab-206"
+
+ADD TABLE "unid-neg-canal-venda"
+  AREA "dados64x8"
+  LABEL "Unidade Neg¢cio x Canal Venda"
+  DESCRIPTION "Relacionamento unidade de neg¢cio por canal de venda."
+  DUMP-NAME "unid-neg-canal-venda"
+
+ADD FIELD "cdn_unid_negoc" OF "unid-neg-canal-venda" AS integer 
+  FORMAT ">>>>>>9"
+  INITIAL "0"
+  LABEL "Unidade de Neg¢cio"
+  POSITION 2
+  MAX-WIDTH 4
+  COLUMN-LABEL "Unid Negoc"
+  ORDER 10
+
+ADD FIELD "cod-canal-venda" OF "unid-neg-canal-venda" AS integer 
+  FORMAT ">>>9"
+  INITIAL "0"
+  LABEL "Canal Vendas"
+  POSITION 3
+  MAX-WIDTH 4
+  COLUMN-LABEL "Canal Vendas"
+  ORDER 20
+
+ADD INDEX "PU" ON "unid-neg-canal-venda" 
+  AREA "indices"
+  PRIMARY
+  INDEX-FIELD "cod-canal-venda" ASCENDING 
+  INDEX-FIELD "cdn_unid_negoc" ASCENDING 
+
+ADD FIELD "ct-codigo" OF "ctb-tipo-verba" AS character
+  DESCRIPTION "Conta"
+  FORMAT "x(20)"
+  POSITION 7
+  INITIAL ""
+  HELP "Conta"
+  LABEL "Conta"
+  COLUMN-LABEL "Cta"
+  ORDER 50
+  MAX-WIDTH 252
+
+ADD FIELD "cod_gestor_cobranca" OF "equipamentos" AS character
+  FORMAT "x(12)"
+  POSITION 27
+  INITIAL ""
+  LABEL "Gestor Cobran‡a"
+  COLUMN-LABEL "Gestor Cobran‡a"
+  ORDER 260
+  MAX-WIDTH 24
+
+ADD FIELD "cod_usuario" OF "equipamentos" AS character
+  FORMAT "x(12)"
+  POSITION 28
+  INITIAL ""
+  LABEL "Usu rio"
+  COLUMN-LABEL "Usu rio"
+  ORDER 250
+  MAX-WIDTH 24
+
+RENAME INDEX "ch-gestor" TO "temp-36034" ON "equipamentos"
+
+RENAME INDEX "ch-usuario" TO "temp-16033" ON "equipamentos"
+
+ADD INDEX "ch-gestor" ON "equipamentos"
+  AREA "indices"
+  INDEX-FIELD "cod_gestor_cobranca" ASCENDING
+
+ADD INDEX "ch-gestor_old" ON "equipamentos"
+  AREA "indices"
+  INDEX-FIELD "gestor-cobranca" ASCENDING
+
+ADD INDEX "ch-usuario" ON "equipamentos"
+  AREA "indices"
+  INDEX-FIELD "cod_usuario" ASCENDING
+
+ADD INDEX "ch-usuario_old" ON "equipamentos"
+  AREA "indices"
+  INDEX-FIELD "cod-usuario" ASCENDING
+
+DROP INDEX "temp-36034" ON "equipamentos"
+DROP INDEX "temp-16033" ON "equipamentos"
+
+ADD FIELD "cod_usuario" OF "fedex" AS character
+  FORMAT "x(12)"
+  POSITION 45
+  INITIAL ""
+  LABEL "Usu rio"
+  COLUMN-LABEL "Usu rio"
+  ORDER 440
+  MAX-WIDTH 24
+
+RENAME INDEX "usuario" TO "temp-88469" ON "fedex"
+
+ADD INDEX "usuario" ON "fedex"
+  AREA "indices"
+  INDEX-FIELD "cod_usuario" ASCENDING
+
+ADD INDEX "usuario_old" ON "fedex"
+  AREA "indices"
+  INDEX-FIELD "cod-usuario" ASCENDING
+
+DROP INDEX "temp-88469" ON "fedex"
+
+ADD FIELD "cod-unid-negoc" OF "int-centro-custo" AS character
+  FORMAT "x(3)"
+  POSITION 7
+  INITIAL ""
+  HELP "C¢digo da unidade de n‚gocio"
+  LABEL "Unidade Neg¢cio"
+  COLUMN-LABEL "Unid"
+  ORDER 61
+  MAX-WIDTH 6
+
+ADD FIELD "cod_diretor" OF "int-centro-custo" AS character
+  FORMAT "x(12)"
+  POSITION 8
+  INITIAL ""
+  LABEL "Diretor"
+  COLUMN-LABEL "Diretor"
+  ORDER 70
+  MAX-WIDTH 24
+
+ADD FIELD "cod_usuario" OF "int-centro-custo" AS character
+  FORMAT "x(12)"
+  POSITION 9
+  INITIAL ""
+  LABEL "Usu rio"
+  COLUMN-LABEL "Usu rio"
+  ORDER 60
+  MAX-WIDTH 24
+
+RENAME INDEX "ch-chave" TO "temp-87603" ON "int-centro-custo"
+
+ADD INDEX "ch-chave" ON "int-centro-custo"
+  AREA "indices"
+  UNIQUE
+  INDEX-FIELD "cod-estabel" ASCENDING
+  INDEX-FIELD "cc-codigo" ASCENDING
+  INDEX-FIELD "cod-unid-negoc" ASCENDING
+
+UPDATE PRIMARY INDEX "ch-chave" ON "int-centro-custo"
+
+DROP INDEX "temp-87603" ON "int-centro-custo"
+
+ADD FIELD "sc-codigo" OF "int-unid-neg-natur" AS character
+  FORMAT "x(20)"
+  POSITION 11
+  INITIAL ""
+  LABEL "Centro de Custo"
+  COLUMN-LABEL "Centro de Custo"
+  ORDER 36
+  MAX-WIDTH 40
+
+ADD FIELD "ct-codigo" OF "int-unid-neg-natur" AS character
+  FORMAT "x(20)"
+  POSITION 12
+  INITIAL ""
+  LABEL "Conta"
+  COLUMN-LABEL "Conta"
+  ORDER 33
+  MAX-WIDTH 40
+
+ADD FIELD "cod_usuario" OF "tarifador" AS character
+  FORMAT "x(12)"
+  POSITION 18
+  INITIAL ""
+  LABEL "Usu rio"
+  COLUMN-LABEL "Usu rio"
+  ORDER 170
+  MAX-WIDTH 24
+
+RENAME INDEX "usuario" TO "temp-29069" ON "tarifador"
+
+ADD INDEX "usuario" ON "tarifador"
+  AREA "indices"
+  INDEX-FIELD "cod_usuario" ASCENDING
+  INDEX-FIELD "avaliado" ASCENDING
+  INDEX-FIELD "cobrado" ASCENDING
+
+ADD INDEX "usuario_old" ON "tarifador"
+  AREA "indices"
+  INDEX-FIELD "cod-usuario" ASCENDING
+  INDEX-FIELD "avaliado" ASCENDING
+  INDEX-FIELD "cobrado" ASCENDING
+
+DROP INDEX "temp-29069" ON "tarifador"
+
+
+RENAME INDEX "ramal" TO "temp-87666" ON "tarifador"
+
+ADD INDEX "ramal" ON "tarifador"
+  AREA "indices"
+  INDEX-FIELD "ramal" ASCENDING
+  INDEX-FIELD "data" ASCENDING
+  INDEX-FIELD "cod_usuario" ASCENDING
+
+UPDATE PRIMARY INDEX "ramal" ON "tarifador"
+
+DROP INDEX "temp-87666" ON "tarifador"
+
+.
+PSC
+cpstream=ibm850
+.
+0000032252

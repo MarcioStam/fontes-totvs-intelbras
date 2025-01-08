@@ -1,0 +1,259 @@
+ADD TABLE "int-cc-benef"
+  AREA "dados64x8"
+  LABEL "Apuraá∆o Benef°cios Canal"
+  DUMP-NAME "int-cc-benef"
+
+ADD FIELD "canal" OF "int-cc-benef" AS integer 
+  FORMAT ">>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Canal"
+  POSITION 2
+  MAX-WIDTH 4
+  COLUMN-LABEL "Canal"
+  ORDER 20
+  MANDATORY
+
+ADD FIELD "unid-neg" OF "int-cc-benef" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  LABEL "Unid Neg"
+  POSITION 3
+  MAX-WIDTH 16
+  COLUMN-LABEL "Unid Neg"
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "tipo-beneficio" OF "int-cc-benef" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Tipo de Benef°cio"
+  POSITION 4
+  MAX-WIDTH 4
+  COLUMN-LABEL "Tipo de Benef°cio"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "classificacao" OF "int-cc-benef" AS character 
+  FORMAT "x(36)"
+  INITIAL "0"
+  LABEL "Classificacao"
+  POSITION 5
+  MAX-WIDTH 5
+  COLUMN-LABEL "Categoria"
+  ORDER 50
+  MANDATORY
+
+ADD FIELD "categoria" OF "int-cc-benef" AS character 
+  FORMAT "x(36)"
+  INITIAL "0"
+  LABEL "Categoria"
+  POSITION 6
+  MAX-WIDTH 6
+  COLUMN-LABEL "Categoria"
+  ORDER 60
+  MANDATORY
+
+ADD FIELD "dt-periodo-ini" OF "int-cc-benef" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Per°odo Inicial"
+  POSITION 7
+  MAX-WIDTH 4
+  COLUMN-LABEL "Per Ini"
+  HELP "Per°odo Inicial"
+  ORDER 70
+  MANDATORY
+
+ADD FIELD "dt-periodo-fim" OF "int-cc-benef" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Per°odo Fim"
+  POSITION 8
+  MAX-WIDTH 4
+  COLUMN-LABEL "Per Fim"
+  HELP "Per°odo final"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "vl-original" OF "int-cc-benef" AS decimal 
+  FORMAT ">>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Original"
+  POSITION 9
+  MAX-WIDTH 17
+  COLUMN-LABEL "Valor Original"
+  HELP "Valor Original apurado conforme Faturamento/Sell out"
+  DECIMALS 2
+  ORDER 90
+
+ADD FIELD "vl-saldo" OF "int-cc-benef" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Saldo Conta"
+  POSITION 10
+  MAX-WIDTH 17
+  COLUMN-LABEL "Saldo Conta"
+  HELP "Saldo da conta corrente"
+  DECIMALS 2
+  ORDER 100
+
+ADD FIELD "vl-empenhado" OF "int-cc-benef" AS decimal 
+  FORMAT ">>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Empenhado"
+  POSITION 11
+  MAX-WIDTH 17
+  COLUMN-LABEL "Valor Empenhado"
+  HELP "Valor empenhado"
+  DECIMALS 2
+  ORDER 110
+
+ADD FIELD "dt-transacao" OF "int-cc-benef" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Data Transaá∆o"
+  POSITION 12
+  MAX-WIDTH 4
+  COLUMN-LABEL "Dt Trans"
+  HELP "Data da Transaá∆o"
+  ORDER 120
+  MANDATORY
+
+ADD FIELD "dt-vencimento" OF "int-cc-benef" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Data Vencimento"
+  POSITION 13
+  MAX-WIDTH 4
+  COLUMN-LABEL "Dt Vencto"
+  HELP "Data de Vencimento Benef°cio"
+  ORDER 130
+
+ADD FIELD "id-status" OF "int-cc-benef" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Status"
+  POSITION 14
+  MAX-WIDTH 4
+  COLUMN-LABEL "Status"
+  HELP "Status da conta corrente"
+  ORDER 140
+  MANDATORY
+
+ADD FIELD "usuario" OF "int-cc-benef" AS character 
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Usu†rio"
+  POSITION 15
+  MAX-WIDTH 40
+  COLUMN-LABEL "Usu†rio"
+  HELP "Usu†rio geraá∆o apuraá∆o"
+  ORDER 150
+
+ADD FIELD "canal-matriz" OF "int-cc-benef" AS integer 
+  FORMAT ">>>>>>>9"
+  INITIAL "0"
+  LABEL "Canal Matriz"
+  POSITION 16
+  MAX-WIDTH 4
+  COLUMN-LABEL "Canal Matriz"
+  ORDER 160
+
+ADD FIELD "forma-pagto" OF "int-cc-benef" AS integer 
+  FORMAT ">>>>>>9"
+  INITIAL "0"
+  LABEL "Forma Pagto"
+  POSITION 17
+  MAX-WIDTH 4
+  COLUMN-LABEL "Forma Pagto"
+  HELP "Forma de bagamento"
+  ORDER 170
+
+ADD FIELD "vl-saldo-anterior" OF "int-cc-benef" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Saldo Anterior"
+  POSITION 18
+  MAX-WIDTH 17
+  COLUMN-LABEL "Saldo Ant"
+  HELP "Saldo da conta corrente"
+  DECIMALS 2
+  ORDER 180
+
+ADD FIELD "vl-saldo-transp-vmc-ouro" OF "int-cc-benef" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Saldo Semestral VMC Ouro"
+  POSITION 19
+  MAX-WIDTH 17
+  COLUMN-LABEL "Saldo Semest. VMC Outro"
+  HELP "Saldo saldo acum trimestre anterior para desconto pr¢xima apur."
+  DECIMALS 2
+  ORDER 190
+
+ADD FIELD "num_id_tit_ap" OF "int-cc-benef" AS integer 
+  FORMAT "9999999999"
+  INITIAL "0"
+  LABEL "Token T°tulo"
+  POSITION 20
+  MAX-WIDTH 4
+  COLUMN-LABEL "Token T°tulo"
+  ORDER 200
+
+ADD FIELD "cod_estab" OF "int-cc-benef" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  LABEL "Estab"
+  POSITION 21
+  MAX-WIDTH 16
+  COLUMN-LABEL "Estab"
+  HELP "C¢digo do estabelecimento"
+  ORDER 210
+
+ADD FIELD "tp-movto" OF "int-cc-benef" AS integer 
+  DESCRIPTION "1 - Provis∆o
+2 - Despesa"
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "Tipo Movto"
+  POSITION 22
+  MAX-WIDTH 4
+  COLUMN-LABEL "Tipo Movto"
+  HELP "Indica se o movimento de conta corrente Ç provis∆o ou Despesa"
+  ORDER 220
+  MANDATORY
+
+ADD INDEX "idx-status" ON "int-cc-benef" 
+  AREA "dados64x8"
+  INDEX-FIELD "id-status" ASCENDING 
+  INDEX-FIELD "tipo-beneficio" ASCENDING 
+  INDEX-FIELD "unid-neg" ASCENDING 
+
+ADD INDEX "idx-canal-status" ON "int-cc-benef" 
+  AREA "dados64x8"
+  INDEX-FIELD "id-status" ASCENDING 
+  INDEX-FIELD "canal" ASCENDING 
+  INDEX-FIELD "tipo-beneficio" ASCENDING 
+  INDEX-FIELD "unid-neg" ASCENDING 
+
+ADD INDEX "idx-primary" ON "int-cc-benef" 
+  AREA "dados64x8"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "tp-movto" ASCENDING 
+  INDEX-FIELD "canal" ASCENDING 
+  INDEX-FIELD "unid-neg" ASCENDING 
+  INDEX-FIELD "tipo-beneficio" ASCENDING 
+  INDEX-FIELD "dt-periodo-ini" ASCENDING 
+  INDEX-FIELD "dt-periodo-fim" ASCENDING 
+
+ADD INDEX "idx-titulo-ap" ON "int-cc-benef" 
+  AREA "dados64x8"
+  INDEX-FIELD "cod_estab" ASCENDING 
+  INDEX-FIELD "num_id_tit_ap" ASCENDING 
+
+.
+PSC
+cpstream=ibm850
+.
+0000005804

@@ -1,0 +1,48 @@
++==================================================================================================================================+
+|                      Lay-out do Arquivo de Importaá∆o de Itens X Estabelecimento X Dep¢sto de Ressuprimento                      |
+|----------------------------------------------------------------------------------------------------------------------------------|
+|                                                             Produto: Datasul EMS 2.0                                             |
+|                                                             Formato: Texto                                                       |
+|                                                 Tamanho do Registro: Vari†vel                                                    |
++----------------------------------------------------------------------------------------------------------------------------------+
+|  Nota: 1.) Vale salientar que o delimitador dos campos Ç o caracter ","                                                          |
+|        2.) N∆o precisa utilizar o carater aspas duplas (") ou aspas simples (') nos campos caracter                              |
+|        3.) A importaá∆o ser† realizada em duas etapas, sendo primeiro de itens e depois da previs∆o de vendas                    |
++----------------------------------------------------------------------------------------------------------------------------------+
+| Layout Registro Item                                                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------+
+| Ordem |                            Descriá∆o                                                 | Conte£do | Decimais | Obrigat¢rio |
+|-------+--------------------------------------------------------------------------------------+----------+----------+-------------|
+|    1  | C¢digo do Item                                                                       | Caracter |          |     Sim     |
+|    2  | C¢digo do Estabelecimento Origem                                                     | Caracter |          |     Sim     |
+|    3  | C¢digo do Estabelecimento Ressuprimento                                              | Caracter |          |     Sim     |
+|    4  | Classificaá∆o do Item                                                                | Inteiro  |          |     Sim     |
+|    5  | Quantidade Estoque Seguranáa                                                         | Decimal  |    04    |     Sim     |
+|    6  | Politica                                                                             | Inteiro  |          |     Sim     |
+|    7  | C¢digo do Dep¢sito de Ressuprimento                                                  | Caracter |          |     Sim     |
+|    8  | Log Estoque M°nimo                                                                   | Log      |          |     Sim     |
+|    9  | Quantidade Estoque M°nimo                                                            | Decimal  |    04    |     Sim     |
+|   10  | Tipo Estoque Seguranáa                                                               | Inteiro  |          |     Sim     |
+|   11  | Tempo Estoque Seguranáa                                                              | Inteiro  |          |     Sim     |
++==================================================================================================================================+
+
++==================================================================================================================================+
+|  Nota: 1.) Vale salientar que o delimitador dos campos Ç o caracter ","                                                          |
+|        2.) N∆o precisa utilizar o carater aspas duplas (") ou aspas simples (') nos campos caracter                              |
+|        3.) A importaá∆o ser† realizada em duas etapas, sendo primeiro de itens e depois da previs∆o de vendas                    |
++----------------------------------------------------------------------------------------------------------------------------------+
+| Layout Registro Previs∆o de Vendas                                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------+
+| Ordem |                            Descriá∆o                                                 | Conte£do | Decimais | Obrigat¢rio |
+|-------+--------------------------------------------------------------------------------------+----------+----------+-------------|
+|    1  | Data Referància                                                                      | Data     |          |     Sim     |
+|    2  | Màs Referància                                                                       | Data     |          |     Sim     |
+|    3  | C¢digo do Item                                                                       | Caracter |          |     Sim     |
+|    4  | Quantidade Previs∆o Màs                                                              | Decimal  |    04    |     Sim     |
+|    5  | Origem                                                                               | Caracter |          |     Sim     |
+|    6  | Preáo MÇdio                                                                          | Decimal  |    04    |     Sim     |
+|    7  | C¢digo do Estabelecimento Ressuprimento                                              | Caracter |          |     Sim     |
+|    8  | C¢digo do Dep¢sito de Ressuprimento                                                  | Caracter |          |     Sim     |
++----------------------------------------------------------------------------------------------------------------------------------+
+
+

@@ -1,0 +1,278 @@
+/*****************************************************************************
+** Copyright DATASUL S.A. (1994)
+** Todos os Direitos Reservados.
+** 
+** Este fonte e de propriedade exclusiva da DATASUL, sua reproducao
+** parcial ou total por qualquer meio, so' podera ser feita mediante
+** autorizacao expressa.
+**
+** Programa..............: fnc_cob_bradesc
+** Descricao.............: Funá‰es
+** Versao................:  1.00.00.006
+** Procedimento..........: utl_formula_edi
+** Nome Externo..........: esp/edf/edf237ce.py
+** Data Geracao..........: 26/07/2002 - 08:42:54
+*****************************************************************************/
+
+def var c-versao-prg as char initial " 1.00.00.006":U no-undo.
+
+{include/i_dbinst.i}
+{include/i_dbtype.i}
+
+
+/******************************* Private-Data *******************************/
+assign this-procedure:private-data = "HLP=0":U.
+/*************************************  *************************************/
+
+/********************* Temporary Table Definition Begin *********************/
+
+def temp-table tt_param_program_formul no-undo
+    field tta_cdn_segment_edi              as Integer format ">>>>>9" initial 0 label "Segmento" column-label "Segmento"
+    field tta_cdn_element_edi              as Integer format ">>>>>9" initial 0 label "Elemento" column-label "Elemento"
+    field tta_des_label_utiliz_formul_edi  as character format "x(10)" label "Label Utiliz Formula" column-label "Label Utiliz Formula"
+    field ttv_des_contdo                   as character format "x(100)" label "Conteudo" column-label "Conteudo"
+    index tt_param_program_formul_id       is primary
+          tta_cdn_segment_edi              ascending
+          tta_cdn_element_edi              ascending.
+
+
+
+/********************** Temporary Table Definition End **********************/
+
+/************************ Parameter Definition Begin ************************/
+
+def Input param p_cdn_mapa_edi
+    as Integer
+    format ">>>>>9"
+    no-undo.
+def Input param p_cdn_segment_edi
+    as Integer
+    format ">>>>>9"
+    no-undo.
+def Input param p_cdn_element_edi
+    as Integer
+    format ">>>>>9"
+    no-undo.
+def Input param table 
+    for tt_param_program_formul.
+
+
+/************************* Parameter Definition End *************************/
+
+/************************* Variable Definition Begin ************************/
+DEF VAR v_cont AS INT NO-UNDO.
+
+/************************** Variable Definition End *************************/
+
+
+/****************************** Main Code Begin *****************************/
+
+
+
+/* Begin_Include: i_version_extract */
+def new global shared var v_cod_arq
+    as char  
+    format 'x(60)'
+    no-undo.
+def new global shared var v_cod_tip_prog
+    as character
+    format 'x(8)'
+    no-undo.
+
+def stream s-arq.
+
+if  v_cod_arq <> '' and v_cod_arq <> ?
+then do:
+    run pi_version_extract ('fnc_cob_bradesc', 'esp/edf/edf237ve.p', '1.00.00.001', 'pro').
+end /* if */.
+/* End_Include: i_version_extract */
+
+IF  p_cdn_segment_edi = 3
+AND p_cdn_element_edi = 4 THEN DO:
+    ASSIGN v_cont = -1.
+    FIND LAST proces_edi NO-LOCK NO-ERROR.
+    FOR EACH reg_proces_saida_edi NO-LOCK
+        WHERE reg_proces_saida_edi.cdn_proces_edi = proces_edi.cdn_proces_edi:
+        ASSIGN v_cont = v_cont + 1.
+    END.
+    RETURN string(v_cont).
+END.
+
+IF  p_cdn_segment_edi = 4
+AND p_cdn_element_edi = 4 THEN DO:
+    FIND LAST proces_edi NO-LOCK NO-ERROR.
+    ASSIGN v_cont = -1.
+    FOR EACH reg_proces_saida_edi NO-LOCK
+        WHERE reg_proces_saida_edi.cdn_proces_edi = proces_edi.cdn_proces_edi:
+        ASSIGN v_cont = v_cont + 1.
+    END.
+    RETURN string(v_cont).
+END.
+
+IF  p_cdn_segment_edi = 6
+AND p_cdn_element_edi = 5 THEN DO:
+    FIND LAST proces_edi NO-LOCK NO-ERROR.
+    FOR EACH reg_proces_saida_edi NO-LOCK
+        WHERE reg_proces_saida_edi.cdn_proces_edi = proces_edi.cdn_proces_edi:
+        ASSIGN v_cont = v_cont + 1.
+    END.
+    RETURN string(v_cont).
+END.
+
+IF  p_cdn_segment_edi = 5
+AND p_cdn_element_edi = 6 THEN DO:
+    FIND LAST proces_edi NO-LOCK NO-ERROR.
+    FOR EACH reg_proces_saida_edi NO-LOCK
+        WHERE reg_proces_saida_edi.cdn_proces_edi = proces_edi.cdn_proces_edi:
+        ASSIGN v_cont = v_cont + 1.
+    END.
+    ASSIGN v_cont = v_cont + 1.
+    RETURN string(v_cont).
+END.
+
+
+/* --- Instruá∆o Bancaria ---*/
+
+
+
+
+
+/******************************* Main Code End ******************************/
+
+/************************* Internal Procedure Begin *************************/
+
+/*****************************************************************************
+** Procedure Interna.....: pi_version_extract
+** Descricao.............: pi_version_extract
+** Criado por............: jaison
+** Criado em.............: 31/07/1998 09:33:22
+** Alterado por..........: Gilmar
+** Alterado em...........: 29/01/1999 13:50:32
+*****************************************************************************/
+PROCEDURE pi_version_extract:
+
+    /************************ Parameter Definition Begin ************************/
+
+    def Input param p_cod_program
+        as character
+        format "x(08)"
+        no-undo.
+    def Input param p_cod_program_ext
+        as character
+        format "x(8)"
+        no-undo.
+    def Input param p_cod_version
+        as character
+        format "x(8)"
+        no-undo.
+    def Input param p_cod_program_type
+        as character
+        format "x(8)"
+        no-undo.
+
+
+    /************************* Parameter Definition End *************************/
+
+    if  can-do(v_cod_tip_prog, p_cod_program_type)
+    then do:
+        if p_cod_program_type = 'dic' then 
+           assign p_cod_program_ext = replace(p_cod_program_ext, 'database/', '').
+
+        output stream s-arq to value(v_cod_arq) append.
+
+        put stream s-arq unformatted
+            p_cod_program            at 1 
+            p_cod_program_ext        at 43 
+            p_cod_version            at 69 
+            today                    at 84 
+            string(time, 'HH:MM:SS') at 94 skip.
+
+        if  p_cod_program_type = 'pro' then do:
+            &if '{&emsbas_version}' > '1.00' &then
+            find prog_dtsul 
+                where prog_dtsul.cod_prog_dtsul = p_cod_program 
+                no-lock no-error.
+            if  avail prog_dtsul
+            then do:
+                &if '{&emsbas_version}' > '5.00' &then
+                    if  prog_dtsul.nom_prog_dpc <> '' then
+                        put stream s-arq 'DPC : ' at 5 prog_dtsul.nom_prog_dpc  at 15 skip.
+                &endif
+                if  prog_dtsul.nom_prog_appc <> '' then
+                    put stream s-arq 'APPC: ' at 5 prog_dtsul.nom_prog_appc at 15 skip.
+                if  prog_dtsul.nom_prog_upc <> '' then
+                    put stream s-arq 'UPC : ' at 5 prog_dtsul.nom_prog_upc  at 15 skip.
+            end /* if */.
+            &endif
+        end.
+
+        if  p_cod_program_type = 'dic' then do:
+            &if '{&emsbas_version}' > '1.00' &then
+            find tab_dic_dtsul 
+                where tab_dic_dtsul.cod_tab_dic_dtsul = p_cod_program 
+                no-lock no-error.
+            if  avail tab_dic_dtsul
+            then do:
+                &if '{&emsbas_version}' > '5.00' &then
+                    if  tab_dic_dtsul.nom_prog_dpc_gat_delete <> '' then
+                        put stream s-arq 'DPC-DELETE : ' at 5 tab_dic_dtsul.nom_prog_dpc_gat_delete  at 25 skip.
+                &endif
+                if  tab_dic_dtsul.nom_prog_appc_gat_delete <> '' then
+                    put stream s-arq 'APPC-DELETE: ' at 5 tab_dic_dtsul.nom_prog_appc_gat_delete at 25 skip.
+                if  tab_dic_dtsul.nom_prog_upc_gat_delete <> '' then
+                    put stream s-arq 'UPC-DELETE : ' at 5 tab_dic_dtsul.nom_prog_upc_gat_delete  at 25 skip.
+                &if '{&emsbas_version}' > '5.00' &then
+                    if  tab_dic_dtsul.nom_prog_dpc_gat_write <> '' then
+                        put stream s-arq 'DPC-WRITE : ' at 5 tab_dic_dtsul.nom_prog_dpc_gat_write  at 25 skip.
+                &endif
+                if  tab_dic_dtsul.nom_prog_appc_gat_write <> '' then
+                    put stream s-arq 'APPC-WRITE: ' at 5 tab_dic_dtsul.nom_prog_appc_gat_write at 25 skip.
+                if  tab_dic_dtsul.nom_prog_upc_gat_write <> '' then
+                    put stream s-arq 'UPC-WRITE : ' at 5 tab_dic_dtsul.nom_prog_upc_gat_write  at 25 skip.
+            end /* if */.
+            &endif
+        end.
+
+        output stream s-arq close.
+    end /* if */.
+
+END PROCEDURE. /* pi_version_extract */
+
+
+/************************** Internal Procedure End **************************/
+
+/************************* External Procedure Begin *************************/
+
+
+
+/************************** External Procedure End **************************/
+
+/*************************************  *************************************/
+/*****************************************************************************
+**  Procedure Interna: pi_messages
+**  Descricao........: Mostra Mensagem com Ajuda
+*****************************************************************************/
+PROCEDURE pi_messages:
+
+    def input param c_action    as char    no-undo.
+    def input param i_msg       as integer no-undo.
+    def input param c_param     as char    no-undo.
+
+    def var c_prg_msg           as char    no-undo.
+
+    assign c_prg_msg = "messages/":U
+                     + string(trunc(i_msg / 1000,0),"99":U)
+                     + "/msg":U
+                     + string(i_msg, "99999":U).
+
+    if search(c_prg_msg + ".r":U) = ? and search(c_prg_msg + ".p":U) = ? then do:
+        message "Mensagem nr. " i_msg "!!!":U skip
+                "Programa Mensagem" c_prg_msg "n∆o encontrado."
+                view-as alert-box error.
+        return error.
+    end.
+
+    run value(c_prg_msg + ".p":U) (input c_action, input c_param).
+    return return-value.
+END PROCEDURE.  /* pi_messages */
+/*************************  End of fnc_cob_bradesc ************************/

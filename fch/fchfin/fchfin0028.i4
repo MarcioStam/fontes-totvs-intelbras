@@ -1,0 +1,9 @@
+DEFINE TEMP-TABLE {1} NO-UNDO 
+  FIELD transactionID AS integer
+  FIELD sequence AS integer
+  FIELD economicPurpose AS character
+  FIELD quotationDate AS date
+  FIELD quotationValue AS decimal decimals 4  
+  FIELD transactionValue AS decimal decimals 4  
+
+.

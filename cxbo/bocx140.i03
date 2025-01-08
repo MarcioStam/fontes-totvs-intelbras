@@ -1,0 +1,50 @@
+/*
+Objetivo: Criar Registro na tabela alt-ped
+Autor: Ksm 42618.
+Necessidade obtida na fo 1806.191
+*/
+
+assign c-time = string(time - 1,"hh:mm:ss").
+
+find first alt-ped where alt-ped.num-pedido   = {3}
+                     and alt-ped.numero-ordem = {4}
+                     and alt-ped.parcela      = {5}
+                     and alt-ped.data         = {1}
+                     and alt-ped.hora         = c-time exclusive-lock no-error.
+        if not avail alt-ped then                     
+                CREATE alt-ped. 
+        
+        assign alt-ped.data  = {1}
+        alt-ped.hora         = c-time 
+        alt-ped.usuario      = {2}
+        alt-ped.num-pedido   = {3} 
+        alt-ped.numero-ordem = {4} 
+        alt-ped.parcela      = {5} 
+        &IF "{&ems_dbtype}" <> "progress":U &THEN 
+            alt-ped.observacao   = "Importa‡Æo: atualiz. data prevista de entrega - acompanhamento de importa‡Æo"
+        &ELSE
+            alt-ped.observacao   = "Importa‡Æo: atualiza‡Æo data prevista de entrega do acompanhamento de importa‡Æo" 
+        &ENDIF
+        alt-ped.data-entrega = {6} 
+        alt-ped.quantidade   = {7} 
+        alt-ped.cod-cond-pag = {8}
+        alt-ped.char-1       = "0|0|" +  string({12},"99/99/9999"). 
+        
+        &if defined(bf-mat-comex) &then
+        &else
+                assign alt-ped.preco        = ?.
+        &endif
+        find emitente where emitente.cod-emitente = {9} no-lock no-error.
+        if  avail emitente then
+                assign alt-ped.nome-abrev   = emitente.nome-abrev.
+        &if defined(bf_mat_compras_edi) &then
+                /* atualiza dados do pedido e da ordem
+                possibilitando extrair novamente
+                os dados no edi         */
+                assign {10} = yes.
+        find pedido-compr where pedido-compr.num-pedido = {11}
+        exclusive-lock no-error.
+        if  avail pedido-compr then
+        assign pedido-compr.gera-edi = yes.
+        find current pedido-compr no-lock no-error.
+        &endif

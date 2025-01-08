@@ -1,0 +1,27 @@
+CREATE {1}.
+
+&IF "{&mgdis_dbtype}" = "PROGRESS" &THEN                     
+        
+RAW-TRANSFER {2}.raw-contdo TO {1} no-error.
+    
+&ELSE                                              
+IF  NUM-ENTRIES({2}.raw-contdo, "|") > 0 THEN
+    ASSIGN {1}.ID       = ENTRY(1,{2}.raw-contdo,"|")
+           {1}.tpAmb    = ENTRY(2,{2}.raw-contdo,"|")
+           {1}.cStat    = ENTRY(3,{2}.raw-contdo,"|")
+           {1}.xMotivo  = ENTRY(4,{2}.raw-contdo,"|")
+           {1}.cUF      = ENTRY(5,{2}.raw-contdo,"|")
+           {1}.dhRecbto = ENTRY(6,{2}.raw-contdo,"|")
+           {1}.nProt    = ENTRY(7,{2}.raw-contdo,"|")
+           {1}.tpEvento = ENTRY(8,{2}.raw-contdo,"|").
+           
+&ENDIF
+
+
+
+
+
+
+    
+
+

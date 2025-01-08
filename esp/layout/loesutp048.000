@@ -1,0 +1,38 @@
++===========================================================================================+
+| Intelbras S/A       Layout do Arquivo de Importaá∆o Usu†rio Fidelidade        Folha:  1/1 |
+|===========================================================================================|
+|                                                                                           |
+|                                   *** A T E N Ä « O ***                                   |
+|                                                                                           |
+| Ao converter um arquivo para o formato CSV, os campos numÇricos poder∆o sofrer alteraá‰es |
+| em zeros Ö esquerda. Campos como CPF/CNPJ, por exemplo, n∆o ser∆o localizados ou criados  |
+| em duplicidade devido Ö este tipo de problema. Caso o problema ocorra, abra o arquivo CSV |
+| em um editor de texto comum (Exemplo: Bloco de Notas) e caso necess†rio, realize as alte- |
+| raá‰es manualmente, inserindo os zeros necess†rios Ö esquerda.                            |
+|                                                                                           |
+|===========================================================================================|
+| Formato do Arquivo: CSV (Arquivo com colunas separados por ponto-e-v°rgula ";")           |
+|===========================================================================================|
+| Ordem | Descriá∆o                                                        | Coluna | Obrig |
+|-------+------------------------------------------------------------------+--------+-------|
+|    1  | Nome                                                             |     1  |  Sim  |
+|    2  | Empresa                                                          |     2  |  N∆o  |
+|    3  | Endereáo                                                         |     3  |  Sim  |
+|    4  | Bairro                                                           |     4  |  Sim  |
+|    5  | CEP (C¢digo Postal)                                              |     5  |  Sim  |
+|    6  | Estado (UF)                                                      |     6  |  Sim  |
+|    7  | Cidade                                                           |     7  |  Sim  |
+|    8  | Telefone Fixo                                                    |     8  |  N∆o  |
+|    9  | Telefone Celular                                                 |     9  |  N∆o  |
+|   10  | E-mail                                                           |    10  |  Sim  |
+|   11  | CPF/CNPJ                                                         |    12  |  Sim  |
+|   12  | Usu†rio                                                          |    13  |  Sim  |
+|   13  | Senha                                                            |    14  |  Sim  |
+|   14  | Tipo Revenda (RA ou RMC)                                         |    16  |  Sim  |
+|   15  | µrea de Atuaá∆o TELECOM (Sim/Nao)                                |    17  |  Sim  |
+|   16  | µrea de Atuaá∆o SEGURANÄA ELETR‚NICA (Sim/Nao)                   |    18  |  Sim  |
+|   17  | µrea de Atuaá∆o INFORMµTICA (Sim/Nao)                            |    19  |  Sim  |
+|   18  | Distribuidores                                                   |    20  |  N∆o  |
+|===========================================================================================|
+|----------------------------------------- Espec°ficos Intelbras - ESUTP048 - v:2.04.00.000 |
++===========================================================================================+

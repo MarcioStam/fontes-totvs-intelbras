@@ -1,0 +1,53 @@
+procedure pi-procedimento-14:
+    form item.it-codigo        format "x(16)"          column-label "Item"
+         item.desc-item        format "x(60)"          column-label "Descri‡Æo"
+         ord-prod.qt-ordem     format ">>>>>,>>9.9999" column-label "Qtde Ordem"
+         ord-prod.nr-ord-produ format ">>>,>>>,>>9"    column-label "Ord Prod"
+         ord-prod.cod-estabel  format "x(5)"           column-label "Estab"
+         with width 132 down no-box stream-io frame f-14.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "ordens-prod-abertas-saldo-zerado.txt"
+           c-titulo-relat = "Ordens Produ‡Æo abertas com saldo zerado".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "OPs abertas com saldo zerado...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each ord-prod fields(nr-ord-produ cod-estabel qt-ordem qt-produzida) use-index estado no-lock
+       where ord-prod.estado < 7,
+       first item fields(it-codigo desc-item) no-lock
+       where item.it-codigo = ord-prod.it-codigo:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 15 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if ord-prod.qt-ordem - ord-prod.qt-produzida > 0
+        then next.
+
+        disp stream st-relat
+             item.it-codigo
+             item.desc-item
+             ord-prod.qt-ordem
+             ord-prod.nr-ord-produ
+             ord-prod.cod-estabel
+             with frame f-14.
+        down stream st-relat with frame f-14.
+    end. /* for each ord-prod */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-14 */

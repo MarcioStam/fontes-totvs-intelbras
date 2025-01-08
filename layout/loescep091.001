@@ -1,0 +1,30 @@
++----------------------------------------------------------------------------+
+|           Layout do Arquivo de Importa‡Æo de Dados para o APS              |
+|----------------------------------------------------------------------------|
+|           Nome do Arquivo: A ser informado                                 |
+|                   Formato: Arquivo CSV (separado por ponto e v¡rgula)      |
+|----------------------------------------------------------------------------|
+|**Obs.: A primeira linha do arquivo ficou reservada para t¡tulos da coluna**|
+|----------------------------------------------------------------------------|
+|     Coluna    |  Descri‡Æo                                                 |
+|---------------+------------------------------------------------------------|
+|       01      |  Estabelecimento                                           |
+|       02      |  Item                                                      |
+|       03      |  Permite Compra Spot (Sim/NÆo)                             |
+|       04      |  Permite Modal A‚reo (Sim/NÆo)                             |
+|       05      |  Item Phase-in (Sim/NÆo)                                   |
+|       06      |  Item Phase-out (Sim/NÆo)                                  |
+|       07      |  Tempo Transf. Estab (em dias)                             |
+|       08      |  Modelo                                                    |
+|       09      |  Lote M¡nimo Compras CKD/SKD                               |
+|       10      |  Lote M¡nimo Fabrica‡Æo CKD/SKD                            |
+|       11      |  Lote M ximo Compras                                       |
+|       12      |  Lote M ximo Fabrica‡Æo                                    |
+|       13      |  Qtd Dias M¡nimo                                           |
+|       14      |  Qtd Dias Alvo                                             |
+|       15      |  Qtd Dias Cobertura MP Kit CKD/SKD                         |
+|       16      |  Qtd Dias Alvo MP Kit CKD/SKD                              |
+|       17      |  Qtd Dias Antec                                            |
+|       18      |  Item Restritivo (Sim/NÆo)                                 |
++----------------------------------------------------------------------------+
+

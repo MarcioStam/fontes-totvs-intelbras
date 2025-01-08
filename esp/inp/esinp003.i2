@@ -1,0 +1,19 @@
+/*********************************************************************************************************/
+/* Parƒmetros:                                                                                           */
+/*                                                                                                       */
+/* {1} tipo                                                                                              */     
+/* {2} label                                                                                             */         
+/* {3} informacao                                                                                        */
+/* {4} posicao                                                                                           */
+/*                                                                                                       */
+/*********************************************************************************************************/
+
+ASSIGN {2} = {2} + "</TR>"
+       {3} = {3} + "</TR>".
+
+CREATE tt-ncm-email.
+ASSIGN tt-ncm-email.codigo   = tt-ncm.codigo
+       tt-ncm-email.tipo         = {1}
+       tt-ncm-email.c-label      = {2}
+       tt-ncm-email.c-informacao = {3}
+       tt-ncm-email.c-posicao    = {4}.

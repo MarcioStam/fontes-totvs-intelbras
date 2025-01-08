@@ -1,0 +1,169 @@
+/************************************************************
+    Vari veis de trabalho do WMSai001
+************************************************************/
+
+Define {1} Shared Temp-table ttWork No-Undo like {&TempTable}.
+
+Define {1} Shared Temp-table ttwm-docto-itens No-undo Like wm-docto-itens.
+
+Define {1} Shared Temp-table ttwm-box No-undo Like wm-box
+    Field RowNum As Integer Init 1
+    Field r-Rowid AS Rowid. 
+
+DEFINE {1} Shared TEMP-TABLE ttWm-box-movto-idx      LIKE wm-box-movto
+    FIELD val-prioridade AS INTEGER
+    FIELD r-rowid        AS ROWID
+    INDEX idx-prioridade val-prioridade DESC
+    INDEX idx-movto      id-movto       ASC.
+
+DEFINE {1} SHARED TEMP-TABLE ttWm-box-movto-idx-picking  no-undo LIKE wm-box-movto
+    FIELD val-prioridade AS INTEGER
+    FIELD nr-pedcli      LIKE wm-docto-itens-ped.nr-pedcli
+    FIELD nome-abrev     LIKE wm-docto-itens-ped.nome-abrev
+    INDEX idx-prioridade nr-pedcli nome-abrev val-prioridade DESC.
+    
+def buffer bttWm-box-movto-idx-picking for ttWm-box-movto-idx-picking.
+
+DEFINE {1} Shared TEMP-TABLE bttWm-box-movto         LIKE wm-box-movto
+        Field val-prioridade    As Integer
+        Index idx-prioridade val-prioridade Descending.
+
+Define Temp-table RowErrors No-undo 
+    Field ErrorSequence    As Integer 
+    Field ErrorNumber      As Integer 
+    Field ErrorDescription As Character 
+    Field ErrorParameters  As Character 
+    Field ErrorType        As Character 
+    Field ErrorHelp        As Character 
+    Field ErrorSubType     As Character.
+
+DEFINE {1} Shared TEMP-TABLE ttSerialQtd
+       FIELD id-etiqueta       LIKE wm-etiqueta.id-etiqueta
+       FIELD qtd-item-retirado LIKE wm-etiqueta.qtd-item-retirado.
+
+DEFINE {1} Shared TEMP-TABLE tt-leitura
+           FIELD id-docto              LIKE wm-docto-itens.id-docto
+           FIELD num-seq-item          LIKE wm-docto-itens.num-seq-item
+           FIELD ind-tipo-movto        LIKE wm-box-movto.ind-tipo-movto
+/*           FIELD ind-status-movto      LIKE wm-box-movto.ind-status-movto */
+           FIELD id-movto              LIKE wm-box-movto.id-movto           
+           FIELD id-box-lido           LIKE wm-box-movto.id-box 
+           FIELD cod-item-lido         LIKE wm-docto-itens.cod-item
+           FIELD qtd-item-lido         LIKE wm-docto-itens.qtd-item
+           FIELD cod-embalagem-lido    LIKE wm-box-movto.cod-embalagem
+           FIELD qti-embalagem-lido    LIKE wm-box-movto.qti-embalagem
+           FIELD qtd-item-picking      LIKE wm-box-movto.qtd-item-picking.
+                    
+Define {1} Shared Temp-table tt-box-movto       Like wm-box-movto.
+
+/************************************************************/
+
+/* Variaveis de trabalho ---                                */              
+Define {1} Shared Variable vIdBox                  Like wm-box-movto.id-box         No-undo.
+Define {1} Shared Variable vCodOpcao               As Character            Init ''  No-undo.
+Define {1} Shared Variable vCodTipoEquip           As Character            Init ''  No-undo.
+Define {1} Shared Variable vCodEmbalagem           As Character            Init ''  No-undo.
+Define {1} Shared Variable vCodItem                As Character            Init ''  No-undo.
+Define {1} Shared Variable vNumCont                As Integer              Init 0   No-undo.
+Define {1} Shared Variable vNumItensSerial         As Decimal Format '>>>>>9.9999':U Init 0   No-undo.
+Define {1} Shared Variable vLogValidaMovto         As Logical              Init Yes No-undo.
+Define {1} Shared Variable vNumBoxMovto            As Integer              Init 0   No-undo.
+Define {1} Shared Variable vNumSaldo               As Integer              Init 0   No-undo.
+Define {1} Shared Variable vNumDoca                As Integer Form '>>>>>' Init 0   No-undo.
+Define {1} Shared Variable vNumSeq                 As Integer              Init 0   No-undo.
+Define {1} Shared Variable vLogOk                  As Logical              Init No  No-undo.
+Define {1} Shared Variable vLogAtivo               As Logical              Init No  No-undo.
+Define {1} Shared Variable vLogProcesso            As Logical              Init No  No-undo.
+Define {1} Shared Variable v-log-abre-embalagem    As Logical              Init No  No-undo.
+Define {1} Shared Variable vLogEmProcesso          As Logical              Init No  No-undo.
+Define {1} Shared Variable vLogIniciado            As Logical              Init No  No-undo.
+Define {1} Shared Variable v-cod-estabel           As Character                     No-undo.
+Define {1} Shared Variable v-cod-local             As Character                     No-undo.
+
+Define {1} Shared Variable wgBOSC030               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC060               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC092               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC096               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC032               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC044               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC045               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC038               As Widget-handle                 No-undo. 
+Define {1} Shared Variable wgBOSC074               As Widget-handle                 No-undo. 
+Define {1} Shared Variable wgBOSC078               As Widget-handle                 No-undo. 
+Define {1} Shared Variable wgbosc079               As widget-Handle                 No-undo.
+define {1} shared variable wgbc9018f               as widget-handle                 no-undo.
+Define {1} shared Variable wgBOSC135               As Widget-handle                 No-undo.       
+
+
+DEFINE VARIABLE vLogUtilizaColetor      AS LOGICAL                 INIT NO  NO-UNDO.
+DEFINE VARIABLE vLogAprovaFatura        AS LOGICAL                 INIT NO  NO-UNDO.
+Define Variable vLogControlaLogin       As Logical                 Init No  No-undo.
+
+/* Vari veis padräes do produto */
+{utp/ut-glob.i}
+def new global shared var v_cod_estab_usuar 
+    as character 
+    format 'x(3)' 
+    label 'emsuni.estabelecimento' 
+    column-label 'Estab' 
+    no-undo. 
+def new global shared var v_cod_idiom_usuar 
+    as character 
+    format 'x(8)' 
+    label 'emsuni.idioma' 
+    column-label 'emsuni.idioma' 
+    no-undo. 
+def new global shared var v_cod_pais_empres_usuar 
+    as character 
+    format 'x(3)' 
+    label 'Pa¡s emsuni.empresa Usu rio' 
+    column-label 'Pa¡s' 
+    no-undo. 
+def new global shared var v_cod_usuar_corren_criptog 
+    as character 
+    format 'x(16)' 
+    no-undo. 
+    
+def new global shared var v2_cod_usuar_corren 
+    as character 
+    format 'x(12)' 
+    label 'Usu rio Corrente' 
+    column-label 'Usu rio Corrente' 
+    no-undo. 
+def new global shared var v2_cod_empres_usuar 
+    as character 
+    format 'x(3)' 
+    label 'emsuni.empresa' 
+    column-label 'emsuni.empresa' 
+    no-undo. 
+def new global shared var v2_cod_estab_usuar 
+    as character 
+    format 'x(3)' 
+    label 'emsuni.estabelecimento' 
+    column-label 'Estab' 
+    no-undo. 
+def new global shared var v2_cod_idiom_usuar 
+    as character 
+    format 'x(8)' 
+    label 'emsuni.idioma' 
+    column-label 'emsuni.idioma' 
+    no-undo. 
+def new global shared var v2_cod_pais_empres_usuar 
+    as character 
+    format 'x(3)' 
+    label 'Pa¡s emsuni.empresa Usu rio' 
+    column-label 'Pa¡s' 
+    no-undo. 
+def new global shared var v2_cod_usuar_corren_criptog 
+    as character 
+    format 'x(16)' 
+    no-undo. 
+def new global shared var v2_cod_grp_usuar_lst  
+    as character  
+    label 'Grupo Usu rios'  
+    column-label 'Grupo'  
+    no-undo. 
+
+ 
+
+

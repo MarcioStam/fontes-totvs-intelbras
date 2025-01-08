@@ -1,0 +1,152 @@
+
+CASE i-cont:
+    WHEN 1 THEN DO: /* Etiqueta 1 */
+
+       ASSIGN i-vert[i-cont] = 100
+              i-hori[i-cont] = 30.
+      
+       /* QRcode */
+       PUT UNFORMATTED "^FT" string(180 + i-hori[i-cont]) "," string(275 + i-vert[i-cont]) "^BY4,2.0,65^BQN,2,7^FH\^FDLA," c-qrcode "^FS" SKIP.
+       
+       /* Barcode */
+       PUT UNFORMATTED "^FWR" SKIP.
+       PUT UNFORMATTED "^FO" string(50 + i-hori[i-cont]) "," string(i-vert[i-cont]) "^AD^BY3" SKIP.
+       PUT UNFORMATTED "^BC,90,N,N,N" SKIP.
+       PUT UNFORMATTED "^FD" c-ID "^FS" SKIP.      
+
+       /* Item */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(300 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.it-codigo) "^FS" SKIP.
+
+       /* PO */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDPO:^FS" SKIP.
+       PUT UNFORMATTED "^^FO" string(260 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.num-pedido) "^FS" SKIP.
+
+       /* ID */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(400 + i-vert[i-cont]) "^A0N,50,40^FB1000,1,0,L^FD" c-ID "^FS" SKIP.
+       
+       /* Chave */
+       if c-uuid = ""
+       then PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(450 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" string(c-ch-acesso) "^FS" SKIP.
+
+       /* Seq */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDSEQ:^FS" SKIP.
+       PUT UNFORMATTED "^FO" string(290 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.seq-imp) "^FS" SKIP.
+       
+       /* Reimp */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(550 + i-vert[i-cont]) "^A0N,35,35^FB1000,1,0,L^FDReimp: " c-seg-usuario "^FS" SKIP.
+
+
+    END. /* FIM etiqueta 1 */
+
+    WHEN 2 THEN DO: /* Etiqueta 2 */
+
+       ASSIGN i-vert[i-cont] = 100
+              i-hori[i-cont] = 660.
+
+       /* QRcode */
+       PUT UNFORMATTED "^FT" string(180 + i-hori[i-cont]) "," string(275 + i-vert[i-cont]) "^BY4,2.0,65^BQN,2,7^FH\^FDLA," c-qrcode "^FS" SKIP.
+       
+       /* Barcode */
+       PUT UNFORMATTED "^FWR" SKIP.
+       PUT UNFORMATTED "^FO" string(50 + i-hori[i-cont]) "," string(i-vert[i-cont]) "^AD^BY3" SKIP.
+       PUT UNFORMATTED "^BC,90,N,N,N" SKIP.
+       PUT UNFORMATTED "^FD" c-ID "^FS" SKIP.      
+
+       /* Item */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(300 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.it-codigo) "^FS" SKIP.
+
+       /* PO */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDPO:^FS" SKIP.
+       PUT UNFORMATTED "^^FO" string(260 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.num-pedido) "^FS" SKIP.
+
+       /* ID */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(400 + i-vert[i-cont]) "^A0N,50,40^FB1000,1,0,L^FD" c-ID "^FS" SKIP.
+       
+       /* Chave */
+       if c-uuid = ""
+       then PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(450 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" string(c-ch-acesso) "^FS" SKIP.
+
+       /* Seq */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDSEQ:^FS" SKIP.
+       PUT UNFORMATTED "^FO" string(290 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.seq-imp) "^FS" SKIP.
+       
+       /* Reimp */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(550 + i-vert[i-cont]) "^A0N,35,35^FB1000,1,0,L^FDReimp: " c-seg-usuario "^FS" SKIP.
+
+    END. /* FIM etiqueta 2 */
+
+    WHEN 3 THEN DO: /* Etiqueta 3 */
+
+       ASSIGN i-vert[i-cont] = 100
+              i-hori[i-cont] = 1290.
+
+       /* QRcode */
+       PUT UNFORMATTED "^FT" string(180 + i-hori[i-cont]) "," string(275 + i-vert[i-cont]) "^BY4,2.0,65^BQN,2,7^FH\^FDLA," c-qrcode "^FS" SKIP.
+       
+       /* Barcode */
+       PUT UNFORMATTED "^FWR" SKIP.
+       PUT UNFORMATTED "^FO" string(50 + i-hori[i-cont]) "," string(i-vert[i-cont]) "^AD^BY3" SKIP.
+       PUT UNFORMATTED "^BC,90,N,N,N" SKIP.
+       PUT UNFORMATTED "^FD" c-ID "^FS" SKIP.     
+
+       /* Item */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(300 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.it-codigo) "^FS" SKIP.
+
+       /* PO */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDPO:^FS" SKIP.
+       PUT UNFORMATTED "^^FO" string(260 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.num-pedido) "^FS" SKIP.
+
+       /* ID */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(400 + i-vert[i-cont]) "^A0N,50,40^FB1000,1,0,L^FD" c-ID "^FS" SKIP.
+       
+       /* Chave */
+       if c-uuid = ""
+       then PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(450 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" string(c-ch-acesso) "^FS" SKIP.
+
+       /* Seq */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDSEQ:^FS" SKIP.
+       PUT UNFORMATTED "^FO" string(290 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.seq-imp) "^FS" SKIP. 
+       
+       /* Reimp */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(550 + i-vert[i-cont]) "^A0N,35,35^FB1000,1,0,L^FDReimp: " c-seg-usuario "^FS" SKIP.
+
+    END. /* FIM etiqueta 3 */
+
+    WHEN 4 THEN DO: /* Etiqueta 4 */
+
+       ASSIGN i-vert[i-cont] = 100
+              i-hori[i-cont] = 1930.
+
+       /* QRcode */
+       PUT UNFORMATTED "^FT" string(180 + i-hori[i-cont]) "," string(275 + i-vert[i-cont]) "^BY4,2.0,65^BQN,2,7^FH\^FDLA," c-qrcode "^FS" SKIP.
+       
+       /* Barcode */
+       PUT UNFORMATTED "^FWR" SKIP.
+       PUT UNFORMATTED "^FO" string(50 + i-hori[i-cont]) "," string(i-vert[i-cont]) "^AD^BY3" SKIP.
+       PUT UNFORMATTED "^BC,90,N,N,N" SKIP.
+       PUT UNFORMATTED "^FD" c-ID "^FS" SKIP.      
+
+       /* Item */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(300 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.it-codigo) "^FS" SKIP.
+
+       /* PO */
+       PUT UNFORMATTED "^^FO" string(180 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDPO:^FS" SKIP.
+       PUT UNFORMATTED "^^FO" string(260 + i-hori[i-cont]) "," string(350 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.num-pedido) "^FS" SKIP.
+
+       /* ID */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(400 + i-vert[i-cont]) "^A0N,50,40^FB1000,1,0,L^FD" c-ID "^FS" SKIP.
+       
+       /* Chave */
+       if c-uuid = ""
+       then PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(450 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" string(c-ch-acesso) "^FS" SKIP.
+
+       /* Seq */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FDSEQ:^FS" SKIP.
+       PUT UNFORMATTED "^FO" string(290 + i-hori[i-cont]) "," string(500 + i-vert[i-cont]) "^A0N,50,50^FB1000,1,0,L^FD" STRING(mac-address.seq-imp) "^FS" SKIP.  
+       
+       /* Reimp */
+       PUT UNFORMATTED "^FO" string(180 + i-hori[i-cont]) "," string(550 + i-vert[i-cont]) "^A0N,35,35^FB1000,1,0,L^FDReimp: " c-seg-usuario "^FS" SKIP.
+
+    END. /* FIM etiqueta 4 */
+
+END CASE.

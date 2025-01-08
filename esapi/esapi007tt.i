@@ -1,0 +1,21 @@
+DEFINE TEMP-TABLE tt-ordem NO-UNDO
+    FIELD nr-ord-produ              LIKE ord-prod.nr-ord-produ
+    FIELD it-codigo                 LIKE ord-prod.it-codigo
+    FIELD qt-ordem                  LIKE ord-prod.qt-ordem
+    FIELD nr-linha                  LIKE ord-prod.nr-linha
+    FIELD cod-refer                 LIKE ord-prod.cod-refer
+    FIELD cod-estabel               LIKE ord-prod.cod-estabel  
+    FIELD cod-depos                 LIKE ord-prod.cod-depos    
+    FIELD cd-planejado              LIKE ord-prod.cd-planejado
+    FIELD nr-pedido                 LIKE ord-prod.nr-pedido
+    FIELD nome-abrev                LIKE ord-prod.nome-abrev
+    FIELD nr-sequencia              LIKE ord-prod.nr-sequencia
+    FIELD tipo                      LIKE ord-prod.tipo
+    FIELD estado                    LIKE ord-prod.estado
+    FIELD rep-prod                  LIKE ord-prod.rep-prod
+    FIELD sit-aloc                  LIKE ord-prod.sit-aloc
+    FIELD log-reporta               AS   LOGICAL
+    FIELD log-altera-dep-reservas   AS   LOGICAL 
+    FIELD dep-reservas              LIKE reservas.cod-depos
+    FIELD local-reservas            LIKE reservas.cod-localiz
+    INDEX id nr-ord-produ it-codigo.

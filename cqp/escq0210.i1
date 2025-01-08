@@ -1,0 +1,59 @@
+/****************************************************************************
+**                                                                         **
+**                                                                         **
+**         ESCQ0210.I1  -  Atualiza a ficha de cq                            **
+**                                                                         **
+**                                                                         **
+****************************************************************************/
+if  {1}comp-exame.tipo-result = 1 then do:
+    assign r-comp-exame = rowid({1}comp-exame).
+    assign tt-resultado.resultado:read-only in browse {&browse-name} = no.
+    if l-retorno = no then
+    apply 'entry' to tt-resultado.resultado in browse {&browse-name}.
+end.
+if  {1}comp-exame.tipo-result = 2 then do:
+    assign r-comp-exame = rowid({1}comp-exame).  
+    assign tt-resultado.seq-comp:read-only in browse {&browse-name} = no.
+    if l-retorno = no then
+    apply 'entry' to tt-resultado.seq-comp in browse {&browse-name}.
+end.
+if  {1}comp-exame.tipo-result = 3 then do:
+    assign r-comp-exame = rowid({1}comp-exame).
+    find ficha-cq where ficha-cq.nr-ficha = exam-ficha.nr-ficha no-lock no-error.
+    find first res-fic-cq 
+         where res-fic-cq.nr-ficha  = ficha-cq.nr-ficha
+           and res-fic-cq.it-codigo = ficha-cq.it-codigo
+           and res-fic-cq.cod-comp  = {1}comp-exame.cod-comp
+           and res-fic-cq.cod-exame = {1}comp-exame.cod-exame no-lock no-error.    
+    if  avail res-fic-cq then assign c-texto = res-fic-cq.laudo.
+                         else assign c-texto = "".
+    run cqp/escq0210b.w (input-output c-texto).
+    {cqp/escq0210.i}
+    assign res-fic-cq.laudo = c-texto.
+end.
+if  {1}comp-exame.tipo-result = 4 then do:
+    assign r-comp-exame = rowid({1}comp-exame).  
+    find ficha-cq where ficha-cq.nr-ficha = exam-ficha.nr-ficha no-lock no-error.
+    find first res-fic-cq 
+         where res-fic-cq.nr-ficha  = ficha-cq.nr-ficha
+           and res-fic-cq.it-codigo = ficha-cq.it-codigo
+           and res-fic-cq.cod-comp  = {1}comp-exame.cod-comp
+           and res-fic-cq.cod-exame = {1}comp-exame.cod-exame no-lock no-error.
+    if  avail res-fic-cq then assign de-res-min = res-fic-cq.resultado
+                                     de-res-max = res-fic-cq.res-max.
+                         else assign de-res-min = 0            
+                                     de-res-max = 0.      
+
+    assign r-comp-exame = rowid({1}comp-exame).
+
+    run cqp/escq0210c.w (input-output de-res-min, input-output de-res-max,  INPUT ficha-cq.nr-ficha, input r-comp-exame, input "{1}").
+
+    /******* Alterada a chamada do include ************/
+    {cqp/escq0210.i it-}
+
+    assign res-fic-cq.resultado = de-res-min
+           res-fic-cq.res-max   = de-res-max
+           tt-resultado.resultado:screen-value in browse {&browse-name} = string(de-res-min)
+           tt-resultado.res-max = de-res-max.
+/*    disp tt-resultado.resultado with browse {&browse-name}.*/
+end.

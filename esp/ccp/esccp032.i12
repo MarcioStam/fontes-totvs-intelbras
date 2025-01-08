@@ -1,0 +1,342 @@
+/**************************************************************************
+**
+**  Include: CD0420.i12 - Procedure pi-digitacao
+**
+**************************************************************************/
+PROCEDURE pi-digitacao.
+    
+    FOR EACH tt-digita
+        WHERE tt-digita.c-it-codigo <> "" NO-LOCK:
+
+        /*FOR EACH tt-digita-2 EXCLUSIVE-LOCK:
+            DELETE tt-digita-2.
+        END.*/
+
+        FIND FIRST ITEM
+            WHERE ITEM.it-codigo = tt-digita.c-it-codigo NO-LOCK NO-ERROR.
+
+        IF AVAILABLE ITEM
+            AND ((ITEM.compr-fabric = 1 AND tt-param.l-comprado)
+             OR  (ITEM.compr-fabric = 2 AND tt-param.l-fabricado))
+            AND ((ITEM.cod-obsoleto = 1 AND (tt-param.i-obsoleto = 1 OR tt-param.i-obsoleto = 4))
+             OR  (ITEM.cod-obsoleto = 2 AND (tt-param.i-obsoleto = 2 OR tt-param.i-obsoleto = 4))
+             OR  (ITEM.cod-obsoleto = 3 AND (tt-param.i-obsoleto = 3 OR tt-param.i-obsoleto = 4))
+             OR  (ITEM.cod-obsoleto = 4 AND tt-param.i-obsoleto  = 4)) THEN DO:
+            
+            IF NOT CAN-FIND(FIRST tt-digita-2
+                            WHERE tt-digita-2.c-it-codigo = ITEM.it-codigo
+                              AND tt-digita-2.c-cod-refer = ITEM.cod-refer) THEN DO:
+              
+                CREATE tt-digita-2.
+                BUFFER-COPY tt-digita TO tt-digita-2.
+                ASSIGN tt-digita-2.niv-mais-bai = ITEM.niv-mais-bai.
+
+           END.
+      
+        END.
+            
+        IF tt-param.l-componente THEN DO:
+            RUN estrutura-item-dig (INPUT tt-digita.c-it-codigo,
+                                    INPUT 1,
+                                    INPUT TABLE tt-param).
+        END.            
+            
+    END.
+    
+    CASE tt-param.classifica:
+        WHEN 1 THEN DO:
+            IF tt-param.l-componente THEN
+                VIEW FRAME f-cab-item.
+                
+            &IF DEFINED(bf_man_206b) &THEN
+                IF l-usa-unid-negoc THEN DO:
+                    view frame f-cab-sml-un.
+                END.
+                ELSE DO:
+            &ENDIF
+            
+            VIEW FRAME f-cab-sml.
+                
+            &IF DEFINED(bf_man_206b) &THEN
+                END.
+            &ENDIF
+            
+            IF tt-param.l-componente THEN DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.niv-mais-bai
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+            ELSE DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.c-it-codigo.
+            END.
+
+        END.
+            
+        WHEN 2 THEN DO:
+            IF tt-param.l-componente THEN
+                VIEW FRAME f-fam-estr.
+            ELSE
+                VIEW FRAME f-cab-fam.
+                    
+            &IF DEFINED(bf_man_206b) &THEN
+                IF l-usa-unid-negoc THEN DO:
+                    VIEW FRAME f-cab-sml-un.
+                END.
+                ELSE DO:
+            &ENDIF
+            
+            VIEW FRAME f-cab-sml.
+                
+            &IF DEFINED(bf_man_206b) &THEN
+                END.
+            &ENDIF
+            
+            IF tt-param.l-componente THEN DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.fm-codigo
+                                         BY tt-digita-2.niv-mais-bai
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+            ELSE DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.fm-codigo
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+
+        END.
+     
+        WHEN 3 THEN DO:
+            IF tt-param.l-componente THEN
+                VIEW FRAME f-plan-estr.
+            ELSE
+                VIEW FRAME f-cab-plan.
+                    
+            &IF DEFINED(bf_man_206b) &THEN
+                IF l-usa-unid-negoc THEN DO:
+                    VIEW FRAME f-cab-sml-un.
+                END.
+                ELSE DO:
+            &ENDIF
+            
+            VIEW FRAME f-cab-sml.
+                
+            &IF DEFINED(bf_man_206b) &THEN
+                END.
+            &ENDIF
+            
+            IF tt-param.l-componente THEN DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.cd-planejado
+                                         BY tt-digita-2.niv-mais-bai
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+            ELSE DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.cd-planejado
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+
+        END.
+     
+        WHEN 4 THEN DO:
+            IF tt-param.l-componente THEN
+                VIEW FRAME f-fam-estr.
+            ELSE
+                VIEW FRAME f-cab-ge.
+          
+            &IF DEFINED(bf_man_206b) &THEN
+                IF l-usa-unid-negoc THEN DO:
+                    VIEW FRAME f-cab-sml-un.
+                END.
+                ELSE DO:
+            &ENDIF
+            
+            VIEW FRAME f-cab-sml.
+          
+            &IF DEFINED(bf_man_206b) &THEN
+                END.
+            &ENDIF
+            
+            IF tt-param.l-componente THEN DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.ge-codigo
+                                         BY tt-digita-2.niv-mais-bai
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+            ELSE DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.ge-codigo
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+
+        END.
+     
+        WHEN 5 THEN DO:
+            IF tt-param.l-componente THEN
+                VIEW FRAME f-comp-estr.
+            ELSE
+                VIEW FRAME f-cab-comp.
+                    
+            &IF DEFINED(bf_man_206b) &THEN
+                IF l-usa-unid-negoc THEN DO:
+                    VIEW FRAME f-cab-sml-un.
+                END.
+                ELSE DO:
+            &ENDIF
+          
+            VIEW FRAME f-cab-sml.
+          
+            &IF DEFINED(bf_man_206b) &THEN
+                END.
+            &ENDIF
+            
+            IF tt-param.l-componente THEN DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.cod-comprado
+                                         BY tt-digita-2.niv-mais-bai
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+            ELSE DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.cod-comprado
+                                         BY tt-digita-2.c-it-codigo.
+            END.
+
+        END.
+     
+        WHEN 6 THEN DO:
+            IF tt-param.l-componente THEN
+                VIEW FRAME f-cab-item.
+          
+            &IF DEFINED(bf_man_206b) &THEN
+                IF l-usa-unid-negoc THEN DO:
+                    VIEW FRAME f-cab-sml-un.
+                END.
+                ELSE DO:
+            &ENDIF
+          
+            VIEW FRAME f-cab-sml.
+          
+            &IF DEFINED(bf_man_206b) &THEN
+                END.
+            &ENDIF
+            
+            IF tt-param.l-componente THEN DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.niv-mais-bai
+                                         BY tt-digita-2.c-desc-item                     
+                                         BY tt-digita-2.c-it-codigo.                                             
+                                         
+            END.
+            ELSE DO:
+                OPEN QUERY q-digita
+                    FOR EACH tt-digita-2 BY tt-digita-2.c-desc-item
+                                         BY tt-digita-2.c-it-codigo.
+                                         
+            END.
+
+        END.
+     
+    END CASE.
+
+    ASSIGN c-cod-item = ?.
+
+    GET FIRST q-digita.
+
+    REPEAT WHILE AVAILABLE tt-digita-2:
+        FIND FIRST ITEM
+            WHERE ITEM.it-codigo = tt-digita-2.c-it-codigo
+              AND ITEM.nr-linha >= tt-param.i-linha-ini
+              AND ITEM.nr-linha <= tt-param.i-linha-fim NO-LOCK NO-ERROR.
+            
+        IF AVAILABLE ITEM THEN DO:
+            RUN pi-acompanhar IN h-acomp (INPUT ITEM.it-codigo).
+            
+            assign l-ref         = (tt-digita-2.c-it-codigo = c-cod-item)
+                   c-descricao   = ITEM.desc-item
+                   c-cod-item    = ITEM.it-codigo
+                   c-un          = ITEM.un
+                   c-desc-cab    = c-descricao
+                   c-cod-refer   = tt-digita-2.c-cod-refer
+                   de-saldo-inic = 0.                                                   
+            
+            RUN pi-simulacao (BUFFER ITEM,
+                              INPUT  YES &IF DEFINED(bf_man_206b) &THEN
+                              ,INPUT l-usa-unid-negoc
+                              &ENDIF).
+        END.
+
+        GET NEXT q-digita.
+    END.
+        
+    IF   tt-param.l-componente THEN
+        PAGE.
+
+
+END PROCEDURE.
+
+PROCEDURE estrutura-item-dig:
+    DEFINE INPUT PARAMETER item-pai LIKE estrutura.it-codigo NO-UNDO.
+    DEFINE INPUT PARAMETER i-nivel  AS INTEGER               NO-UNDO.
+    DEFINE INPUT PARAMETER TABLE FOR tt-param.
+
+    FOR EACH estrutura
+        WHERE estrutura.it-codigo = item-pai NO-LOCK:
+        
+        FIND FIRST ITEM
+            WHERE   ITEM.it-codigo     = estrutura.es-codigo
+              AND ((ITEM.compr-fabric  = 1 AND tt-param.l-comp-comp)
+               OR  (ITEM.compr-fabric  = 2 AND tt-param.l-comp-fabr))
+              AND   ITEM.it-codigo    >= tt-param.c-ci-item-ini
+              AND   ITEM.it-codigo    <= tt-param.c-ci-item-fim
+              AND   ITEM.fm-codigo    >= tt-param.c-ci-fami-ini
+              AND   ITEM.fm-codigo    <= tt-param.c-ci-fami-fim
+              AND   ITEM.ge-codigo    >= tt-param.i-ci-ge-ini
+              AND   ITEM.ge-codigo    <= tt-param.i-ci-ge-fim
+              AND   ITEM.cod-comprado >= tt-param.c-ci-comp-ini
+              AND   ITEM.cod-comprado <= tt-param.c-ci-comp-fim NO-LOCK NO-ERROR.
+            
+        IF AVAILABLE ITEM THEN DO:
+
+            &IF DEFINED(bf_man_206b) &THEN
+                IF l-usa-unid-negoc THEN DO:
+                    RUN retornaUnidadeNegocio IN h-cdapi024 (INPUT item.cod-estabel,
+                                                             INPUT item.it-codigo,
+                                                             INPUT "",
+                                                             OUTPUT c-cod-unid-negoc).
+                        
+                    IF NOT (c-cod-unid-negoc >= tt-param.c-ci-cod-unid-negoc-ini
+                       AND  c-cod-unid-negoc <= tt-param.c-ci-cod-unid-negoc-fim) THEN NEXT.
+                END.
+            &ENDIF
+            
+            IF NOT CAN-FIND(FIRST item-uni-estab
+                            WHERE item-uni-estab.it-codigo     = item.it-codigo
+                              AND item-uni-estab.cod-estabel  >= tt-param.c-ci-estab-ini
+                              AND item-uni-estab.cod-estabel  <= tt-param.c-ci-estab-fim
+                              AND item-uni-estab.cd-planejado >= tt-param.c-ci-plan-ini
+                              AND item-uni-estab.cd-planejado <= tt-param.c-ci-plan-fim
+                              AND item-uni-estab.nr-linha     >= tt-param.i-ci-linha-ini
+                              AND item-uni-estab.nr-linha     <= tt-param.i-ci-linha-fim) THEN NEXT.
+
+            IF NOT CAN-FIND(FIRST tt-digita-2
+                            WHERE tt-digita-2.c-it-codigo = ITEM.it-codigo
+                              AND tt-digita-2.c-cod-refer = ITEM.cod-refer) THEN DO:
+                
+                CREATE tt-digita-2.
+                ASSIGN tt-digita-2.c-it-codigo  = ITEM.it-codigo
+                       tt-digita-2.c-desc-item  = ITEM.descricao-1
+                       tt-digita-2.niv-mais-bai = ITEM.niv-mais-bai.
+            END.
+        END.
+        
+        IF i-nivel < tt-param.i-niveis THEN DO:
+            RUN estrutura-item-dig (INPUT estrutura.es-codigo,
+                                    INPUT i-nivel + 1,
+                                    INPUT TABLE tt-param).
+        END.
+
+    END.
+
+END PROCEDURE.

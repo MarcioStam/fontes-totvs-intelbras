@@ -1,0 +1,249 @@
+/******************************************************************************
+**
+**  CQ0203.I1 - Imprime os Componentes do Exame
+**
+*******************************************************************************/
+
+/*put "Componentes: ". 
+
+if can-find (first it-comp-exame where it-comp-exame.it-codigo = exam-ficha.it-codigo and it-comp-exame.cod-exame = exam-ficha.cod-exame) then do:
+    for each it-comp-exame no-lock where 
+        it-comp-exame.it-codigo = exam-ficha.it-codigo and
+        it-comp-exame.cod-exame = exam-ficha.cod-exame 
+        break by it-comp-exame.cod-exame:
+        
+        if last-of(it-comp-exame.cod-exame) then
+            put unformatted it-comp-exame.descricao.
+        else
+            put unformatted it-comp-exame.descricao + ", ".
+    end.
+end.
+else do:
+    for each comp-exame where 
+             comp-exame.cod-exame = exam-ficha.cod-exame
+             no-lock
+             break by comp-exame.cod-exame:       
+             
+        if last-of (comp-exame.cod-exame) then
+           put unformatted comp-exame.descricao.      
+        else
+            put unformatted comp-exame.descricao + ", ".      
+    end.
+end.*/
+
+put skip(1).
+
+/*
+for each tt-result:
+    delete tt-result.
+end.    
+for each it-comp-exame no-lock where 
+    it-comp-exame.it-codigo = exam-ficha.it-codigo and
+    it-comp-exame.cod-exame = exam-ficha.cod-exame :
+    create tt-result.
+    assign tt-result.it-codigo   = it-comp-exame.it-codigo
+           tt-result.cod-exame   = it-comp-exame.cod-exame
+           tt-result.cod-comp    = it-comp-exame.cod-comp
+           tt-result.descricao   = it-comp-exame.descricao
+           tt-result.nr-tabela   = it-comp-exame.nr-tabela
+           tt-result.unidade     = it-comp-exame.unidade
+           tt-result.tipo-result = it-comp-exame.tipo-result
+           tt-result.result-min  = it-comp-exame.result-min
+           tt-result.result-max  = it-comp-exame.result-max
+           tt-result.nr-decimais = it-comp-exame.nr-decimais
+           tt-result.log-1       = if it-comp-exame.situacao = 1 
+                                      then yes
+                                      else no .
+end.
+find first tt-result no-error.
+if avail tt-result then do:
+    for each tt-result:
+        find first comp-exame where
+             comp-exame.cod-exame = tt-result.cod-exame and
+             comp-exame.cod-comp  = tt-result.cod-comp no-lock no-error.
+         if avail comp-exame then
+            assign tt-result.local-cq     = comp-exame.local-cq
+                   tt-result.narrativa    = comp-exame.narrativa
+                   tt-result.compl-res    = comp-exame.compl-res
+                   tt-result.inst-equip   = comp-exame.inst-equip
+                   tt-result.refer-tec    = comp-exame.refer-tec
+                   tt-result.metodo       = comp-exame.metodo
+                   tt-result.narrativa    = comp-exame.narrativa.
+    end.
+end.
+else do:
+    for each comp-exame where 
+        comp-exame.cod-exame = exam-ficha.cod-exame
+        no-lock:             
+        create tt-result.
+        assign tt-result.it-codigo    = exam-ficha.it-codigo
+               tt-result.cod-exame    = comp-exame.cod-exame
+               tt-result.cod-comp     = comp-exame.cod-comp
+               tt-result.descricao    = comp-exame.descricao
+               tt-result.nr-tabela    = comp-exame.nr-tabela
+               tt-result.unidade      = comp-exame.unidade
+               tt-result.tipo-result  = comp-exame.tipo-result
+               tt-result.result-min   = comp-exame.result-min
+               tt-result.result-max   = comp-exame.result-max
+               tt-result.nr-decimais  = comp-exame.nr-decimais
+               tt-result.log-1        = comp-exame.log-1
+               tt-result.local-cq     = comp-exame.local-cq
+               tt-result.narrativa    = comp-exame.narrativa
+               tt-result.compl-res    = comp-exame.compl-res
+               tt-result.inst-equip   = comp-exame.inst-equip
+               tt-result.refer-tec    = comp-exame.refer-tec
+               tt-result.metodo       = comp-exame.metodo.
+    end.
+end.
+
+
+assign i-cod-comp = ?.
+for each tt-result               
+     where tt-result.cod-exame = exam-ficha.cod-exame
+     and tt-result.log-1 = yes  no-lock :    
+    assign c-comp = ""
+           c-dec  = "." + substr(c-aux,1,tt-result.nr-decimais).
+    if  c-dec = "." then
+        assign c-dec = "".
+    assign c-formato = "->,>>>,>>9" + c-dec.
+    if i-cod-comp <> tt-result.cod-comp then do:
+        {utp/ut-liter.i Componentes * r}
+        assign c-comp = trim(return-value) + ":"
+               i-cod-comp = tt-result.cod-comp.
+    end.
+    if  tt-result.local-cq = 1 then do:
+        {utp/ut-liter.i Laborat¢rio * r}
+        assign c-local = trim(return-value). 
+    end.
+    else do:
+        if  tt-result.local-cq = 2 then do:
+            {utp/ut-liter.i Produ‡Æo * r}
+            assign c-local = trim(return-value).
+        end.
+        else do:
+            {utp/ut-liter.i Terceiros * r}
+            assign c-local = trim(return-value).
+        end.
+    end.
+    if  tt-result.tipo-result = 3 then do:
+        {utp/ut-liter.i Laudo * r}
+        assign c-laudo = trim(return-value).
+        put c-comp 
+            tt-result.cod-comp " - "
+            tt-result.descricao
+            fill("-",36)        at 53 format "x(36)" " "
+            c-laudo             " "
+            fill("-",37)              format "x(37)" skip(1).
+        do  i-cont = 1 to 8:
+            put fill("_",80) at 53 format "x(80)".
+            if  i-cont = 8 then put skip. else put skip(1).
+        end.
+    end.
+    else do:
+        put c-comp
+            tt-result.cod-comp " - "
+            tt-result.descricao.
+        if  tt-result.tipo-result = 4 then do:            
+            {utp/ut-liter.i Res._M¡nimo * r}
+            assign c-res-min = trim(return-value) + ":".
+            {utp/ut-liter.i Res._M ximo * r}
+            assign c-res-max = trim(return-value) + ":".
+            {utp/ut-liter.i Faixa * r}
+            assign c-faixa = trim(return-value) + ":".
+            assign c-a = "-".
+
+            put skip
+                c-res-min             at 46 " _______________"
+                tt-result.unidade
+                c-res-max             at 91 " _______________"
+                tt-result.unidade    skip
+                c-faixa               at 51 " "
+                tt-result.result-min format c-formato " "
+                c-a                   " "
+                tt-result.result-max format c-formato skip.
+        end.
+        else do:
+            {utp/ut-liter.i Resultado * r}
+            assign c-resultado = trim(return-value) + ":".
+            put "  " c-resultado " _______________"
+                tt-result.unidade.
+        end.
+        if  tt-result.tipo-result = 1 then do:
+            {utp/ut-liter.i Faixa * r}
+            assign c-faixa = trim(return-value) + ":".
+            assign c-a = "-".
+            put " " c-faixa " "
+                tt-result.result-min format c-formato " "
+                c-a
+                tt-result.result-max format c-formato skip.
+        end.
+        if  tt-result.tipo-result = 2 then do:
+            assign i-aux = 0.
+            find first tab-result
+                 where tab-result.nr-tabela = tt-result.nr-tabela
+                 no-lock no-error.
+            {utp/ut-liter.i Tabela * r}
+            assign c-tabela = trim(return-value) + ":".
+            put c-tabela             at 92
+                tt-result.nr-tabela " - "
+                tab-result.descricao format "x(27)" skip.
+            assign i-x = 0.
+            for each comp-tab-res no-lock
+                where comp-tab-res.nr-tabela = tt-result.nr-tabela:
+                if  i-aux = 0 then do:
+                    if  i-x = 0 then do:
+                        {utp/ut-liter.i Comp. * r}
+                        assign c-comp = trim(return-value) + ":".
+                        put c-comp at 54 format "x(6)".
+                        assign i-x = 1.
+                    end.
+                    put comp-tab-res.seq-comp at 61 " - "
+                        comp-tab-res.descricao.
+                    assign i-aux = 1.
+                end.
+                else do:
+                     assign i-aux = 0.
+                     put comp-tab-res.seq-comp  at 98 " - "
+                         comp-tab-res.descricao skip.
+                end.
+            end.
+            put skip.
+            {utp/ut-liter.i Componentes * r}
+            assign c-comp = trim(return-value) + ":".
+        end.
+    end.
+    {utp/ut-liter.i Compl._Result. * r}
+    assign c-comp-res = trim(return-value) + ":".
+    {utp/ut-liter.i Local_CQ * r}
+    assign c-local-cq = trim(return-value) + ":".
+    {utp/ut-liter.i Equipamento * r}
+    assign c-equipamento = trim(return-value) + ":".
+    {utp/ut-liter.i Metodo * r}
+    assign c-metodo = trim(return-value) + ":".
+    {utp/ut-liter.i Ref._Tec. * r}
+    assign c-ref-tec = trim(return-value) + ":".
+    put c-comp-res            at 45
+        tt-result.compl-res  "   "
+        c-local-cq            " "
+        c-local               " "
+        c-equipamento         "   "
+        tt-result.inst-equip " "
+        c-metodo              at 50 " "
+        tt-result.metodo     " "
+        c-ref-tec             " "
+        tt-result.refer-tec format "x(28)" skip(1).
+        
+    if tt-param.l-narrativa-comp then do:
+        RUN pi-print-editor (tt-result.narrativa, 70).
+        FOR EACH tt-editor 
+            WHERE tt-editor.linha > 0:
+            DISP tt-editor.conteudo 
+                WITH FRAME f-narrativa-2.
+                DOWN WITH FRAME f-narrativa-2.
+        END.
+        PUT SKIP(1).
+        DOWN WITH FRAME f-narrativa-2.            
+    end.    
+end.*/
+
+/* Fim da Include */

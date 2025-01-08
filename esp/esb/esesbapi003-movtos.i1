@@ -1,0 +1,64 @@
+/*-----------------------------------------------------------------------------------*/
+/* Include..: esp/esb/esesbapi003-movto.i1                                           */
+/* Objetivo.: Executa validaá‰es das movimentaá‰es que s∆o permitidas para o usu†rio */
+/*            obs: A permiss∆o s∆o atribu°das no programa esesb008d.w                */
+/*-----------------------------------------------------------------------------------*/
+
+PROCEDURE pi-valida-operacao-usuario:
+
+    /* Validar se o usu†rio pode realizar a transaá∆o*/
+    DEF INPUT  PARAM p-usuario   AS CHAR NO-UNDO.
+    DEF INPUT  PARAM p-transacao AS INTEGER NO-UNDO.
+    DEF OUTPUT PARAM c-erro      AS CHAR FORMAT "X(100)" NO-UNDO.
+
+    FIND FIRST int-usuario-beneficio NO-LOCK
+        WHERE int-usuario-beneficio.cod-usuario = p-usuario NO-ERROR.
+
+    IF  NOT AVAIL int-usuario-beneficio THEN DO:
+        assign c-erro = "Usu†rio n∆o possui nenhuma permiss∆o para acesso/movimentaá‰es das contas correntes de benef°cios dos canais ".
+        RETURN "NOK".
+    END.
+    
+    FIND FIRST int-usuario-beneficio NO-LOCK
+        WHERE int-usuario-beneficio.cod-usuario  = p-usuario
+          AND int-usuario-beneficio.tp-permissao = p-transacao NO-ERROR.
+
+    CASE p-transacao:
+        
+        /* CONSULTA DE CONTA CORRENTE DOS BENEF÷CIOS */
+        WHEN 1 THEN c-erro = "Usu†rio n∆o possui permiss∆o consulta de saldo de benef°cio entre unidades." .
+        
+        /* ENTRADA OU SA÷DA DE TRANSFER“NCIA */
+        WHEN 2 THEN ASSIGN c-erro = "Usu†rio n∆o possui permiss∆o para transferància de saldo de benef°cio entre unidades." .
+        
+        /* AJUSTES DE VALOR */
+        WHEN 3 THEN  c-erro =  "Usu†rio n∆o possui permiss∆o para realizar ajuste de valores." .
+
+        /* CRIAÄ«O MANUAL DE CONTA CORRENTE BENEF÷CIO */
+        WHEN 4 THEN c-erro = "Usu†rio n∆o possui permiss∆o criaá∆o de conta corrente manualmente".
+        
+        /* EFETUAR CµLCULO DE BENEF÷CIO */
+        WHEN 5 THEN c-erro = "Usu†rio n∆o possui permiss∆o para C†lculo/Rec†lculo de benef°cios.".
+
+        /* EFETUAR RECµLCULO RETROATIVO DE  BENEF÷CIO */
+        WHEN 6 THEN c-erro = "Usu†rio n∆o possui permiss∆o para Rec†lculo Retroativo de benef°cios.".
+
+        /* EFETUAR GERAÄ«O PROVIS«O */
+        WHEN 7 THEN c-erro = "Usu†rio n∆o possui permiss∆o para Gerar/Enviar Log de C†lculo para Cliente.".
+        
+        /* EFETUAR GERAÄ«O PROVIS«O */
+        WHEN 8 THEN c-erro = "Usu†rio n∆o possui permiss∆o para Provisionamento de Benef°cios.".
+
+        /* EFETUAR GERAÄ«O PROVIS«O */
+        WHEN 9 THEN c-erro = "Usu†rio n∆o possui permiss∆o para Reprocessar Provisionamento de Benef°cios.".
+
+        OTHERWISE c-erro = "Usu†rio n∆o possui permiss∆o para executar esta aá∆o".
+
+    END CASE.
+            
+    IF  NOT AVAIL int-usuario-beneficio THEN
+        RETURN "NOK".        
+
+
+    RETURN "OK".
+END.

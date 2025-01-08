@@ -1,0 +1,83 @@
+/* utilizada no programa es0000rp.p */
+/* {1} - recebe a temp-table das mensagens msg0152, msg0154, , msg0155, msg0156, msg0157, msg0158 */
+
+/*
+assign c-literal = int-solicitacao.DescricaoSolicitacao
+       c-lista   = "1234567890abcdefghijklmnopqrstuvwxyz-_/\.,;! ‚¢£ˆ“…‡@$#&%()+=:?{}[]*".
+
+DO  i=1 TO LENGTH(c-literal):
+    assign c-literal-aux = substr(c-literal,i,1).
+
+    IF  c-literal-aux = "" THEN do:
+        ASSIGN c-literal-final = c-literal-final + " ".
+        NEXT.
+    end.     
+        
+    IF  INDEX(c-lista,c-literal-aux) = 0 THEN
+        ASSIGN c-literal-aux = " ".
+
+    ASSIGN c-literal-final = c-literal-final + c-literal-aux.
+END.
+*/
+
+CREATE {1}.
+ASSIGN {1}.CodigoSolicitacaoBeneficio      = int-solicitacao.CodigoSolicitacaoBeneficio     
+       {1}.NomeSolicitacaoBeneficio        = int-solicitacao.NomeSolicitacaoBeneficio       
+       {1}.CodigoTipoSolicitacao           = int-solicitacao.CodigoTipoSolicitacao
+       {1}.CodigoBeneficio                 = int-solicitacao.CodigoBeneficio                
+       {1}.BeneficioCodigo                 = int-solicitacao.tipo-beneficio
+       {1}.CodigoBeneficioCanal            = int-solicitacao.CodigoBeneficioCanal           
+       {1}.CodigoUnidadeNegocio            = int-solicitacao.CodigoUnidadeNegocio           
+       {1}.CodigoConta                     = int-solicitacao.CodigoConta                    
+       {1}.ValorSolicitado                 = int-solicitacao.ValorSolicitadoOrigemCRM               
+       {1}.DescricaoSolicitacao            = ""
+       {1}.SolicitacaoIrregular            = int-solicitacao.SolicitacaoIrregular           
+       {1}.DescricaoSituacaoIrregular      = int-solicitacao.DescricaoSituacaoIrregular.
+    
+IF  int-solicitacao.tipo-beneficio = 21  THEN /* VMC */
+    ASSIGN {1}.CodigoAcaoSubsidiadaVMC         = int-solicitacao.CodigoAcaoSubsidiadaVMC        
+           {1}.DataPrevistaRetornoAcao         = int-solicitacao.DataPrevistaRetornoAcao        
+           {1}.ValorAcao                       = int-solicitacao.ValorAcao.
+
+ASSIGN {1}.CodigoFormaPagamento            = int-solicitacao.CodigoFormaPagamento           
+       {1}.SituacaoSolicitacaoBeneficio    = int-solicitacao.SituacaoSolicitacaoBeneficio   
+       {1}.RazaoStatusSolicitacaoBeneficio = int-solicitacao.RazaoStatusSolicitacaoBeneficio
+       {1}.StatusPagamento                 = int-solicitacao.StatusPagamento     
+       {1}.Situacao                        = int-solicitacao.Situacao                       
+       {1}.Proprietario                    = int-solicitacao.Proprietario                   
+       {1}.TipoProprietario                = int-solicitacao.TipoProprietario
+       {1}.CodigoAssistente                = int-solicitacao.CodigoAssistente
+       {1}.CodigoSupervisorEMS             = int-solicitacao.CodigoSupervisorEMS
+       {1}.CodigoFilial                    = if int-solicitacao.CodigoFilial = "" then ? else int-solicitacao.CodigoFilial
+       {1}.SolicitacaoAjuste               = int-solicitacao.ajuste
+       {1}.ValorAbater                     = int-solicitacao.ValorAbaterOriginalCRM
+       {1}.ValorAprovado                   = int-solicitacao.ValorAprovado 
+       {1}.ValorPago                       = int-solicitacao.ValorPago + (if int-solicitacao.SituacaoSolicitacaoBeneficio = 993520006 then 0 else int-solicitacao.vl-empenho-pago)
+       
+                                             /* Foi colocado como premissa que sempre que for produto, o fator de conversÆo utilizado    */  
+                                             /* pelo CRM para enviar o valor a abater deve ser 1                                         */
+                                             /* Isso porque aqui utilizamos o valor parcialmente atendido, multiplicando a quantidade do */
+                                             /* produto enviada no xml pelo pre‡o.                                                       */
+       {1}.ValorCancelado                  = if  int-solicitacao.desc-forma-pagto = "Produto" then 
+                                                 int-solicitacao.ValorCancelado           
+                                             else if  int-solicitacao.SituacaoSolicitacaoBeneficio = 993520006 then
+                                                      int-solicitacao.ValorAbater /* Para que a vizualiza‡Æo fique correta na Extranet */
+                                                  else
+                                                      0
+       {1}.DataCriacao                     = int-solicitacao.DataCriacao              
+       {1}.DataValidade                    = int-solicitacao.DataValidade             
+       {1}.CodigoCondicaoPagamento         = int-solicitacao.CodigoCondicaoPagamento  
+       {1}.DescartarVerba                  = int-solicitacao.DescartarVerba           
+       {1}.TrimestreCompetencia            = int-solicitacao.TrimestreCompetencia     
+       {1}.FormaCancelamento               = int-solicitacao.FormaCancelamento.
+       
+assign c-literal-final = "".
+
+IF  int-solicitacao.SituacaoSolicitacaoBeneficio = 993520006 THEN
+    ASSIGN {1}.StatusPagamento = 993520000.
+ELSE    
+    IF  int-solicitacao.StatusPagamento <> 993520001 
+    AND int-solicitacao.StatusPagamento <> 993520002  THEN
+        ASSIGN {1}.StatusPagamento = 993520002.
+        
+RAW-TRANSFER {1} TO raw-param. 

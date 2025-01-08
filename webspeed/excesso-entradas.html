@@ -1,0 +1,437 @@
+<script language="SpeedScript">
+procedure output-header:
+   if (get-cgi("HTTP_ACCEPT") matches "*application/xhtml+xml*") then
+      output-content-type("application/xhtml+xml; charset=utf-8").
+   else
+      output-content-type("text/html; charset=utf-8").
+end.
+
+session:numeric-format = 'EUROPEAN'.
+
+define temp-table tt-item no-undo
+   field cod-estabel like movto-estoq.cod-estabel
+   field it-codigo   like movto-estoq.it-codigo
+   field quantidade  like movto-estoq.quantidade
+   field preco       as decimal format '->>>,>>>,>>>,>>9.9999'
+   index ch-pri as primary unique cod-estabel it-codigo.
+
+define temp-table tt-saida no-undo
+   field cod-estabel like movto-estoq.cod-estabel
+   field it-codigo   like item.it-codigo
+   field desc-item   like item.desc-item
+   field preco       as decimal format '->>>,>>>,>>>,>>9.9999'
+   field consumo-med as decimal format '->>>,>>>,>>>,>>9.9999'
+   field quantidade  like movto-estoq.quantidade
+   field vl-entradas as decimal format '->>>,>>>,>>>,>>9.9999'
+   field saldo       like saldo-estoq.qtidade-atu
+   field qtd-pol     like int-item-uni-estab.qtd-pol
+   index ch-pri as primary unique cod-estabel it-codigo.
+
+define variable h-util as handle no-undo.
+run html-util.p persistent set h-util.
+
+define variable c-de                   as character no-undo.
+define variable c-ate                  as character no-undo.
+define variable dt-inicial             as date      no-undo.
+define variable dt-final               as date      no-undo.
+define variable de-total               as decimal   no-undo.
+define variable de-subtotal            as decimal   no-undo.
+define variable c-color                as character no-undo.
+define variable c-it-codigo            as character no-undo.
+define variable c-descricao            as character no-undo.
+define variable de-consumo             as decimal   no-undo.
+define variable de-saldo               as decimal   no-undo.
+define variable de-consumo-med         as decimal   no-undo.
+define variable de-subtotal-consumo    as decimal   no-undo.
+define variable de-subtotal-quantidade as decimal   no-undo.
+define variable de-subtotal-saldo      as decimal   no-undo.
+define variable de-total-consumo       as decimal   no-undo.
+define variable de-total-quantidade    as decimal   no-undo.
+define variable de-total-saldo         as decimal   no-undo.
+</script>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt_BR">
+<head>
+  <title>Excesso de saldo - entradas</title>
+  <style type="text/css">
+body {
+  text-align: center;
+  background-color: #ffffff;
+  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-size: 0.8em;
+}
+a {
+  text-decoration: none;
+}
+h2 {
+  font-size: 1.8em;
+}
+h5 {
+  font-size: 1em;
+}
+h6 {
+  font-size: 0.9em;
+}
+table {
+  font-size: 1em;
+  margin: auto;
+}
+th {
+  background-color: #aaaaaa;
+}
+.light {
+  background-color: #ffffff;
+}
+.dark {
+  background-color: #e7e7e7;
+}
+.total {
+  background-color: #cccccc;
+  font-weight: bold;
+}
+input {
+  font-size: 0.9em;
+}
+select {
+  font-size: 0.9em;
+}
+fieldset {
+  height: 5em;
+}
+legend {
+  margin-bottom: 0.5em;
+}
+#ajuda {
+  margin: auto;
+  width: 600px;
+}
+#consumo {
+  font-size: 0.9em;
+  margin: auto;
+  width: 600px;
+}
+#consumo .col1 {
+  clear: both;
+  display: block;
+  float: left;
+  width: 20%;
+}
+#consumo .col2 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#consumo .col3 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#consumo .col4 {
+  display: block;
+  float: left;
+  text-align: center;
+  width: 10%;
+}
+#resultado {
+  font-size: 0.9em;
+  padding-top: 1em;
+}
+</style>
+<script type="text/javascript">
+function valida() {
+   var form = document.getElementById('estoque');
+   var de   = document.getElementById('de');
+   var ate  = document.getElementById('ate');
+
+   var dateDe  = new Date(de.value.substring(6, 10), de.value.substring(3, 5) - 1, de.value.substring(0, 2));
+   var dateAte = new Date(ate.value.substring(6, 10), ate.value.substring(3, 5) - 1, ate.value.substring(0, 2));
+
+   var strDe = ((dateDe.getDate() &lt; 10) ? '0' : '') + dateDe.getDate() + '/' + ((dateDe.getMonth() &lt; 9) ? '0' : '') + (dateDe.getMonth() + 1) + '/' + dateDe.getFullYear();
+   var strAte = ((dateAte.getDate() &lt; 10) ? '0' : '') + dateAte.getDate() + '/' + ((dateAte.getMonth() &lt; 9) ? '0' : '') + (dateAte.getMonth() + 1) + '/' + dateAte.getFullYear();
+   
+   if (de.value == "") {
+      alert('Data inicial inv&aacute;lida');
+      return false;
+   }
+
+   if (ate.value == "") {
+      alert('Data final inv&aacute;lida');
+      return false;
+   }
+   
+   if (!(strDe == de.value)) {
+       alert('Data inicial inv&aacute;lida');
+       return false;
+   }
+
+   if (!(strAte == ate.value)) {
+       alert('Data final inv&aacute;lida');
+       return false;
+   }
+   
+   if (dateAte &lt; dateDe) {
+      alert('Data final n&atilde;o pode ser maior que a inicial');
+      return false;
+   }
+
+   return true;
+}
+
+function dateMask(inputData, e) {
+   if (document.all) // Internet Explorer
+      var tecla = event.keyCode;
+   else //Outros Browsers
+      var tecla = e.which;
+
+   if (tecla &gt;= 47 &amp;&amp; tecla &lt; 58) { // numeros de 0 a 9 e "/"
+      var data = inputData.value;
+      if (data.length == 2 || data.length == 5){
+         data += '/';
+         inputData.value = data;
+      }
+   }
+   else if (tecla == 8 || tecla == 0) // Backspace, Delete e setas direcionais(para mover o cursor, apenas para FF)
+      return true;
+   else
+      return false;
+}
+</script>
+</head>
+
+<body>
+<script language="SpeedScript">
+assign c-de = get-value("de")
+       c-ate = get-value("ate").
+</script>
+<h2>Excesso de saldo - entradas</h2>
+<div id="consumo">
+  <form action="" method="post" id="estoque" onsubmit="javascript:return valida();">
+    <fieldset>
+      <legend>Per&iacute;odo</legend>
+      <span class="col1">
+        <label for="de">De</label>
+        <input type="text" id="de" name="de" <!--WSS if (c-de <> ?) and (c-de <> "") then do: {&out} --> value="`c-de`" <!--WSS end. else do: {&out} --> value="`string(today, "99/99/9999")`" <!--WSS end. -->  size="12" maxlength="10" onkeypress="javascript:return dateMask(this, event);" />
+      </span>
+      <span class="col2">
+        <label for="ate">At&eacute;</label>
+        <input type="text" id="ate" name="ate" <!--WSS if (c-ate <> ?) and (c-ate <> "") then do: {&out} --> value="`c-ate`" <!--WSS end. else do: {&out} --> value="`string(today, "99/99/9999")`" <!--WSS end. -->  size="12" maxlength="10" onkeypress="javascript:return dateMask(this, event);" />
+      </span>
+      <span class="col3">
+        &nbsp;
+      </span>
+      <span class="col4">
+        <input type="submit" style="width: 90%;" value="OK"/>
+      </span>
+    </fieldset>
+  </form>
+</div>
+<p/>
+<script language="SpeedScript">
+if (c-de <> ?) and (c-de <> '') and (c-ate <> ?) and (c-ate <> '') then do:
+
+   assign dt-inicial = date(int(substr(c-de, 4, 2)), int(substr(c-de, 1, 2)), int(substr(c-de, 7, 4)))
+          dt-final   = date(int(substr(c-ate, 4, 2)), int(substr(c-ate, 1, 2)), int(substr(c-ate, 7, 4))).
+
+   for each movto-estoq no-lock
+      where movto-estoq.esp-docto     = 21
+        and movto-estoq.dt-trans     >= dt-inicial
+        and movto-estoq.dt-trans     <= dt-final
+        and movto-estoq.it-codigo    <> ""
+        and movto-estoq.cod-emitente <> 18963:
+
+      find first tt-item
+         where tt-item.cod-estabel = movto-estoq.cod-estabel
+           and tt-item.it-codigo   = movto-estoq.it-codigo no-error.
+
+      if not available (tt-item) then do:
+         create tt-item.
+         assign tt-item.cod-estabel = movto-estoq.cod-estabel
+                tt-item.it-codigo   = movto-estoq.it-codigo.
+
+         find first item-estab no-lock
+            where item-estab.cod-estabel = movto-estoq.cod-estabel
+              and item-estab.it-codigo   = movto-estoq.it-codigo no-error.
+
+         if available (item-estab) then
+            assign tt-item.preco = (item-estab.val-unit-ggf-m[1] + item-estab.val-unit-mat-m[1] + item-estab.val-unit-mob-m[1]).
+      end.
+
+      assign tt-item.quantidade = tt-item.quantidade + movto-estoq.quantidade.
+   end.
+
+   for each tt-item no-lock,
+      each item no-lock
+         where  item.it-codigo = tt-item.it-codigo
+           and (item.ge-codigo = 10 or item.ge-codigo = 12 or item.ge-codigo = 15 or item.ge-codigo = 30):
+
+      assign de-consumo = 0
+             de-saldo   = 0.
+
+      find first consumo-itens no-lock
+         where consumo-itens.it-codigo   = tt-item.it-codigo
+           and consumo-itens.cod-estabel = tt-item.cod-estabel no-error.
+
+      if available (consumo-itens) then
+         assign de-consumo-med = consumo-itens.consumo-medio.
+      else
+         assign de-consumo-med = 0.
+
+      for each saldo-estoq no-lock
+         where saldo-estoq.cod-estabel = tt-item.cod-estabel
+           and saldo-estoq.it-codigo   = tt-item.it-codigo
+           and saldo-estoq.qtidade-atu > 0:
+
+         assign de-saldo = de-saldo + saldo-estoq.qtidade-atu.
+      end.
+
+      if ((de-saldo / de-consumo-med) <= 2) then
+         next.
+
+      find int-item-uni-estab no-lock
+         where int-item-uni-estab.cod-estabel = tt-item.cod-estabel
+           and int-item-uni-estab.it-codigo   = tt-item.it-codigo no-error.
+
+      create tt-saida.
+      assign tt-saida.cod-estabel = tt-item.cod-estabel
+             tt-saida.it-codigo   = tt-item.it-codigo
+             tt-saida.desc-item   = item.descricao-1 + item.descricao-2
+             tt-saida.preco       = tt-item.preco
+             tt-saida.consumo-med = de-consumo-med
+             tt-saida.quantidade  = tt-item.quantidade
+             tt-saida.vl-entradas = tt-item.quantidade * tt-item.preco
+             tt-saida.saldo       = de-saldo
+             tt-saida.qtd-pol     = int-item-uni-estab.qtd-pol when available int-item-uni-estab.
+   end.
+
+   if not can-find (first tt-saida) then do:
+</script>
+<div style="text-align: center;">
+  Sem registros a exibir.
+</div>
+<script language="SpeedScript">
+   end.
+   else do:
+</script>
+<p style="clear: both;" />
+<div id="resultado">
+<script language="SpeedScript">
+      for each tt-saida no-lock
+         break by tt-saida.cod-estabel
+               by tt-saida.vl-entradas desc:
+
+         if (c-color = "light") then
+            assign c-color = "dark".
+         else
+            assign c-color = "light".
+
+         run html-entities in h-util (input tt-saida.it-codigo, output c-it-codigo).
+         run html-entities in h-util (input tt-saida.desc-item, output c-descricao).
+         
+         if first-of (tt-saida.cod-estabel) then do:
+            assign de-subtotal-consumo    = 0
+                   de-subtotal-quantidade = 0
+                   de-subtotal-saldo      = 0.
+</script>           
+  <h4>Estab. `tt-saida.cod-estabel`</h4>
+  <table border="0" cellspacing="0" width="98%">
+    <colgroup>
+      <col width="7%" />
+      <col width="24%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="5%" />
+    </colgroup>
+    <tr>
+      <th>Item</th>
+      <th>Descri&ccedil;&atilde;o</th>
+      <th>Valor</th>
+      <th>Consumo M&eacute;dio 3 meses</th>
+      <th>Valor Consumo M&eacute;dio</th>
+      <th>Entrada</th>
+      <th>Valor Entrada</th>
+      <th>Saldo</th>
+      <th>Valor Saldo</th>
+      <th>Pol&iacute;tica</th>
+      <th>%</th>
+    </tr>
+<script language="SpeedScript">
+         end.
+</script>
+    <tr class="`c-color`">
+      <td style="text-align: left;">`c-it-codigo`</td>
+      <td style="text-align: left;">`c-descricao`</td>
+      <td style="text-align: right;">`string(tt-saida.preco, '->>>,>>>,>>9.9999')`</td>
+      <td style="text-align: right;">`string(tt-saida.consumo-med, '->>>,>>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string((tt-saida.consumo-med * tt-saida.preco), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(tt-saida.quantidade, '->>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string((tt-saida.quantidade * tt-saida.preco), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(tt-saida.saldo, '->>>,>>9')`</td>
+      <td style="text-align: right;">`string((tt-saida.saldo * tt-saida.preco), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(tt-saida.qtd-pol, '->>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string((if tt-saida.qtd-pol = 0 then 100 else (tt-saida.saldo / tt-saida.qtd-pol)), '->>>,>>>,>>>,>>9.99')`</td>
+    </tr>
+<script language="SpeedScript">
+         assign de-subtotal-consumo    = de-subtotal-consumo + tt-saida.consumo-med * tt-saida.preco
+                de-subtotal-quantidade = de-subtotal-quantidade + tt-saida.quantidade * tt-saida.preco
+                de-subtotal-saldo      = de-subtotal-saldo + tt-saida.saldo * tt-saida.preco
+                de-total-consumo       = de-total-consumo + tt-saida.consumo-med * tt-saida.preco
+                de-total-quantidade    = de-total-quantidade + tt-saida.quantidade * tt-saida.preco
+                de-total-saldo         = de-total-saldo + tt-saida.saldo * tt-saida.preco.
+         
+         if last-of (tt-saida.cod-estabel) then do:
+</script>
+    <tr class="total">
+      <td style="text-align: right;" colspan="4">Subtotal</td>
+      <td style="text-align: right;">`string(de-subtotal-consumo, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-subtotal-quantidade, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-subtotal-saldo, ">>>,>>>,>>9.99")`</td>
+      <td colspan="2">&nbsp;</td>
+    </tr>
+  </table>
+<script language="SpeedScript">
+         end.
+      end. /** for each **/
+</script>
+  <table border="0" cellspacing="0" width="98%">
+    <colgroup>
+      <col width="50%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="8%" />
+      <col width="10%" />
+    </colgroup>
+    <tr class="total">
+      <td style="text-align: right;">Total geral</td>
+      <td style="text-align: right;">`string(de-total-consumo, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-total-quantidade, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-total-saldo, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+    </tr>
+  </table>
+</div>
+<script language="SpeedScript">
+   end. /** else do **/
+end. /** if **/
+
+if valid-handle(h-util) then
+   delete object h-util.
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,93 @@
+/**********************************************************************
+****
+****    SUGEST€O DE RETIRADA - Abertura de Query
+****
+****    Par³metro: {1} - Pode assumir os valores "" ou descending 
+****
+************************************************************************/
+
+/* HORIZONTAL */
+if  i-ind-seq-retirada = 1  then 
+    Open query q-box-saldo
+      for each wm-box-saldo
+         where wm-box-saldo.cod-estabel       = wm-docto-itens.cod-estabel
+           and wm-box-saldo.cod-local         = wm-docto-itens.cod-local
+           and wm-box-saldo.cod-item          = wm-docto-itens.cod-item
+           and wm-box-saldo.cod-cliente       = wm-docto-itens.cod-cliente
+           and wm-box-saldo.cod-refer         = wm-docto-itens.cod-refer
+           and (wm-box-saldo.cod-lote         = c-lote or
+                c-lote                        = "" )
+           and wm-box-saldo.qtd-item          > wm-box-saldo.qtd-item-bloq
+           and wm-box-saldo.ind-status-saldo  = 3 /* liberado */ no-lock,
+         first wm-box
+         where wm-box.cod-estabel       = wm-box-saldo.cod-estabel
+           and wm-box.cod-local         = wm-box-saldo.cod-local
+           and wm-box.log-bloq-retir    = NO /** Liberado Retirada **/
+           and wm-box.id-box            = wm-box-saldo.id-box no-lock,
+         first wm-tipo-box /* normal */ where 
+               (wm-tipo-box.ind-status-box  = 1 or
+                wm-tipo-box.ind-status-box  = 2) and 
+                wm-tipo-box.cdn-tipo-box    = wm-box.cdn-tipo-box no-lock,                    
+         FIRST wm-item-embalagem-local
+         WHERE wm-item-embalagem-local.cod-estabel   = wm-box-saldo.cod-estabel
+           AND wm-item-embalagem-local.cod-local     = wm-box-saldo.cod-local 
+           AND wm-item-embalagem-local.cod-item      = wm-box-saldo.cod-item
+           AND wm-item-embalagem-local.cod-embalagem = wm-box-saldo.cod-embalagem NO-LOCK
+             by wm-box-saldo.dt-transacao     {1}
+             by wm-box-saldo.cod-cliente
+             by wm-box-saldo.cod-estabel
+             by wm-box-saldo.cod-local
+             by wm-box-saldo.cod-item
+             by wm-box-saldo.cod-refer
+             by wm-box-saldo.cod-lote
+             by wm-box-saldo.ind-status-saldo
+             by wm-box-saldo.qtd-item - wm-box-saldo.qtd-item-bloq
+             by wm-box.cod-bloco            
+             by wm-box.cod-rua              
+             by wm-box.cod-coluna           
+             by wm-box.cod-nivel   
+             BY wm-item-embalagem-local.qtd-volume.
+        
+/* VERTICAL */         
+else   
+    Open query q-box-saldo
+      for each wm-box-saldo
+         where wm-box-saldo.cod-estabel      = wm-docto-itens.cod-estabel
+           and wm-box-saldo.cod-local        = wm-docto-itens.cod-local
+           and wm-box-saldo.cod-item         = wm-docto-itens.cod-item
+           and wm-box-saldo.cod-refer        = wm-docto-itens.cod-refer
+           and (wm-box-saldo.cod-lote        = c-lote or
+                c-lote                       = "" )
+           and wm-box-saldo.qtd-item         > wm-box-saldo.qtd-item-bloq
+           and wm-box-saldo.cod-cliente      = wm-docto-itens.cod-cliente
+           and wm-box-saldo.ind-status-saldo = 3 /* liberado */ no-lock,
+         first wm-box
+         where wm-box.cod-estabel       = wm-box-saldo.cod-estabel
+           and wm-box.cod-local         = wm-box-saldo.cod-local
+           and wm-box.log-bloq-retir    = NO /** Liberado Retirada **/
+           and wm-box.id-box            = wm-box-saldo.id-box no-lock,
+         first wm-tipo-box where 
+               (wm-tipo-box.ind-status-box  = 1 or
+                wm-tipo-box.ind-status-box  = 2)
+           and wm-tipo-box.cdn-tipo-box    = wm-box.cdn-tipo-box no-lock,                     
+         FIRST wm-item-embalagem-local
+         WHERE wm-item-embalagem-local.cod-estabel   = wm-box-saldo.cod-estabel 
+           AND wm-item-embalagem-local.cod-local     = wm-box-saldo.cod-local
+           AND wm-item-embalagem-local.cod-item      = wm-box-saldo.cod-item
+           AND wm-item-embalagem-local.cod-embalagem = wm-box-saldo.cod-embalagem NO-LOCK
+             by wm-box-saldo.dt-transacao   {1}
+             by wm-box-saldo.cod-cliente
+             by wm-box-saldo.cod-estabel
+             by wm-box-saldo.cod-local
+             by wm-box-saldo.cod-item
+             by wm-box-saldo.cod-refer
+             by wm-box-saldo.cod-lote     
+             by wm-box-saldo.qtd-item - wm-box-saldo.qtd-item-bloq
+             by wm-box.cod-bloco            
+             by wm-box.cod-rua              
+             by wm-box.cod-nivel            
+             by wm-box.cod-coluna
+             BY wm-item-embalagem-local.qtd-volume.
+        
+
+/* fim */

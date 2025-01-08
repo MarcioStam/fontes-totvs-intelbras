@@ -1,0 +1,87 @@
+procedure pi-procedimento-19:
+    def var lg-inconsistencia as logi no-undo.
+
+    def buffer b-op-ferram for op-ferram.
+    
+    form operacao.it-codigo   format "x(16)" column-label "Item"
+         operacao.op-codigo   format ">>>>9" column-label "Oper"
+         operacao.descricao   format "x(34)" column-label "Descri‡Æo"
+         op-ferram.ferramenta format "x(16)" column-label "Ferramenta"
+         ferr-prod.char-1     format "x(11)" column-label "Tipo"
+         with width 132 down no-box stream-io frame f-19.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "duplic-recurso-operacao.txt"
+           c-titulo-relat = "Mais de um mesmo tipo de Recurso na mesma Opera‡Æo".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Mais do mesmo Recurso em mesma Oper...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each operacao fields(it-codigo op-codigo descricao) no-lock
+       where operacao.data-termino >= today,
+        each op-ferram fields(num-id-operacao ferramenta) no-lock
+       where op-ferram.num-id-operacao = operacao.num-id-operacao,
+       first ferr-prod fields(char-1) no-lock
+       where ferr-prod.cod-ferr-prod = op-ferram.ferramenta:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 15 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if trim(ferr-prod.char-1) = "Dispositivo"
+        then next.
+
+        assign lg-inconsistencia = no.
+
+        if  ferr-prod.char-1 <> ""
+        and ferr-prod.char-1 <> "..."
+        then for each b-op-ferram fields() no-lock
+                where b-op-ferram.num-id-operacao = op-ferram.num-id-operacao
+                  and rowid(b-op-ferram)         <> rowid(op-ferram),
+                first b-ferr-prod fields() no-lock
+                where b-ferr-prod.cod-ferr-prod = b-op-ferram.ferramenta
+                  and b-ferr-prod.char-1        = ferr-prod.char-1:
+                 assign lg-inconsistencia = yes.
+                 leave.
+             end. /* for each b-op-ferram */
+        else for each b-op-ferram fields() no-lock
+                where b-op-ferram.num-id-operacao = op-ferram.num-id-operacao
+                  and rowid(b-op-ferram)         <> rowid(op-ferram),
+                first b-ferr-prod fields() no-lock
+                where b-ferr-prod.cod-ferr-prod = b-op-ferram.ferramenta
+                  and trim(b-ferr-prod.char-1) <> "Ferramenta"
+                  and trim(b-ferr-prod.char-1) <> "Dispositivo"
+                  and trim(b-ferr-prod.char-1) <> "MÆo de Obra":
+                 assign lg-inconsistencia = yes.
+                 leave.
+             end. /* for each b-op-ferram */
+
+        if not lg-inconsistencia
+        then next.
+
+        disp stream st-relat
+             operacao.it-codigo             
+             operacao.op-codigo
+             operacao.descricao
+             op-ferram.ferramenta
+             trim(ferr-prod.char-1) @ ferr-prod.char-1
+             with frame f-19.
+        down stream st-relat with frame f-19.
+    end. /* for each operacao */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-19 */

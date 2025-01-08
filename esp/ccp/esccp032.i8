@@ -1,0 +1,274 @@
+/**************************************************************************
+**
+**  Include: CD0420.i8 - Procedure pi-classifica-5
+**
+**************************************************************************/
+
+procedure pi-classifica-5.
+        DEFINE BUFFER B-ORD-CLASS FOR ORD-PROD LABEL "B-ORD-CLASS EM PI-CLASSIFICA-8":U.
+         if tt-param.l-componente then
+            view frame f-comp-estr.
+         else
+             view frame f-cab-comp.
+         
+         &if defined(bf_man_206b) &then
+            if l-usa-unid-negoc then do:
+                view frame f-cab-sml-un.
+            end.
+            else do:
+         &endif
+         
+         view frame f-cab-sml.
+         
+         &if defined(bf_man_206b) &then
+            end.
+         &endif
+
+         for each  comprador no-lock 
+             where comprador.cod-comprado >= tt-param.c-comp-ini
+               and comprador.cod-comprado <= tt-param.c-comp-fim:
+               
+               for each item use-index comprador no-lock
+                     where item.cod-comprado = comprador.cod-comprado
+                       and item.it-codigo   >= tt-param.c-item-ini
+                       and item.it-codigo   <= tt-param.c-item-fim
+                       and item.ge-codigo   >= tt-param.i-ge-ini
+                       and item.ge-codigo   <= tt-param.i-ge-fim
+                       and item.fm-codigo   >= tt-param.c-fami-ini
+                       and item.fm-codigo   <= tt-param.c-fami-fim:
+                       
+                       &IF defined(bf_man_206b) &THEN 
+                            if l-usa-unid-negoc then do:
+                                RUN retornaUnidadeNegocio IN h-cdapi024 (INPUT item.cod-estabel,
+                                                                         INPUT item.it-codigo,
+                                                                         INPUT "",
+                                                                         OUTPUT c-cod-unid-negoc).
+                                if not (c-cod-unid-negoc >= tt-param.c-cod-unid-negoc-ini
+                                   and c-cod-unid-negoc <= tt-param.c-cod-unid-negoc-fim) then
+                                   next. 
+                            end.                                                                
+                       &ENDIF                        
+                       
+                   if item.it-codigo = "" then next.
+                       
+                   if    ((item.compr-fabric = 1 and  tt-param.l-comprado)
+                     or   (item.compr-fabric = 2 and  tt-param.l-fabricado))
+                     and ((item.cod-obsoleto = 1 and (tt-param.i-obsoleto = 1 or tt-param.i-obsoleto = 4))
+                     or   (item.cod-obsoleto = 2 and (tt-param.i-obsoleto = 2 or tt-param.i-obsoleto = 4))
+                     or   (item.cod-obsoleto = 3 and (tt-param.i-obsoleto = 3 or tt-param.i-obsoleto = 4))
+                     or   (item.cod-obsoleto = 4 and  tt-param.i-obsoleto = 4)) then 
+                       if not can-find(tt-item where tt-item.it-codigo = item.it-codigo) then do:
+                           create tt-item.
+                           buffer-copy item to tt-item.
+                       end.    
+               
+                   if tt-param.l-componente then
+                       for each estrutura 
+                         where estrutura.it-codigo = item.it-codigo no-lock:
+                           find first b-item 
+                             where b-item.it-codigo    = estrutura.es-codigo
+                             and ((b-item.compr-fabric = 1 and tt-param.l-comp-comp)
+                             or   (b-item.compr-fabric = 2 and tt-param.l-comp-fabr))
+                             no-lock no-error.
+                           if avail b-item then 
+                               if not can-find(tt-item where tt-item.it-codigo = b-item.it-codigo) then do:
+                                   create tt-item.
+                                   buffer-copy b-item to tt-item.
+                               end.
+                       end.
+               end.        
+               for each tt-item use-index comprador no-lock
+                     where tt-item.cod-comprado = comprador.cod-comprado:    
+                   
+                     if not can-find( first item-uni-estab where item-uni-estab.it-codigo     = tt-item.it-codigo
+                                                       and item-uni-estab.cod-estabel        >= tt-param.c-estab-ini
+                                                       and item-uni-estab.cod-estabel        <= tt-param.c-estab-fim
+                                                       and item-uni-estab.cd-planejado       >= tt-param.c-plan-ini
+                                                       and item-uni-estab.cd-planejado       <= tt-param.c-plan-fim
+                                                       and item-uni-estab.nr-linha           >= tt-param.i-linha-ini
+                                                       and item-uni-estab.nr-linha           <= tt-param.i-linha-fim) then
+                                                       next.
+                    
+                     run pi-acompanhar in h-acomp (input c-lb-comp[1] + " "  + comprador.cod-comprado).
+                     assign l-ref = no.
+                    
+                     if tt-item.tipo-con-est = 4 then do:
+                        for each  ref-item
+                            where ref-item.it-codigo = tt-item.it-codigo no-lock:
+                            assign c-cod-refer = ref-item.cod-refer.                
+                    
+                            find first saldo-estoq
+                                 where saldo-estoq.it-codigo    = tt-item.it-codigo
+                                   and saldo-estoq.cod-estabel >= tt-param.c-estab-ini
+                                   and saldo-estoq.cod-estabel <= tt-param.c-estab-fim
+                                   and saldo-estoq.cod-refer    = c-cod-refer
+                                 no-lock no-error.
+                    
+                            find first saldo-terc
+                                 where saldo-terc.it-codigo    = tt-item.it-codigo
+                                   and saldo-terc.cod-estabel >= tt-param.c-estab-ini
+                                   and saldo-terc.cod-estabel <= tt-param.c-estab-fim
+                                   and saldo-terc.cod-refer    = c-cod-refer
+                                 no-lock no-error.
+                    
+                            find first ord-prod
+                                 where ord-prod.it-codigo    = tt-item.it-codigo
+                                   and ord-prod.cod-estabel >= tt-param.c-estab-ini
+                                   and ord-prod.cod-estabel <= tt-param.c-estab-fim
+                                   and ord-prod.cod-refer    = c-cod-refer
+                                 no-lock no-error.
+                    
+                            find first ordem-compra
+                                 where ordem-compra.it-codigo    = tt-item.it-codigo
+                                   and ordem-compra.cod-estabel >= tt-param.c-estab-ini
+                                   and ordem-compra.cod-estabel <= tt-param.c-estab-fim
+                                   and ordem-compra.cod-refer    = c-cod-refer
+                                 no-lock no-error.
+                    
+                            assign l-res-estabel = no.
+                            /* queli */      
+                            for each  reservas fields (nr-ord-produ) use-index planejamento no-lock
+                                where reservas.it-codigo = tt-item.it-codigo and
+                                      reservas.estado = 1
+                                  and reservas.cod-refer = c-cod-refer:
+                    
+                                for first b-ord-class fields (cod-estabel) where
+                                          b-ord-class.nr-ord-prod = reservas.nr-ord-prod no-lock:
+                                          
+                                      if b-ord-class.cod-estabel >= tt-param.c-estab-ini and
+                                         b-ord-class.cod-estabel <= tt-param.c-estab-fim then do:
+                                         assign l-res-estabel = yes.
+                                         leave.
+                                      end.
+                                end.
+                            end.
+                            find first ped-item
+                                 where ped-item.it-codigo = tt-item.it-codigo
+                                   and ped-item.cod-refer = c-cod-refer
+                                 no-lock no-error.
+                            if avail ped-item then do:
+                               find first ped-venda
+                                    where ped-venda.nome-abrev   = ped-item.nome-abrev
+                                      and ped-venda.nr-pedcli    = ped-item.nr-pedcli
+                                      and (ped-venda.cod-sit-aval = 2 or not tt-param.l-cred-aprov
+                                       or ped-venda.cod-sit-aval = 3)
+                                      and ped-venda.cod-estabel >= tt-param.c-estab-ini
+                                      and ped-venda.cod-estabel <= tt-param.c-estab-fim
+                                    no-lock no-error.
+                            end.
+                            else find ped-venda where
+                                      rowid (ped-venda) = ? no-lock no-error.
+                    
+                    
+                            if avail saldo-estoq or
+                               avail saldo-terc or
+                               avail ord-prod or
+                               avail ordem-compra or
+                               l-res-estabel or
+                               avail ped-venda then do:
+                               assign c-desc-cab  = tt-item.desc-item
+                                      c-cod-item  = tt-item.it-codigo
+                                      c-un        = tt-item.un.
+                               if tt-item.cod-comprado <> c-comprado then do:
+                                  assign c-comprado  = tt-item.cod-comprado
+                                         c-comp-desc = comprador.nome.
+                                  page.
+                               end.                       
+                    
+                               find item where item.it-codigo = tt-item.it-codigo no-error.
+                               if avail item then
+                               run pi-simulacao (buffer item,
+                                         input  yes
+                                         &if defined(bf_man_206b) &then
+                                            ,input l-usa-unid-negoc
+                                         &endif
+                                         ).
+                    
+                            end.
+                        end.
+                     end.
+                     else do:
+                          assign c-cod-refer = "".
+                          find first saldo-estoq
+                               where saldo-estoq.it-codigo    = tt-item.it-codigo
+                                 and saldo-estoq.cod-estabel >= tt-param.c-estab-ini
+                                 and saldo-estoq.cod-estabel <= tt-param.c-estab-fim
+                               no-lock no-error.
+                    
+                          find first saldo-terc
+                               where saldo-terc.it-codigo    = tt-item.it-codigo
+                                 and saldo-terc.cod-estabel >= tt-param.c-estab-ini
+                                 and saldo-terc.cod-estabel <= tt-param.c-estab-fim
+                               no-lock no-error.
+                    
+                          find first ord-prod
+                               where ord-prod.it-codigo    = tt-item.it-codigo
+                                 and ord-prod.cod-estabel >= tt-param.c-estab-ini
+                                 and ord-prod.cod-estabel <= tt-param.c-estab-fim
+                               no-lock no-error.
+                    
+                          find first ordem-compra
+                               where ordem-compra.it-codigo    = tt-item.it-codigo
+                                 and ordem-compra.cod-estabel >= tt-param.c-estab-ini
+                                 and ordem-compra.cod-estabel <= tt-param.c-estab-fim
+                               no-lock no-error.
+                    
+                          assign l-res-estabel = no.
+                          /* queli */
+                          for each  reservas fields (nr-ord-produ) use-index planejamento no-lock
+                              where reservas.it-codigo = tt-item.it-codigo
+                               and  reservas.estado = 1:    
+                               for first b-ord-class fields (cod-estabel) where
+                                         b-ord-class.nr-ord-prod = reservas.nr-ord-prod no-lock:
+                                   if b-ord-class.cod-estabel >= tt-param.c-estab-ini and
+                                      b-ord-class.cod-estabel <= tt-param.c-estab-fim then do:
+                                      assign l-res-estabel = yes.
+                                      leave.
+                                   end.
+                               end.
+                          end.
+                          find first ped-item
+                               where ped-item.it-codigo = tt-item.it-codigo no-lock no-error.
+                          if avail ped-item then do:
+                             find first ped-venda
+                                  where ped-venda.nome-abrev   = ped-item.nome-abrev
+                                    and ped-venda.nr-pedcli    = ped-item.nr-pedcli
+                                    and (ped-venda.cod-sit-aval = 2 or not tt-param.l-cred-aprov
+                                     or ped-venda.cod-sit-aval = 3)
+                                    and ped-venda.cod-estabel >= tt-param.c-estab-ini
+                                    and ped-venda.cod-estabel <= tt-param.c-estab-fim
+                                  no-lock no-error.
+                          end.
+                          else find ped-venda where
+                                      rowid (ped-venda) = ? no-lock no-error.
+                    
+                    
+                          if avail saldo-estoq or
+                             avail saldo-terc or
+                             avail ord-prod or
+                             avail ordem-compra or
+                             l-res-estabel or
+                             avail ped-venda then do:
+                             assign c-desc-cab  = tt-item.desc-item
+                                    c-cod-item  = tt-item.it-codigo
+                                    c-un        = tt-item.un.
+                             if tt-item.cod-comprado <> c-comprado then do:
+                                assign c-comprado  = tt-item.cod-comprado
+                                       c-comp-desc = comprador.nome.
+                                page.
+                             end.                     
+                    
+                             find item where item.it-codigo = tt-item.it-codigo no-error.
+                             if avail item then
+                             run pi-simulacao (buffer item,
+                                         input  yes
+                                         &if defined(bf_man_206b) &then
+                                            ,input l-usa-unid-negoc
+                                         &endif
+                                         ).
+                    
+                          end.
+                     end.                  
+         end.
+     end.
+end procedure.        

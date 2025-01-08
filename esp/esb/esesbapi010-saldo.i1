@@ -1,0 +1,24 @@
+
+DEF TEMP-TABLE tt-saldo NO-UNDO
+   FIELD CodigoBeneficioCanal   AS CHAR FORMAT "X(50)"
+   FIELD VerbaCalculada         AS DEC
+   FIELD VerbaPeriodoAnterior   AS DEC
+   FIELD VerbaTotal             AS DEC
+   
+   FIELD VerbaEmpenhadaAnalise  AS DEC
+   FIELD VerbaEmpenhadaAprovada AS DEC
+   FIELD VerbaEmpenhadaTotal    AS DEC
+   
+   FIELD VerbaReembolsada       AS DEC
+   
+   FIELD VerbaCancelada         AS DEC
+   FIELD VerbaAjustada          AS DEC
+   
+   FIELD VerbaDisponivel        AS DEC.
+
+
+
+
+
+   
+   

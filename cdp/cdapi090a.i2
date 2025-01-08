@@ -1,0 +1,290 @@
+/*******************************************************
+**
+** Variaves e Dataset Integra‡Æo Datasul x Samsung SCI
+**
+********************************************************/
+
+DEFINE VARIABLE d-vol-tot           AS DECIMAL   NO-UNDO.
+DEFINE VARIABLE d-vol-un            AS DECIMAL   NO-UNDO.
+DEFINE VARIABLE d-tot-pes           AS DECIMAL   NO-UNDO.
+DEFINE VARIABLE cDate               AS CHARACTER NO-UNDO.
+
+DEFINE VARIABLE port-type-handle    AS HANDLE    NO-UNDO.
+
+DEF TEMP-TABLE tt-pre-fatur NO-UNDO
+    FIELD cdd-embarq LIKE nota-fiscal.cdd-embarq
+    FIELD nr-resumo  LIKE nota-fiscal.nr-resumo
+    FIELD nome-abrev LIKE nota-fiscal.nome-abrev
+    FIELD nr-pedcli  LIKE it-nota-fisc.nr-pedcli.
+
+/***** Tracking Point 1 *****/
+DEFINE TEMP-TABLE tt-salesOrder-tp1 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "salesOrder"
+    FIELD soNo               AS CHARACTER 
+    FIELD actionType         AS CHARACTER 
+    FIELD issueDate          AS CHARACTER 
+    FIELD shiperFederalId    AS CHARACTER 
+    FIELD shiperName         AS CHARACTER 
+    FIELD salesDivision      AS CHARACTER 
+    FIELD customerName       AS CHARACTER 
+    FIELD customerCategory   AS CHARACTER 
+    FIELD customerFederalId  AS CHARACTER 
+    FIELD customerState      AS CHARACTER 
+    FIELD customerCity       AS CHARACTER 
+    FIELD customerAddress    AS CHARACTER 
+    FIELD customerZipcode    AS CHARACTER 
+    FIELD customerDeliveryNo AS CHARACTER 
+    FIELD rdd                AS CHARACTER 
+    FIELD totalAmount        AS CHARACTER
+    FIELD incoterm           AS CHARACTER
+    FIELD carrierFederalId   AS CHARACTER
+    FIELD salesChannel       AS CHARACTER
+	FIELD rwid               AS ROWID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE tt-item-tp1 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "item"
+    FIELD itemOrder     AS CHARACTER
+	FIELD sku           AS CHARACTER 
+	FIELD description   AS CHARACTER 
+    FIELD category      AS CHARACTER
+	FIELD qty           AS CHARACTER 
+	FIELD unit          AS CHARACTER 
+    FIELD volumeTotal   AS CHARACTER 
+    FIELD weightTotal   AS CHARACTER 
+    FIELD volumeUnit    AS CHARACTER 
+    FIELD weightUnit    AS CHARACTER
+    FIELD rdd           AS CHARACTER 
+	FIELD rwid          AS ROWID
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET salesOrderGo-tp1
+    NAMESPACE-URI "" 
+    XML-NODE-NAME ""
+    FOR tt-salesOrder-tp1, tt-item-tp1
+    DATA-RELATION  RELATION1 FOR tt-salesOrder-tp1, tt-item-tp1 NESTED
+        RELATION-FIELDS (tt-salesOrder-tp1.rwid, tt-item-tp1.rwid).
+/********/
+
+/***** Tracking Point 4 *****/   
+DEFINE TEMP-TABLE tt-deliveryOrder-tp4 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "deliveryOrder"
+	FIELD doNo              AS CHARACTER 
+    FIELD actionType        AS CHARACTER 
+    FIELD soNo              AS CHARACTER 
+    FIELD issueDate         AS CHARACTER 
+    FIELD shiperFederalId   AS CHARACTER 
+    FIELD customerFederalId AS CHARACTER 
+    FIELD shipToName        AS CHARACTER 
+    FIELD shipToCategory    AS CHARACTER 
+    FIELD shipToFederalId   AS CHARACTER 
+    FIELD shipToState       AS CHARACTER 
+    FIELD shipToCity        AS CHARACTER 
+    FIELD shipToAddress     AS CHARACTER 
+    FIELD shipToZipcode     AS CHARACTER 
+    FIELD orderType         AS CHARACTER
+    FIELD shippingCondition AS CHARACTER
+    FIELD shipType          AS CHARACTER
+    FIELD rdd               AS CHARACTER 
+	FIELD rwid              AS ROWID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE TEMP-TABLE tt-item-tp4 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "item"
+    FIELD itemOrder     AS CHARACTER
+	FIELD sku           AS CHARACTER 
+	FIELD description   AS CHARACTER 
+    FIELD category      AS CHARACTER
+	FIELD qty           AS CHARACTER 
+	FIELD unit          AS CHARACTER 
+    FIELD volumeTotal   AS CHARACTER 
+    FIELD weightTotal   AS CHARACTER 
+    FIELD itemOrderSO   AS CHARACTER 
+	FIELD rwid          AS ROWID
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET deliveryOrderGo-tp4
+    NAMESPACE-URI "" 
+    XML-NODE-NAME ""
+	FOR tt-deliveryOrder-tp4, tt-item-tp4
+	DATA-RELATION  RELATION1 FOR tt-deliveryOrder-tp4, tt-item-tp4 NESTED
+		RELATION-FIELDS (tt-deliveryOrder-tp4.rwid, tt-item-tp4.rwid).
+/***********/
+
+/***** Tracking Point 5 *****/
+DEFINE TEMP-TABLE tt-shipment-TP5 NO-UNDO
+    NAMESPACE-URI "" 
+    XML-NODE-NAME "Shipment"
+    FIELD shipmentNo        AS CHARACTER
+    FIELD actionType        AS CHARACTER
+    FIELD issueDate         AS CHARACTER
+    FIELD shiperFederalId   AS CHARACTER
+    FIELD carrierName       AS CHARACTER
+    FIELD carrierFederalId  AS CHARACTER
+    FIELD carrierState      AS CHARACTER
+    FIELD carrierCity       AS CHARACTER
+    FIELD carrierAddress    AS CHARACTER
+    FIELD carrierZipcode    AS CHARACTER
+    FIELD etd               AS CHARACTER
+    FIELD vehicleCode       AS CHARACTER
+    FIELD vehicleName       AS CHARACTER
+    FIELD shippingCondition AS CHARACTER
+    FIELD shipType          AS CHARACTER
+    FIELD rwid AS ROWID
+    XML-NODE-TYPE "HIDDEN".
+
+DEFINE TEMP-TABLE tt-deliveryOrder-TP5 NO-UNDO
+    NAMESPACE-URI "" 
+    XML-NODE-NAME "item"
+    FIELD doNo              AS CHARACTER
+    FIELD accessKey         AS CHARACTER
+    FIELD itemOrder         AS CHARACTER
+    FIELD shipToName        AS CHARACTER
+    FIELD shipToCategory    AS CHARACTER
+    FIELD shipToFederalId   AS CHARACTER
+    FIELD shipToState       AS CHARACTER
+    FIELD shipToCity        AS CHARACTER
+    FIELD shipToAddress     AS CHARACTER
+    FIELD shipToZipcode     AS CHARACTER 
+    FIELD sku               AS CHARACTER
+    FIELD description       AS CHARACTER
+    FIELD qty               AS CHARACTER
+    FIELD unit              AS CHARACTER
+    FIELD volumeTotal       AS CHARACTER
+    FIELD weightTotal       AS CHARACTER
+    FIELD rwid AS ROWID 
+        XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET shipmentGo NAMESPACE-URI "" 
+	FOR tt-shipment-TP5, tt-deliveryOrder-TP5
+	DATA-RELATION  RELATION1 FOR tt-shipment-TP5, tt-deliveryOrder-TP5 NESTED
+		RELATION-FIELDS (tt-shipment-TP5.rwid, tt-deliveryOrder-TP5.rwid).
+/***********/
+
+/***** Tracking Point 6 *****/
+DEFINE TEMP-TABLE tt-notafiscal-tp6 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "Invoice"
+	FIELD serie AS CHARACTER 
+	FIELD nNF AS CHARACTER 
+	FIELD accessKey AS CHARACTER 
+	FIELD actionType AS CHARACTER 
+	FIELD natOp AS CHARACTER 
+	FIELD issueDate AS CHARACTER 
+	FIELD shipperFederalId AS CHARACTER 
+    FIELD customerFederalId AS CHARACTER 
+    FIELD shipToFederalId AS CHARACTER 
+	FIELD carrierFederalId AS CHARACTER 
+	FIELD totalAmount AS CHARACTER 
+	FIELD freightAmount AS CHARACTER 
+	FIELD additionalInfo AS CHARACTER
+    /*FIELD shipmentNo AS CHARACTER*/
+    FIELD rwid AS ROWID
+    XML-NODE-TYPE "HIDDEN".
+
+DEFINE TEMP-TABLE tt-item-tp6 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "item"
+	FIELD sku               AS CHARACTER
+    FIELD doNo              AS CHARACTER
+    FIELD shipmentNo        AS CHARACTER
+    FIELD itemOrder         AS CHARACTER
+	FIELD description       AS CHARACTER 
+	FIELD ncm               AS CHARACTER 
+	FIELD qty               AS CHARACTER 
+	FIELD unit              AS CHARACTER 
+	FIELD unitValue         AS CHARACTER 
+	FIELD itemAmount        AS CHARACTER 
+	FIELD cfop              AS CHARACTER 
+	FIELD rwid              AS ROWID
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET notaFiscalGo-tp6 
+    NAMESPACE-URI "" 
+    /*XML-NODE-NAME "notafiscal"*/
+	FOR tt-notafiscal-tp6, tt-item-tp6
+	DATA-RELATION  RELATION1 FOR tt-notafiscal-tp6, tt-item-tp6 NESTED
+		RELATION-FIELDS (tt-notafiscal-tp6.rwid, tt-item-tp6.rwid).
+
+/*********/
+
+/***** Tracking Point 9 *****/
+DEFINE TEMP-TABLE tt-manifest-TP9 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "manifest"
+	FIELD manifestNo       AS CHARACTER
+	FIELD actionType       AS CHARACTER
+	FIELD issueDate        AS CHARACTER
+	FIELD shiperFederalId  AS CHARACTER
+	FIELD shipToFederalId  AS CHARACTER
+    FIELD carrierName      AS CHARACTER
+	FIELD carrierFederalId AS CHARACTER
+	FIELD carrierState     AS CHARACTER
+	FIELD carrierCity      AS CHARACTER
+    FIELD carrierAddress   AS CHARACTER
+    FIELD carrierZipcode   AS CHARACTER
+    FIELD etd              AS CHARACTER
+    FIELD vehicleCode      AS CHARACTER
+    FIELD vehicleName      AS CHARACTER
+    FIELD shippingCondition AS CHARACTER
+    FIELD shipType          AS CHARACTER
+    FIELD rwid AS ROWID
+    XML-NODE-TYPE "HIDDEN".
+
+DEFINE TEMP-TABLE tt-shipment-TP9 NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "shipment"
+	FIELD shipmentNo       AS CHARACTER
+	FIELD rwid AS ROWID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET manifestGo NAMESPACE-URI "" 
+	FOR tt-manifest-TP9, tt-shipment-TP9
+	DATA-RELATION  RELATION1 FOR tt-manifest-TP9, tt-shipment-TP9 NESTED
+		RELATION-FIELDS (tt-manifest-TP9.rwid, tt-shipment-TP9.rwid).
+/********/
+
+/**** Tracking Point 2,3,7,8,10 *****/
+DEFINE TEMP-TABLE tt-tracking NO-UNDO
+	NAMESPACE-URI "" 
+    XML-NODE-NAME "tracking"
+	FIELD refNo          AS CHARACTER
+    FIELD refType        AS CHARACTER
+    FIELD trackingCode   AS CHARACTER
+    FIELD checkpointCode AS CHARACTER
+    FIELD trackingDate   AS CHARACTER
+    FIELD remarks        AS CHARACTER
+	FIELD rwid AS ROWID 
+		XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET trackingGo NAMESPACE-URI "" 
+	FOR tt-tracking.
+/**********/
+
+/***** Ocorrencias *******/
+DEFINE TEMP-TABLE tt-occurrence NO-UNDO
+        NAMESPACE-URI ""
+    XML-NODE-NAME "occurrence"
+    FIELD refNo	                AS CHARACTER /* TRIM(it-pre-fat.nome-abrev) + "|" + TRIM(it-pre-fat.nr-pedcli) + "|" + STRING(it-pre-fat.nr-sequencia) 
+                                                + "|" + TRIM(it-pre-fat.it-codigo) + "|" + TRIM(it-pre-fat.cod-refer) + "|" + STRING(it-pre-fat.nr-entrega) */
+    FIELD refType	        AS CHARACTER /* 2 = Delivery Order (refNo = doNo) */
+    FIELD occurrenceCode	AS CHARACTER /* Fixo "1001" - Occorrˆncia de falta de saldo */
+    FIELD occurrenceDate	AS CHARACTER /* 2015-12-01T17:57:30	Data e Hora do acontecimento */
+    FIELD occurrenceConsequence	AS CHARACTER /* Fixo "0" */
+    FIELD remarks	        AS CHARACTER /* Observa‡Æo ou informa‡Æo adicional (NÆo Obritat¢rio) */
+    FIELD rwid AS ROWID 
+          XML-NODE-TYPE "HIDDEN" .
+
+DEFINE DATASET occurrenceGo NAMESPACE-URI ""
+        FOR tt-occurrence.
+/************************/
+
+/***** Retorno SCI *******/
+DEFINE TEMP-TABLE ttRetorno NO-UNDO
+    FIELD protocolNo   AS CHAR
+    FIELD messageCode  AS CHAR
+    FIELD mensagem     AS CHAR.

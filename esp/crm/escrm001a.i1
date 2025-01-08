@@ -1,0 +1,115 @@
+/********************************************************************************
+ ** include....: esp/crm/escrm001a.i1
+ ** Data.......: Setembro/ 2010
+ ** Objetivo...: Definicoes das temp-tables alteradas pelas triggers de write/delete.
+ ********************************************************************************/
+
+DEF NEW GLOBAL SHARED VAR l-web-service AS LOGICAL NO-UNDO.
+
+define temp-table tt-raw-transfer no-undo
+field record  as raw.
+
+define temp-table tt-cont-emit-atu no-undo like cont-emit 
+index idx_chave cod-emitente sequencia.
+
+define temp-table tt-loc-entr-atu no-undo like loc-entr 
+index idx_chave nome-abrev cod-entrega.
+
+define temp-table tt-repres-atu no-undo like repres 
+index idx_chave cod-rep.
+
+define temp-table tt-portador-atu no-undo like mgcad.portador 
+index idx_chave ep-codigo cod-portador modalidade.
+
+define temp-table tt-receita-padrao-atu no-undo like tipo-rec-desp 
+index idx_chave tp-codigo.
+
+define temp-table tt-cond-pagto-atu no-undo like cond-pagto 
+index idx_chave cod-cond-pag.
+
+define temp-table tt-cep-atu no-undo like cep 
+index idx_chave cep.
+
+define temp-table tt-transporte-atu no-undo like transporte
+index idx_chave cod-transp.
+
+define temp-table tt-canal-venda-atu no-undo like canal-venda
+index idx_chave cod-canal-venda.
+
+define temp-table tt-gr-cli-atu no-undo like gr-cli
+index idx_chave cod-gr-cli.
+
+define temp-table tt-relacionamento-cliente-atu no-undo like crm-relacionamento-cliente
+index idx_chave cod-emitente seq.
+
+define temp-table tt-item-atu no-undo like item
+index idx_chave it-codigo.
+
+DEFINE TEMP-TABLE tt-familia-material-atu no-undo LIKE familia
+INDEX idx_chave fm-codigo.
+
+DEFINE TEMP-TABLE tt-familia-comercial-atu no-undo LIKE fam-comerc
+INDEX idx_chave fm-cod-com.
+DEFINE TEMP-TABLE tt-new_unidade_familia-atu like tt-new_unidade_familia.  
+DEFINE TEMP-TABLE tt-new_segmento-atu        like tt-new_segmento. 
+DEFINE TEMP-TABLE tt-new_familia-atu         like tt-new_familia. 
+DEFINE TEMP-TABLE tt-new_subfamilia-atu      like tt-new_subfamilia.  
+DEFINE TEMP-TABLE tt-new_origem-atu          like tt-new_origem.  
+
+define temp-table tt-estrutura-atu no-undo like estrutura
+index idx_chave it-codigo sequencia es-codigo.
+
+define temp-table tt-grup-estoque-atu no-undo like Grup-estoque
+index idx_chave ge-codigo.
+
+DEFINE TEMP-TABLE tt-crm-categoria-atu no-undo LIKE crm-categoria
+INDEX idx_chave cd-categoria.
+
+DEFINE TEMP-TABLE tt-crm-categ-un-atu no-undo LIKE crm-categ-un
+INDEX idx_chave cd-categoria cd-unid-negoc.
+
+DEFINE TEMP-TABLE tt-natur-oper-atu no-undo LIKE natur-oper
+INDEX idx_chave nat-operacao.
+
+DEFINE TEMP-TABLE tt-mensagem-atu no-undo LIKE mensagem
+INDEX idx_chave cod-mensagem.
+
+DEFINE TEMP-TABLE tt-cidade-atu no-undo LIKE mgcad.cidade
+INDEX idx_chave cidade estado pais.
+
+DEFINE TEMP-TABLE tt-unid-feder-atu no-undo LIKE unid-feder
+INDEX idx_chave pais estado.
+
+DEFINE TEMP-TABLE tt-estabelec-atu no-undo LIKE estabelec
+    FIELD nome-abrev as char
+    FIELD id-ativo   AS INTEGER
+INDEX idx_chave cod-estabel.
+
+DEFINE TEMP-TABLE tt-tab-finan-atu no-undo LIKE tab-finan
+INDEX idx_chave nr-tab-finan.
+
+DEFINE TEMP-TABLE tt-ind-tab-finan-atu NO-UNDO
+    FIELD nr-tab-finan        LIKE tab-finan.nr-tab-finan
+    FIELD nr-ind-finan        AS INTEGER FORMAT ">9":U LABEL "Nr Seq Öndice":U HELP "N£mero do ¡ndice de financiamento":U
+    FIELD tab-dia-fin         LIKE tab-finan.tab-dia-fin[1]
+    FIELD tab-ind-fin         LIKE tab-finan.tab-ind-fin[1]
+INDEX idx_chave nr-tab-finan nr-ind-finan.
+
+DEFINE TEMP-TABLE tt-rota-atu no-undo LIKE rota
+INDEX idx_chave cod-rota.
+ 
+DEFINE TEMP-TABLE tt-ped-venda-atu no-undo LIKE ped-venda
+INDEX idx_chave_prin IS PRIMARY nr-pedido 
+INDEX idx_chave nr-pedcli nome-abrev.
+
+DEFINE TEMP-TABLE tt-ped-item-atu no-undo LIKE ped-item
+FIELD nr-seq-xml AS INT
+FIELD action     AS CHARACTER
+FIELD sit-crm    AS INTEGER /* 1 - Aberto  2 - Efetivado */
+INDEX idx_chave action sit-crm nr-pedcli nome-abrev it-codigo nr-sequencia.
+
+DEFINE TEMP-TABLE tt-tb-preco-atu no-undo LIKE tb-preco
+INDEX idx_chave nr-tabpre.
+
+DEFINE TEMP-TABLE tt-preco-item-atu no-undo LIKE preco-item
+INDEX idx_chave it-codigo cod-refer nr-tabpre dt-inival quant-min.

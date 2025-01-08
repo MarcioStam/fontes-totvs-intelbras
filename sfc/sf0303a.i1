@@ -1,0 +1,24 @@
+def temp-table tt-ref /*no-undo - retirado o no-undo para o uso na sfapi009, para q a tt se desfa‡a quando desfizer a transa‡Æo*/
+    field line              as int
+    field rw-split-operac   as rowid
+    field nr-ord-prod       like rep-refugo-oper.nr-ord-produ
+    field cod-motiv-refugo  like rep-refugo-oper.cod-motiv-refugo
+    field des-motiv-refugo  like motiv-refugo.des-motiv-refugo
+    field codigo-rejei      like motiv-refugo.codigo-rejei
+    field qtd-operac-refgda like rep-refugo-oper.qtd-operac-refgda
+    field qtd-operac-retrab like rep-refugo-oper.qtd-operac-refgda.
+
+def temp-table tt-ic      no-undo like rep-ic-ctrab 
+    field abreviatura     like item-controle.abreviatura
+    field des-ic          like item-controle.des-ic
+    field formato         like item-controle.formato
+    field nr-tabela       like item-controle.nr-tabela
+    field ind-tip-result  like item-controle.tip-result
+    field tip-result      as integer
+    field resultado       as char format 'x(27)'
+    field rw-ctrab-ic     as rowid.
+
+def temp-table tt-res-tab no-undo like rep-ic-ctrab-tab.
+define  temp-table  tt-res-tab-aux      no-undo like tt-res-tab.
+
+{mfbo/bomf544.i1} /*tt-rep-ic-ctrab, tt-rep-ic-ctrab-tab*/

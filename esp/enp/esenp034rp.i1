@@ -1,0 +1,19 @@
+for each tt-dados use-index {1}:
+    assign i-cont = i-cont + 1.
+
+    if  valid-handle(h-acomp)
+    and i-cont mod 20 = 0
+    then run pi-acompanhar in h-acomp (input i-cont).
+
+    put stream st-csv unformatted 
+        tt-dados.cod-estabel      "|"
+        tt-dados.it-codigo        "|"
+        tt-dados.desc-item        "|"
+        tt-dados.nr-linha         "|"
+        tt-dados.cod-cor          "|"
+        tt-dados.cod-tipo-mp      "|"
+        tt-dados.cod-modelo-placa "|"
+        tt-dados.cod-tam-placa    "|"
+        tt-dados.cod-potencia 
+        skip.
+end. /* for each tt-dados */

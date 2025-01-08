@@ -1,0 +1,125 @@
+FOR EACH ped-venda NO-LOCK
+      WHERE  ped-venda.cod-estabel >= tt-param.cod-estabel-ini
+        AND  ped-venda.cod-estabel <= tt-param.cod-estabel-fim
+        AND  ped-venda.tp-pedido   >= tt-param.tp-pedido-ini
+        AND  ped-venda.tp-pedido   <= tt-param.tp-pedido-fim
+        AND (if  tt-param.l-cancelados then 
+                 ped-venda.cod-sit-ped = 6
+             else
+                 if  tt-param.l-itens-cancelados then
+                     (ped-venda.cod-sit-ped = 1 or ped-venda.cod-sit-ped = 2 or ped-venda.cod-sit-ped = 5 or ped-venda.cod-sit-ped = 6)
+                 else
+                     (ped-venda.cod-sit-ped = 1 or ped-venda.cod-sit-ped = 2 or ped-venda.cod-sit-ped = 5)        
+           )
+      ,
+      EACH ped-item NO-LOCK
+         WHERE (ped-item.nome-abrev   = ped-venda.nome-abrev
+           AND  ped-item.nr-pedcli    = ped-venda.nr-pedcli
+           AND  ped-item.ind-componen = 1
+           AND  ped-item.dt-entrega  >= tt-param.dt-entrega-ini 
+           AND  ped-item.dt-entrega  <= tt-param.dt-entrega-fim
+           AND  ped-item.it-codigo   >= tt-param.it-codigo-ini
+           AND  ped-item.it-codigo   <= tt-param.it-codigo-fim
+           AND  ped-item.cod-unid-negoc >= tt-param.cod-unid-negoc-ini     
+           AND  ped-item.cod-unid-negoc <= tt-param.cod-unid-negoc-fim)
+           AND (if  tt-param.l-cancelados then 
+                   (ped-item.cod-sit-item = 1 or ped-item.cod-sit-item = 2 or  ped-item.cod-sit-item = 5 or ped-item.cod-sit-item = 6)
+                else 
+                    if  not tt-param.l-itens-cancelados then
+                       (ped-item.cod-sit-item = 1 or ped-item.cod-sit-item = 2 or  ped-item.cod-sit-item = 5)
+                    else
+                        ped-item.cod-sit-item = 6
+                ),
+      FIRST estabelec NO-LOCK
+         WHERE estabelec.cod-estabel = ped-venda.cod-estabel,
+      FIRST emitente NO-LOCK
+         WHERE emitente.nome-abrev    = ped-venda.nome-abrev
+           AND emitente.cod-emitente >= tt-param.cod-emitente-ini
+           AND emitente.cod-emitente <= tt-param.cod-emitente-fim,
+      FIRST loc-entr NO-LOCK
+         WHERE loc-entr.nome-abrev  = ped-venda.nome-abrev
+           AND loc-entr.cod-entrega = ped-venda.cod-entrega,
+      FIRST repres NO-LOCK
+         WHERE repres.nome-abrev = ped-venda.no-ab-reppri,
+      FIRST natur-oper  NO-LOCK
+         WHERE natur-oper.nat-operacao = ped-item.nat-operacao,
+        FIRST item FIELDS (it-codigo fm-cod-com descricao-1 descricao-2 cd-trib-ipi) NO-LOCK
+         WHERE item.it-codigo = ped-item.it-codigo,
+        FIRST int-ped-venda2 no-lock
+        WHERE int-ped-venda2.nr-pedido = ped-venda.nr-pedido
+          AND int-ped-venda2.int-1 >= tt-param.grupo-canais-ini
+          AND int-ped-venda2.int-1 <= tt-param.grupo-canais-fim
+/*        ,                                                        */
+/*       FIRST nota-fiscal FIELDS (nr-pedcli emite-duplic) NO-LOCK */
+/*           WHERE nota-fiscal.nr-pedcli = ped-venda.nr-pedcli     */
+/*             AND nota-fiscal.nome-ab-cli = ped-venda.nome-abrev  */
+
+      BREAK {1}
+            {2}:
+       
+      ASSIGN c-considera-acesso-restrito = "Sim ".
+      IF NOT natur-oper.atual-estat THEN
+          ASSIGN c-considera-acesso-restrito = "Nao - Estatitica".
+      ELSE DO:
+          
+          FIND FIRST atendente
+                 WHERE atendente.cd-oper                        = int(ped-venda.tp-pedido)
+                   AND atendente.ind-considera-acesso-restrito  = YES NO-LOCK NO-ERROR.
+          IF NOT AVAIL atendente THEN
+             ASSIGN c-considera-acesso-restrito = "Nao - Atendente".
+
+          if  ped-venda.cod-priori = 44 then
+              ASSIGN c-considera-acesso-restrito = "Nao - Prioridade".
+       
+          IF  ped-venda.cod-sit-aval = 4 THEN  /* pedidos reprovados que deverao ser considerados no acesso restrito */
+              IF  ped-venda.quem-aprovou  <> "Sistema" THEN 
+                  ASSIGN c-considera-acesso-restrito = "Nao - Reprovado Credito".
+              ELSE
+                  IF ped-item.dt-entrega > dt-final THEN 
+                     ASSIGN c-considera-acesso-restrito = "Nao - Data Prev Fat Futura".
+
+           IF ped-item.dt-entrega >= dt-final + 1 THEN 
+              ASSIGN c-considera-acesso-restrito = "Nao - Data Prev Fat Superior Ultimo Dia do Mes".
+           IF ped-venda.cod-emitente = 105068  THEN
+              ASSIGN c-considera-acesso-restrito = "NÆo - Transf. M‚xico".
+      END.
+
+      
+      IF tt-param.l-lista-prioridade-44 = NO THEN DO:
+          if  ped-venda.cod-priori = 44 then next. /* a pedido da Michele comercial sao somente or‡amento */
+      END.
+      IF tt-param.l-lista-atendente-34 = NO THEN DO:
+          if  ped-venda.tp-pedido  = "34" then next. /* a pedido da Michele comercial sao somente or‡amento */
+      END.
+      
+      IF tt-param.i-dup-ini = "S" AND
+         tt-param.i-dup-fim = "S" AND
+         natur-oper.emite-duplic = NO THEN NEXT.
+
+      IF tt-param.i-dup-ini = "N" AND
+         tt-param.i-dup-fim = "N" AND
+         natur-oper.emite-duplic = YES THEN NEXT.
+
+      ASSIGN c-obs        = ped-venda.observacoes
+             c-cond-espec = ped-venda.cond-espec
+             c-obs        = REPLACE(c-obs,CHR(10), " ")
+             c-obs        = REPLACE(c-obs,CHR(13),"")
+             c-obs        = REPLACE(c-obs,CHR(9),"")
+             c-cond-espec = REPLACE(c-cond-espec, CHR(10), " ")
+             c-obs        = REPLACE(c-obs, ";", ",")
+             c-cond-espec = REPLACE(c-cond-espec, ";", ",").
+
+      IF AVAIL repres THEN DO:
+          IF repres.cod-rep < tt-param.i-rep-ini
+          OR repres.cod-rep > tt-param.i-rep-fim THEN NEXT.
+      END.
+      
+      FIND FIRST mgesp.int-ped-item-pci
+         WHERE mgesp.int-ped-item-pci.nome-abrev   = ped-item.nome-abrev
+           AND mgesp.int-ped-item-pci.nr-pedcli    = ped-item.nr-pedcli
+           AND mgesp.int-ped-item-pci.nr-sequencia = ped-item.nr-sequencia
+           AND mgesp.int-ped-item-pci.it-codigo    = ped-item.it-codigo
+           AND mgesp.int-ped-item-pci.cod-refer    = ped-item.cod-refer NO-LOCK NO-ERROR.  
+      
+      RUN pi-imprime.      
+END.

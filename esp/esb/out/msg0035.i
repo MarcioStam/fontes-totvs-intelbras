@@ -1,0 +1,8 @@
+{esp/esb/esesb000.i}.
+
+DEFINE TEMP-TABLE msg0035 NO-UNDO XML-NODE-NAME 'MSG0035'
+   FIELD idm                   AS INT XML-NODE-TYPE 'hidden'
+   FIELD CodigoFamiliaMaterial AS CHARACTER FORMAT "x(100)".
+   
+DEFINE TEMP-TABLE msg0035r NO-UNDO XML-NODE-NAME 'MSG0035R1'
+    FIELD idm AS INT XML-NODE-TYPE 'hidden'.

@@ -1,0 +1,390 @@
+/*-----------------------------------------------------------
+  TRATAMENTO PARA CANCELAMENTO/INUTILIZA€ÇO ASSÖNCRONO (FT)
+-----------------------------------------------------------*/
+
+DEFINE NEW GLOBAL SHARED VARIABLE gc-NFe-nfs-a-cancelar   AS CHAR NO-UNDO.
+DEFINE NEW GLOBAL SHARED VARIABLE gc-NFe-nfs-a-inutilizar AS CHAR NO-UNDO.
+
+ASSIGN gc-NFe-nfs-a-cancelar   = ""
+       gc-NFe-nfs-a-inutilizar = "".
+
+DEFINE VARIABLE h-axsep002        AS HANDLE      NO-UNDO.
+DEFINE VARIABLE h-axsep003        AS HANDLE      NO-UNDO.
+DEFINE VARIABLE h-axsep018        AS HANDLE      NO-UNDO.
+DEFINE VARIABLE i-tipo-transacao  AS INTEGER     NO-UNDO.
+DEFINE VARIABLE i-cont            AS INTEGER     NO-UNDO.
+DEFINE VARIABLE c-desc-cancela    AS CHARACTER   NO-UNDO.
+DEFINE VARIABLE dt-cancela        AS DATE        NO-UNDO.
+DEFINE VARIABLE l-reabre-resumo   AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-cancela-titulos AS LOGICAL     NO-UNDO.
+
+DEFINE BUFFER bf-sit-nf-eletro FOR sit-nf-eletro.
+
+DEFINE TEMP-TABLE tt_nfe_erro NO-UNDO
+    FIELD cStat     AS CHAR
+    FIELD chNFe     AS CHAR
+    FIELD dhRecbto  AS CHAR
+    FIELD nProt     AS CHAR.
+
+DEFINE TEMP-TABLE tt_log_erro_nfe NO-UNDO
+     FIELD ttv_num_cod_erro  AS INTEGER   INITIAL ?
+     FIELD ttv_des_msg_ajuda AS CHARACTER INITIAL ?
+     FIELD ttv_des_msg_erro  AS CHARACTER INITIAL ?.
+
+/*Totvs Colabora‡Æo 2.0*/
+DEFINE VARIABLE cTpTrans AS CHARACTER NO-UNDO.
+
+DEF TEMP-TABLE tt-dados-evento NO-UNDO
+  FIELD cod-estab               LIKE nota-fiscal.cod-estabel
+  FIELD cod-serie               LIKE nota-fiscal.serie
+  FIELD cod-nota-fis            LIKE nota-fiscal.nr-nota-fis
+  FIELD desc-evento             AS CHAR FORMAT "x(100)"
+  FIELD num-seq                 LIKE carta-correc-eletro.num-seq
+  FIELD cod-versao              LIKE carta-correc-eletro.cod-versao
+  FIELD dsl-evento              LIKE carta-correc-eletro.dsl-carta-correc-eletro
+  FIELD des-dat-hora-event      LIKE carta-correc-eletro.des-dat-hora-event
+  FIELD r-rowid                 AS ROWID
+  INDEX ch-nota IS PRIMARY
+        cod-estab   
+        cod-serie   
+        cod-nota-fis.
+
+PROCEDURE pi-Trata-NFe:
+
+    DEFINE INPUT  PARAMETER pdt-cancela        AS DATE        NO-UNDO.
+    DEFINE INPUT  PARAMETER pc-desc-cancela    AS CHARACTER   NO-UNDO.
+    DEFINE INPUT  PARAMETER pl-reabre-resumo   AS LOGICAL     NO-UNDO.
+    DEFINE INPUT  PARAMETER pl-cancela-titulos AS LOGICAL     NO-UNDO.
+    
+    DEFINE VARIABLE i-cont-progs         AS INTEGER    NO-UNDO.
+    DEFINE VARIABLE i-cont-seg           AS INTEGER    NO-UNDO.
+    DEFINE VARIABLE lExecutadoPeloFT0911 AS LOGICAL    NO-UNDO.
+
+    ASSIGN dt-cancela        = pdt-cancela    
+           c-desc-cancela    = pc-desc-cancela
+           l-reabre-resumo   = pl-reabre-resumo  
+           l-cancela-titulos = pl-cancela-titulos.
+
+    
+    /*---
+    ENVIAR XML DE SOLICITA€ÇO DE CANCELAMENTO ou INUTILIZA€ÇO
+    ---*/                     
+    IF  CAN-FIND (FIRST RowErrors NO-LOCK
+                  WHERE RowErrors.ErrorNumber = 17006
+                    AND (INDEX(RowErrors.ErrorDescription , "NF-e em processo de Cancelamento") > 0
+                     OR  INDEX(RowErrors.ErrorDescription , "NF-e em processo de Inutiliza‡Æo") > 0) ) THEN DO: /*Mensagens 17006, geradas no axsep002/axsep003 para cancel/inut Assincrono*/
+
+        IF  gc-NFe-nfs-a-cancelar <> ""
+        AND gc-NFe-nfs-a-cancelar <> ? THEN
+            RUN pi-Cancel-NFe.
+
+        IF  gc-NFe-nfs-a-inutilizar <> ""
+        AND gc-NFe-nfs-a-inutilizar <> ? THEN
+            RUN pi-Inut-NFe.
+
+    END.
+
+    /*---
+    Quando a Situa‡Æo da NF-e estiver 12 ou 13, em processo de cancel/inut, e no retorno (ft0911) nÆo foi poss¡vel cancelar a nota, gravar na ret-nf-eletro,
+    para mostrar os erros salvos no arquivo ft2200.lst (ret-nf-eleltro ‚ mostrada no FT0909)
+    ---*/
+
+    ASSIGN lExecutadoPeloFT0911 = NO.
+
+    DO  i-cont-progs = 2 TO 20:
+        IF  PROGRAM-NAME(i-cont-progs) MATCHES "*ft0911*" THEN DO:
+            ASSIGN lExecutadoPeloFT0911 = YES.
+            LEAVE.
+        END.
+    END.
+
+    IF  lExecutadoPeloFT0911 /*Executado pela Rotina de Cancelamento (sit-nf-eletro 12 ou 13, quando ‚ modo ass¡ncrono)*/
+    AND &if "{&bf_dis_versao_ems}":U >= "2.07":U &then
+          (nota-fiscal.idi-sit-nf-eletro   = 12 OR nota-fiscal.idi-sit-nf-eletro   = 13) /* 12 - NF-e em Processo de Cancelamento | 13 - NF-e em Processo de Inutiliza‡Æo */
+        &else
+          CAN-FIND (FIRST sit-nf-eletro NO-LOCK
+                    WHERE sit-nf-eletro.cod-estabel  = nota-fiscal.cod-estabel
+                      AND sit-nf-eletro.cod-serie    = nota-fiscal.serie
+                      AND sit-nf-eletro.cod-nota-fis = nota-fiscal.nr-nota-fis
+                      AND (sit-nf-eletro.idi-sit-nf-eletro = 12
+                      OR   sit-nf-eletro.idi-sit-nf-eletro = 13))
+        &endif
+    THEN
+        FOR EACH RowErrors NO-LOCK
+           WHERE RowErrors.ErrorSubType = "Erro":U: /*Erros que impediram o cancelamento*/
+
+            /*Gravar na ret-nf-eletro*/
+            CREATE ret-nf-eletro.
+            ASSIGN ret-nf-eletro.cod-estabel = nota-fiscal.cod-estabel
+                   ret-nf-eletro.cod-serie   = nota-fiscal.serie
+                   ret-nf-eletro.nr-nota-fis = nota-fiscal.nr-nota-fis
+                   ret-nf-eletro.cod-msg     = "0"
+                   ret-nf-eletro.dat-ret     = TODAY
+                   ret-nf-eletro.hra-ret     = REPLACE(STRING(TIME + i-cont-seg, "HH:MM:SS"),":","") 
+                   ret-nf-eletro.log-ativo   = YES
+                   ret-nf-eletro.cod-livre-2 = "[Msg FT2200] " + (IF INDEX(TRIM(RowErrors.ErrorHelp),TRIM(RowErrors.ErrorDescription)) > 0 /*Conte£do do ErrorDescription est  contido no ErrorHelp*/
+                                                                  THEN TRIM(RowErrors.ErrorHelp)
+                                                                  ELSE TRIM(RowErrors.ErrorDescription) + " - " + TRIM(RowErrors.ErrorHelp)).
+
+            ASSIGN i-cont-seg = i-cont-seg + 5. /*Incrementar 5 segundos para nÆo dar problema de chave duplicada*/
+        END.
+    /*---*/
+
+    RELEASE nota-fiscal.
+    RELEASE sit-nf-eletro.
+    
+    IF  VALID-HANDLE(h-axsep002) THEN DO:
+        DELETE PROCEDURE h-axsep002.
+        ASSIGN h-axsep002 = ?.
+    END.
+    IF  VALID-HANDLE(h-axsep003) THEN DO:
+        DELETE PROCEDURE h-axsep003.
+        ASSIGN h-axsep003 = ?.
+    END.
+
+END PROCEDURE.
+
+PROCEDURE pi-Cancel-NFe:
+
+    DO  i-cont = 1 TO NUM-ENTRIES(gc-NFe-nfs-a-cancelar,"#") :
+
+        FOR FIRST nota-fiscal NO-LOCK
+            WHERE ROWID(nota-fiscal) = TO-ROWID( ENTRY(i-cont,gc-NFe-nfs-a-cancelar,"#") ):
+        END.
+         
+        IF  NOT AVAIL nota-fiscal THEN NEXT.
+
+        RUN cdp/cd0360b.p (INPUT nota-fiscal.cod-estabel,
+                           INPUT "NF-e":U,
+                           OUTPUT cTpTrans).
+
+        IF  cTpTrans = "TC2":U THEN DO:
+        
+            FIND FIRST param-nf-estab NO-LOCK
+                 WHERE param-nf-estab.cod-estabel = nota-fiscal.cod-estabel NO-ERROR.
+
+            EMPTY TEMP-TABLE tt-dados-evento.
+            CREATE tt-dados-evento.                         
+            ASSIGN tt-dados-evento.cod-estab             = nota-fiscal.cod-estabel         
+                   tt-dados-evento.cod-serie             = nota-fiscal.serie         
+                   tt-dados-evento.cod-nota-fis          = nota-fiscal.nr-nota-fis 
+                   tt-dados-evento.desc-evento           = "Cancelamento"               
+                   tt-dados-evento.num-seq               = 1        
+                   tt-dados-evento.cod-versao            = &IF '{&bf_dis_versao_ems}' >= '2.09':U &THEN 
+                                                               param-nf-estab.des-vers-carta-correc
+                                                           &ELSE 
+                                                               trim(SUBSTR(param-nf-estab.cod-livre-1,219,10))
+                                                           &ENDIF
+                   tt-dados-evento.dsl-evento            = c-desc-cancela
+                   tt-dados-evento.des-dat-hora-event    = STRING(TODAY,"99/99/9999") + " " + STRING(TIME,"HH:MM:SS").   
+                   tt-dados-evento.r-rowid               = ROWID(nota-fiscal) .
+
+            RUN adapters/xml/ep2/axsep018.p PERSISTENT SET h-axsep018.
+
+            RUN PITransUpsert IN h-axsep018 (INPUT "upd", INPUT "CancelamentoEnv", INPUT "110111", INPUT TABLE tt-dados-evento, OUTPUT TABLE tt_log_erro).
+
+            ASSIGN i-tipo-transacao = 2.
+
+            IF  VALID-HANDLE(h-axsep018) THEN DO:
+                DELETE PROCEDURE h-axsep018.
+                ASSIGN h-axsep018 = ?.
+            END.
+
+
+
+        END.
+        ELSE
+            IF  cTpTrans = "TSS":U OR
+                cTpTrans = "TC":U  THEN DO:
+    
+                RUN ftp/ftapi512.p (INPUT "Cancelamento",
+                                    INPUT ROWID(nota-fiscal),
+                                    INPUT c-desc-cancela,
+                                    OUTPUT i-tipo-transacao).
+            
+            END.              
+            ELSE DO:
+                    
+                IF  NOT VALID-HANDLE(h-axsep002)
+                OR  h-axsep002:TYPE <> "PROCEDURE":U
+                OR  h-axsep002:FILE-NAME <> "adapters/xml/ep2/axsep002.p":U THEN
+                    RUN adapters/xml/ep2/axsep002.p PERSISTENT SET h-axsep002 (OUTPUT TABLE tt_log_erro_nfe).
+        
+                RUN PITransUpsert IN h-axsep002 (INPUT "upd":U,
+                                                 INPUT c-desc-cancela,
+                                                 INPUT ROWID(nota-fiscal),
+                                                 OUTPUT i-tipo-transacao, /* 1 - Sincrona | 2 - Assincrona */
+                                                 OUTPUT TABLE tt_log_erro_nfe,
+                                                 OUTPUT TABLE tt_nfe_erro).
+                                                 
+            END.
+        
+        IF  i-tipo-transacao = ? OR i-tipo-transacao = 0 THEN
+            NEXT.
+        
+        /*---- ASSÖNCRONA ---*/
+        IF  i-tipo-transacao = 2 THEN DO:
+
+            /*FT - Atualiza‡Æo Situa‡Æo*/   /*12 - NF-e em processo de Cancelamento*/
+
+            
+                FIND CURRENT nota-fiscal EXCLUSIVE-LOCK NO-ERROR.
+        
+                ASSIGN nota-fiscal.idi-sit-nf-eletro = 12. /*12 - NF-e em processo de Cancelamento*/
+        
+                FIND CURRENT nota-fiscal NO-LOCK        NO-ERROR.
+/*
+            &else
+                FOR FIRST bf-sit-nf-eletro EXCLUSIVE-LOCK
+                    WHERE bf-sit-nf-eletro.cod-estabel   = nota-fiscal.cod-estabel 
+                      AND bf-sit-nf-eletro.cod-serie     = nota-fiscal.serie       
+                      AND bf-sit-nf-eletro.cod-nota-fisc = nota-fiscal.nr-nota-fis :
+
+                    ASSIGN bf-sit-nf-eletro.idi-sit-nf-eletro = 12.  /*12 - NF-e em processo de Cancelamento*/
+                END.
+                RELEASE bf-sit-nf-eletro.
+            &endif */
+            
+            /*
+            Grava na sit-nf-eletro toda a parametriza‡Æo feita em tela, para que, quando o receiver executar a rotina de cancelamento, possa cancelar conforme os parametros selecionados pelo usuario
+            */
+            
+            FOR FIRST sit-nf-eletro EXCLUSIVE-LOCK
+                WHERE sit-nf-eletro.cod-estabel  = nota-fiscal.cod-estabel
+                  AND sit-nf-eletro.cod-serie    = nota-fiscal.serie
+                  AND sit-nf-eletro.cod-nota-fis = nota-fiscal.nr-nota-fis:
+            END.
+            
+            IF  NOT AVAIL sit-nf-eletro THEN DO:
+                CREATE sit-nf-eletro.
+                ASSIGN sit-nf-eletro.cod-estabel  = nota-fiscal.cod-estabel
+                       sit-nf-eletro.cod-serie    = nota-fiscal.serie
+                       sit-nf-eletro.cod-nota-fis = nota-fiscal.nr-nota-fis.
+            END.
+        
+            ASSIGN sit-nf-eletro.cod-livre-1 = ((IF l-reabre-resumo   THEN "S" ELSE "N") + "#" +
+                                                (IF l-cancela-titulos THEN "S" ELSE "N") + "#" +
+                                                 TRIM(c-desc-cancela) + "#" + TRIM(c-seg-usuario)).
+                                                
+            RELEASE sit-nf-eletro.
+
+        END. /*fim IF  i-tipo-transacao = 2*/
+
+    END. /*fim DO  i-cont*/
+
+END PROCEDURE.
+
+PROCEDURE pi-Inut-NFe:
+
+    DO  i-cont = 1 TO NUM-ENTRIES(gc-NFe-nfs-a-inutilizar,"#") :
+
+        FOR FIRST nota-fiscal NO-LOCK
+            WHERE ROWID(nota-fiscal) = TO-ROWID( ENTRY(i-cont,gc-NFe-nfs-a-inutilizar,"#") ):
+        END.
+        IF  NOT AVAIL nota-fiscal THEN NEXT.
+
+        RUN cdp/cd0360b.p (INPUT nota-fiscal.cod-estabel,
+                           INPUT "NF-e":U,
+                           OUTPUT cTpTrans).
+
+        IF  cTpTrans = "TSS":U
+        OR  cTpTrans = "TC":U THEN DO:
+                      
+            RUN ftp/ftapi512.p (INPUT "Inutiliza‡Æo",
+                                INPUT ROWID(nota-fiscal),
+                                INPUT c-desc-cancela,
+                                OUTPUT i-tipo-transacao).
+            
+        END.              
+        ELSE DO:
+
+            IF  NOT VALID-HANDLE(h-axsep003)
+            OR  h-axsep003:TYPE <> "PROCEDURE":U
+            OR  h-axsep003:FILE-NAME <> "adapters/xml/ep2/axsep003.p":U THEN
+                RUN adapters/xml/ep2/axsep003.p PERSISTENT SET h-axsep003 (OUTPUT TABLE tt_log_erro_nfe).
+    
+            IF  NOT AVAIL estabelec THEN
+                FOR FIRST estabelec FIELDS(cgc estado char-1) NO-LOCK
+                    WHERE estabelec.cod-estabel = nota-fiscal.cod-estabel :
+                END.
+                IF  NOT AVAIL estabelec THEN RETURN 'NOK':U.
+    
+            FOR FIRST natur-oper FIELDS(char-2 &if '{&bf_dis_versao_ems}' >= '2.07' &then cod-model-nf-eletro &ENDIF ) NO-LOCK
+                WHERE natur-oper.nat-operacao = nota-fiscal.nat-operacao :
+            END.
+            IF  NOT AVAIL natur-oper THEN RETURN 'NOK':U.
+    
+            RUN PITransUpsert IN h-axsep003 (INPUT estabelec.estado,
+                                             INPUT YEAR(dt-cancela),
+                                             INPUT estabelec.cgc,
+                                             INPUT &if '{&bf_dis_versao_ems}' >= '2.07' &then
+                                                     natur-oper.cod-model-nf-eletro,
+                                                   &else
+                                                     SUBSTRING(natur-oper.char-2,120,2),
+                                                   &endif
+                                             INPUT nota-fiscal.serie,
+                                             INPUT nota-fiscal.nr-nota-fis,
+                                             INPUT nota-fiscal.nr-nota-fis,
+                                             INPUT c-desc-cancela,
+                                             INPUT "upd":U,
+                                             INPUT "InutInvoiceDocument",
+                                             INPUT ROWID(nota-fiscal),
+                                             OUTPUT i-tipo-transacao, /* 1 - Sincrona | 2 - Assincrona */
+                                             OUTPUT TABLE tt_log_erro_nfe,
+                                             OUTPUT TABLE tt_nfe_erro).
+                                             
+            IF  i-tipo-transacao = ? OR i-tipo-transacao = 0 THEN
+                NEXT.
+
+        END.
+        
+        /*---- ASSÖNCRONA ---*/
+        IF  i-tipo-transacao = 2 THEN DO:
+
+            /*FT - Atualiza‡Æo Situa‡Æo*/   /*13 - NF-e em processo de Inutiliza‡Æo*/
+
+            
+                FIND CURRENT nota-fiscal EXCLUSIVE-LOCK NO-ERROR.
+        
+                ASSIGN nota-fiscal.idi-sit-nf-eletro = 13. /*13 - NF-e em processo de Inutiliza‡Æo*/
+        
+                FIND CURRENT nota-fiscal NO-LOCK        NO-ERROR.
+/*
+            &else
+                FOR FIRST bf-sit-nf-eletro EXCLUSIVE-LOCK
+                    WHERE bf-sit-nf-eletro.cod-estabel   = nota-fiscal.cod-estabel 
+                      AND bf-sit-nf-eletro.cod-serie     = nota-fiscal.serie       
+                      AND bf-sit-nf-eletro.cod-nota-fisc = nota-fiscal.nr-nota-fis :
+
+                    ASSIGN bf-sit-nf-eletro.idi-sit-nf-eletro = 13.  /*13 - NF-e em processo de Cancelamento*/
+                END.
+                RELEASE bf-sit-nf-eletro.
+            &endif
+*/            
+            /*
+            Grava na sit-nf-eletro toda a parametriza‡Æo feita em tela, para que, quando o receiver executar a rotina de cancelamento, possa cancelar conforme os parametros selecionados pelo usuario
+            */
+        
+            FOR FIRST sit-nf-eletro EXCLUSIVE-LOCK
+                WHERE sit-nf-eletro.cod-estabel  = nota-fiscal.cod-estabel
+                  AND sit-nf-eletro.cod-serie    = nota-fiscal.serie
+                  AND sit-nf-eletro.cod-nota-fis = nota-fiscal.nr-nota-fis:
+            END.
+            IF  NOT AVAIL sit-nf-eletro THEN DO:
+                CREATE sit-nf-eletro.
+                ASSIGN sit-nf-eletro.cod-estabel  = nota-fiscal.cod-estabel
+                       sit-nf-eletro.cod-serie    = nota-fiscal.serie
+                       sit-nf-eletro.cod-nota-fis = nota-fiscal.nr-nota-fis.
+            END.
+        
+            ASSIGN sit-nf-eletro.cod-livre-1 = ((IF l-reabre-resumo   THEN "S" ELSE "N") + "#" +
+                                                (IF l-cancela-titulos THEN "S" ELSE "N") + "#" +
+                                                 TRIM(c-desc-cancela) + "#" + TRIM(c-seg-usuario)).
+                                                
+            RELEASE sit-nf-eletro.
+                
+        END. /*fim IF  i-tipo-transacao = 2*/
+
+    END. /*fim DO  i-cont*/
+
+END PROCEDURE.

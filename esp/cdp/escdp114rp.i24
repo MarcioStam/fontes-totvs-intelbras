@@ -1,0 +1,119 @@
+procedure pi-procedimento-24:
+    define variable de-hom-aps      as decimal   no-undo.
+    define variable de-hom-aps-oper as decimal   no-undo.    
+    define variable c-tipo          as character no-undo.
+
+    form tt-hom-aps.cod-estabel  format "x(5)"        column-label "Estab"
+         tt-hom-aps.tipo         format "x(16)"       column-label "Tipo OP"
+         tt-hom-aps.it-codigo    format "x(16)"       column-label "Item"
+         tt-hom-aps.nr-ord-produ format ">>>,>>>,>>9" column-label "Ordem Produ‡Æo"
+         tt-hom-aps.estado       format "x(15)"       column-label "Estado"
+         tt-hom-aps.op-codigo    format ">>>>9"       column-label "Oper"
+         tt-hom-aps.descricao    format "x(34)"       column-label "Descri‡Æo"
+         tt-hom-aps.hom-aps      format ">>9.9"       column-label "Hom APS     "
+         tt-hom-aps.hom-aps-oper format ">>9.9"       column-label "Hom APS Oper"
+         with width 172 down no-box stream-io frame f-24.
+
+    empty temp-table tt-hom-aps.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "divergencias-HomAps-vs-OPs.txt"
+           c-titulo-relat = "Divergˆncias Hom APS x OPs"
+           c-tipo         = "Interna,Externa,Interna/Externa,Retrabalho,Conserto,Manuten‡Æo,Ativo Fixo,Ferramentaria,Reaproveitamento".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Divergˆncias Hom APS x OPs...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-172.
+    view stream st-relat frame f-rodape-172.
+    
+    for each ord-prod fields(nr-ord-produ cod-estabel estado tipo) no-lock
+       where ord-prod.estado < 7,
+        each oper-ord fields(nr-ord-produ num-id-operacao it-codigo  
+                             cod-roteiro  op-codigo       descricao) no-lock
+       where oper-ord.nr-ord-produ = ord-prod.nr-ord-produ,
+       first operacao fields(num-id-operacao gm-codigo) no-lock
+       where operacao.num-id-operacao = oper-ord.num-id-operacao
+         and operacao.gm-codigo       = oper-ord.gm-codigo:
+        assign i-cont          = i-cont + 1
+               de-hom-aps      = 0
+               de-hom-aps-oper = 0.
+
+        if  i-cont mod 25 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        for first int-ext-operacao fields(num-id-operacao nro-homem-aps) no-lock
+            where int-ext-operacao.num-id-operacao = oper-ord.num-id-operacao: 
+            assign de-hom-aps = int-ext-operacao.nro-homem-aps.
+        end. /* for first int-ext-operacao */
+
+        for first int-oper-ord no-lock
+            where int-oper-ord.nr-ord-produ = oper-ord.nr-ord-produ
+              and int-oper-ord.it-codigo    = oper-ord.it-codigo
+              and int-oper-ord.cod-roteiro  = oper-ord.cod-roteiro
+              and int-oper-ord.op-codigo    = oper-ord.op-codigo:
+            assign de-hom-aps-oper = int-oper-ord.nro-homem-aps.
+        end. /* for first int-oper-ord */
+
+        if de-hom-aps = de-hom-aps-oper
+        then next.
+
+        create tt-hom-aps.
+        assign tt-hom-aps.it-codigo    = oper-ord.it-codigo
+               tt-hom-aps.op-codigo    = oper-ord.op-codigo
+               tt-hom-aps.hom-aps      = de-hom-aps
+               tt-hom-aps.hom-aps-oper = de-hom-aps-oper
+               tt-hom-aps.nr-ord-produ = oper-ord.nr-ord-produ
+               tt-hom-aps.cod-estabel  = ord-prod.cod-estabel
+               tt-hom-aps.tipo         = entry(ord-prod.tipo,c-tipo)
+               tt-hom-aps.estado       = c-estado[ord-prod.estado]
+               tt-hom-aps.descricao    = oper-ord.descricao.
+    end. /* for each ord-prod */
+    find current tt-hom-aps no-error.
+    release tt-hom-aps.
+    
+    for each tt-hom-aps
+             break by tt-hom-aps.cod-estabel
+                   by tt-hom-aps.tipo
+                   by tt-hom-aps.it-codigo:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 50 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont). 
+        
+        disp stream st-relat
+             tt-hom-aps.cod-estabel 
+             tt-hom-aps.tipo
+             with frame f-24.
+
+        if first-of(tt-hom-aps.it-codigo)
+        then disp stream st-relat 
+                  tt-hom-aps.it-codigo   
+                  with frame f-24.
+    
+        disp stream st-relat    
+             tt-hom-aps.nr-ord-produ
+             tt-hom-aps.estado      
+             tt-hom-aps.op-codigo   
+             tt-hom-aps.descricao   
+             tt-hom-aps.hom-aps     
+             tt-hom-aps.hom-aps-oper
+             with frame f-24.
+        down stream st-relat with frame f-24.
+    end. /* for each tt-hom-aps */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-24 */
+

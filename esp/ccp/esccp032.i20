@@ -1,0 +1,1674 @@
+&if '{&bf_lote_avancado_liberado}' = 'yes' &then
+{esp/ccp/esccp032.i26}
+&endif
+
+PROCEDURE pi-simulacao-estoque:
+/*****************************************************************************
+**
+**       CD0284.I (CP0509.I): Calculo de Simulacao de Estoque.
+**
+*****************************************************************************/
+DEF PARAMETER BUFFER b-item FOR ITEM.
+def buffer b-deposito for deposito.
+DEF INPUT PARAMETER l-sald-est AS LOG NO-UNDO.
+DEF INPUT PARAMETER l-remessa AS LOG NO-UNDO.
+DEF INPUT PARAMETER l-entrada AS LOG NO-UNDO.
+DEF INPUT PARAMETER l-transfer AS LOG NO-UNDO.
+DEF INPUT PARAMETER l-remessa-con AS LOG NO-UNDO.
+DEF INPUT PARAMETER l-ent-con AS LOG NO-UNDO.
+DEF INPUT PARAMETER c-plan-ini AS CHAR NO-UNDO.
+DEF INPUT PARAMETER c-plan-fim AS CHAR NO-UNDO.   
+DEF INPUT PARAMETER i-nr-linha-ini AS INT NO-UNDO.
+DEF INPUT PARAMETER i-nr-linha-fim AS INT NO-UNDO.
+DEF INPUT PARAMETER l-sald-terc AS LOGICAL NO-UNDO.
+DEF INPUT PARAMETER c-estab-ini AS CHAR NO-UNDO.
+DEF INPUT PARAMETER c-estab-fim AS CHAR NO-UNDO.   
+DEF INPUT PARAMETER l-ord-prod AS LOGICAL NO-UNDO.
+DEF INPUT PARAMETER i-benefic AS INT NO-UNDO.
+DEF INPUT PARAMETER l-cred-aprov AS LOGICAL NO-UNDO.
+DEF INPUT PARAMETER l-planejada AS LOGICAL NO-UNDO.
+DEF INPUT PARAMETER l-res-plan AS LOGICAL NO-UNDO.
+DEF INPUT PARAMETER i-cod-plano AS INT NO-UNDO.
+&IF defined(bf_man_206b) &THEN
+DEF INPUT PARAMETER c-un-neg-ini AS CHAR NO-UNDO.
+DEF INPUT PARAMETER c-un-neg-fim AS CHAR NO-UNDO.
+&ENDIF
+
+&IF DEFINED(bf_man_206b) &THEN
+DEFINE VARIABLE l-usa-unid-negoc AS LOGICAL   NO-UNDO.
+DEFINE VARIABLE h-cdapi024       AS HANDLE    NO-UNDO.
+DEFINE VARIABLE c-unid-retornada AS CHARACTER NO-UNDO.
+DEFINE VARIABLE c-retornado      AS CHARACTER NO-UNDO.
+
+    ASSIGN l-usa-unid-negoc = FALSE.
+
+    IF CAN-FIND (FIRST funcao
+                 WHERE funcao.cd-funcao = "EMS2-UNIDADE-NEGOCIO"
+                 AND   funcao.ativo     = TRUE) THEN DO:
+
+        ASSIGN l-usa-unid-negoc = TRUE.
+
+        RUN cdp~/cdapi024.p PERSISTENT SET h-cdapi024.
+    END.
+&ENDIF
+
+DEFINE VARIABLE de-quant      LIKE saldo-terc.quantidade          no-undo.
+DEFINE VARIABLE de-aloc       as decimal format "->>>>>,>>9.9999" NO-UNDO.
+DEFINE VARIABLE de-aloc-total as decimal format "->>>>>,>>9.9999" NO-UNDO.
+define variable de-qtidade    like saldo-estoq.qtidade-atu        no-undo.
+
+DEFINE VARIABLE l-status-ant-exp-cons-saldo AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-wex-cons-saldo AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-exp-cons-mrp   AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-wex-cons-mrp   AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-oem-cons-saldo AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-oem-cons-mrp   AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-aca-cons-saldo AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-aca-cons-mrp   AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-cdn-cons-saldo AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-epe-cons-saldo AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-cdn-cons-mrp   AS LOGICAL     NO-UNDO.
+DEFINE VARIABLE l-status-ant-epe-cons-mrp   AS LOGICAL     NO-UNDO.
+
+
+&if '{&bf_lote_avancado_liberado}' = 'yes' &then
+  def var l-lote-avancado as log    no-undo.
+  def var h-ceapi030      as handle no-undo.
+  def var l-retorno       as log    no-undo.
+
+  if can-find(funcao where funcao.cd-funcao = "lote-avancado":u and
+                           funcao.ativo) then do:
+      assign l-lote-avancado = yes.
+
+      if not valid-handle(h-ceapi030) then
+          run cep/ceapi030.p persistent set h-ceapi030(input table tt-dados-fda,
+                                                       output table tt-valores,
+                                                       output table tt-erro).
+  end.
+&endif
+
+find first param-global no-lock no-error.
+
+find first param-cp no-lock no-error.
+/* Eliminacao tt-estoq */
+for each tt-estoq:
+    delete tt-estoq.
+end.
+
+
+/********************************************************************/        
+/* CONSIDERAR SEMPRE DEPOSITO EXP - GIZELLE - Parte 1/2 */
+/* Quando o parametro "Informa Dep¢sitos" estiver desmarcado deve sempre considerar o dep¢sito EXP */ 
+
+if l-apenas-oem then do:
+   for each deposito no-lock
+      where deposito.cod-depos = "EXP":
+      
+       ASSIGN l-status-ant-exp-cons-saldo = deposito.cons-saldo
+              l-status-ant-exp-cons-mrp   = deposito.log-ordens-mrp.
+              
+       find first b-deposito exclusive-lock
+            where rowid(b-deposito) = rowid(deposito) no-error.
+       assign b-deposito.cons-saldo = true
+              b-deposito.log-ordens-mrp = TRUE.
+       release b-deposito.
+       
+   end.       
+   
+   for each deposito no-lock
+      where deposito.cod-depos = "WEX":
+   
+       ASSIGN l-status-ant-wex-cons-saldo = deposito.cons-saldo
+              l-status-ant-wex-cons-mrp   = deposito.log-ordens-mrp.
+       
+       find first b-deposito exclusive-lock
+            where rowid(b-deposito) = rowid(deposito) no-error.
+       assign b-deposito.cons-saldo = true
+              b-deposito.log-ordens-mrp = TRUE.
+       release b-deposito.
+       
+   end.    
+   
+   for each deposito no-lock
+      where deposito.cod-depos = "ACA":    
+       
+       ASSIGN l-status-ant-aca-cons-saldo = deposito.cons-saldo
+              l-status-ant-aca-cons-mrp   = deposito.log-ordens-mrp.
+       
+       find first b-deposito exclusive-lock
+            where rowid(b-deposito) = rowid(deposito) no-error.
+       assign b-deposito.cons-saldo = true
+              b-deposito.log-ordens-mrp = TRUE.
+       release b-deposito.
+                  
+   end.
+   
+   for each deposito no-lock
+      where deposito.cod-depos = "CDN":    
+       
+        ASSIGN l-status-ant-cdn-cons-saldo = deposito.cons-saldo
+               l-status-ant-cdn-cons-mrp   = deposito.log-ordens-mrp.
+       
+        find first b-deposito exclusive-lock
+             where rowid(b-deposito) = rowid(deposito) no-error.
+        assign b-deposito.cons-saldo = true
+               b-deposito.log-ordens-mrp = TRUE.
+        release b-deposito.
+       
+   end.
+   
+   for each deposito no-lock
+      where deposito.cod-depos = "EPE":    
+    
+       
+        ASSIGN l-status-ant-epe-cons-saldo = deposito.cons-saldo
+               l-status-ant-epe-cons-mrp   = deposito.log-ordens-mrp.
+       
+        find first b-deposito exclusive-lock
+             where rowid(b-deposito) = rowid(deposito) no-error.
+        assign b-deposito.cons-saldo = true
+               b-deposito.log-ordens-mrp = TRUE.
+        release b-deposito.
+        
+   end. 
+end.
+
+/********************************************************************/
+
+
+
+assign de-saldo-inic      = 0
+       de-saldo-terc      = 0
+       de-saldo-inic-teor = 0
+       de-saldo-terc-teor = 0
+       de-aloc            = 0
+       de-aloc-total      = 0.
+
+&IF DEFINED (bf_man_206b) &THEN
+    IF l-usa-unid-negoc THEN DO:
+        RUN retornaUnidadeNegocio IN h-cdapi024 (INPUT  b-item.cod-estabel,
+                                                 INPUT  b-item.it-codigo,
+                                                 INPUT  "",
+                                                 OUTPUT c-unid-retornada).
+        ASSIGN c-retornado = c-unid-retornada.
+        IF c-retornado < c-un-neg-ini OR
+           c-retornado > c-un-neg-fim THEN DO:
+            RETURN "NOK":U.
+        END.
+    END.
+&ENDIF
+
+if  da-op-corte = ? then
+    assign da-op-corte = da-dt-corte.
+
+/*---------------------------------------------------------------------------*/
+if  param-global.modulo-ce then do:
+    find first tt-depositos no-lock no-error.
+
+    if  avail tt-depositos 
+    and (l-sald-est or l-remessa     or l-entrada 
+      or l-transfer or l-remessa-con or l-ent-con) then do:
+
+        for each  saldo-estoq fields (it-codigo   cod-estabel   cod-depos   qtidade-atu
+                                      qt-alocada  qt-aloc-prod  qt-aloc-ped per-ppm cod-refer lote)
+            where saldo-estoq.it-codigo = b-item.it-codigo
+              and saldo-estoq.cod-refer = c-cod-refer no-lock,
+            first tt-depositos
+                where tt-depositos.cod-estabel = saldo-estoq.cod-estabel
+                  and tt-depositos.cod-depos   = saldo-estoq.cod-depos no-lock:
+
+             if  l-sald-est then DO:
+                 
+         /*********** KSM 40404 ************/                                
+
+                FIND FIRST para-ped NO-LOCK NO-ERROR.
+
+                IF para-ped.tp-aloca-ped = 2 THEN DO:
+
+                        FIND FIRST res-item WHERE res-item.it-codigo   = b-item.it-codigo
+                                             AND  res-item.cod-refer   = c-cod-refer 
+                                             AND  res-item.cod-estabel = saldo-estoq.cod-estabel NO-LOCK NO-ERROR.
+
+                        IF AVAIL res-item THEN DO:
+                            assign de-aloc = res-item.qt-alocada.
+                        END.
+                        ELSE
+                            assign de-aloc = 0.
+
+                END.
+                ELSE 
+                    ASSIGN de-aloc = 0.
+                    
+                assign de-aloc-total = de-aloc-total + de-aloc.
+
+              &if '{&bf_lote_avancado_liberado}' = 'yes' &then
+                assign l-retorno = yes.
+
+                if l-lote-avancado and 
+                   b-item.tipo-con-est > 2 then do:
+
+                    run pi-identifica-saldo in h-ceapi030 (input 1,
+                                                           input saldo-estoq.it-codigo,
+                                                           input saldo-estoq.cod-estabel,
+                                                           input saldo-estoq.lote,
+                                                           input 0,
+                                                           output l-retorno,
+                                                           output table tt-valores2,
+                                                           output table tt-erro).
+                    if return-value = "ok":u and
+                       not l-retorno then
+                        assign de-qtidade = 0.
+
+                end.
+                
+                if l-retorno then
+              &endif
+
+                /*Para saldos OEM nÆo desconta quantidades alocadas em pedidos*/
+                if l-apenas-oem then do:
+                    assign de-qtidade = (saldo-estoq.qtidade-atu).
+                end.
+                else do:
+                    assign de-qtidade = (saldo-estoq.qtidade-atu  - saldo-estoq.qt-alocada -
+                                         saldo-estoq.qt-aloc-prod - saldo-estoq.qt-aloc-ped).
+                end.
+
+                if param-global.modulo-per-ppm and 
+                   (b-item.tipo-formula = 2 or b-item.tipo-formula = 3) then
+                   assign de-saldo-inic      = de-saldo-inic + de-qtidade
+                          de-saldo-inic-teor = de-saldo-inic-teor + f-conv-qtde(de-qtidade,saldo-estoq.per-ppm,b-item.per-ppm).
+                ELSE 
+                    assign de-saldo-inic = de-saldo-inic + de-qtidade.
+             END.
+        end.
+
+       assign de-saldo-inic = de-saldo-inic - de-aloc-total.
+
+         /*********** KSM 40404 ************/
+      
+      if l-sald-terc then do:
+        for each  saldo-terc fields (it-codigo     cod-estabel   cod-refer
+                                     tipo-sal-terc quantidade    lote)
+            where saldo-terc.it-codigo = b-item.it-codigo
+              and saldo-terc.cod-refer = c-cod-refer no-lock,
+            first tt-depositos
+                where tt-depositos.cod-estabel = saldo-terc.cod-estabel no-lock:
+
+
+            /* UPC - Regina Festas - In­cio */ 
+            IF PROGRAM-NAME(3) = "cdp/cd0420rp.p":U THEN DO:
+
+                for each tt-epc exclusive-lock
+                    where tt-epc.cod-event = "rg-desc-saldo-terc":U:
+                    delete tt-epc.
+                end.
+
+                create tt-epc. 
+                assign tt-epc.cod-event     = "rg-desc-saldo-terc":U
+                       tt-epc.cod-parameter = "saldo-terc-rowid":U
+                       tt-epc.val-parameter = string(ROWID(saldo-terc)). 
+
+                {include/i-epc201.i "rg-desc-saldo-terc"}
+
+                IF RETURN-VALUE = "OK":U THEN DO:
+
+                    FIND FIRST tt-epc
+                        WHERE tt-epc.cod-event     = "rg-desc-saldo-terc":U
+                        AND   tt-epc.cod-parameter = "considera-saldo":U NO-LOCK NO-ERROR.
+
+                    IF AVAIL tt-epc AND tt-epc.val-parameter = "N":U THEN DO:
+                        NEXT.
+                    END.
+
+                END.
+
+            END.
+            ELSE IF PROGRAM-NAME(1) = "pi-calc-sim-estoque inbrw/b47in172.w":U THEN DO:
+
+                run pi-upc (input "RG-DESC-SALDO-TERC":U,
+                            input "CONTAINER":U,
+                            input ?,
+                            input ?,
+                            input "saldo-terc-rowid":U,
+                            input ROWID(saldo-terc)).
+
+                IF RETURN-VALUE = "NOK":U THEN DO:
+                    NEXT.
+                END.
+
+            END.
+            /* UPC - Regina Festas - Fim */
+
+          &if '{&bf_lote_avancado_liberado}' = 'yes' &then
+            assign l-retorno = yes.
+
+            if l-lote-avancado and 
+               b-item.tipo-con-est > 2 then do:
+
+                run pi-identifica-saldo in h-ceapi030 (input 1,
+                                                       input saldo-terc.it-codigo,
+                                                       input saldo-terc.cod-estabel,
+                                                       input saldo-terc.lote,
+                                                       input 0,
+                                                       output l-retorno,
+                                                       output table tt-valores2,
+                                                       output table tt-erro).
+                if return-value = "ok":u and 
+                   not l-retorno then
+                    assign de-quant = 0.
+            end.
+            
+            if l-retorno then do:
+          &endif
+
+            IF  param-global.modulo-per-ppm AND 
+               (b-item.tipo-formula = 2 OR
+                b-item.tipo-formula = 3) THEN DO:
+                FOR FIRST saldo-estoq FIELDS (it-codigo cod-estabel cod-refer lote per-ppm)
+                     WHERE saldo-estoq.it-codigo   = saldo-terc.it-codigo   AND
+                           saldo-estoq.cod-estabel = saldo-terc.cod-estabel AND
+                           saldo-estoq.cod-refer   = saldo-terc.cod-refer   AND
+                           saldo-estoq.lote        = saldo-terc.lote NO-LOCK:
+                    ASSIGN de-quant = f-conv-qtde(saldo-terc.quantidade,saldo-estoq.per-ppm,b-item.per-ppm).
+                END.
+            END.
+            ELSE 
+                ASSIGN de-quant = saldo-terc.quantidade.
+
+            if (l-remessa and saldo-terc.tipo-sal-terc = 1) OR
+               (l-transfer and saldo-terc.tipo-sal-terc = 3) OR
+               (l-remessa-con and saldo-terc.tipo-sal-terc = 4) THEN DO:
+                assign de-saldo-inic      = de-saldo-inic + saldo-terc.quantidade
+                       de-saldo-terc      = de-saldo-terc + saldo-terc.quantidade
+                       de-saldo-inic-teor = de-saldo-inic-teor + de-quant
+                       de-saldo-terc-teor = de-saldo-terc-teor + de-quant.
+            END.
+
+            if (l-entrada and saldo-terc.tipo-sal-terc = 2) OR
+               (l-ent-con and saldo-terc.tipo-sal-terc = 5) THEN 
+                assign de-saldo-terc      = de-saldo-terc + saldo-terc.quantidade                    
+                       de-saldo-terc-teor = de-saldo-terc-teor + de-quant.
+
+          &if '{&bf_lote_avancado_liberado}' = 'yes' &then
+            end.
+          &endif
+        end.
+      end.
+    end.
+    else 
+        if  l-sald-est    
+        or  l-remessa     
+        or  l-entrada     
+        or  l-transfer    
+        or  l-remessa-con 
+        or  l-ent-con then do:
+
+          for each  saldo-estoq fields (it-codigo   cod-estabel   cod-depos   qtidade-atu lote
+                                        qt-alocada  qt-aloc-prod  qt-aloc-ped cod-refer per-ppm)
+              where saldo-estoq.it-codigo    = b-item.it-codigo
+                and saldo-estoq.cod-refer    = c-cod-refer
+                and saldo-estoq.cod-estabel >= c-estab-ini
+                and saldo-estoq.cod-estabel <= c-estab-fim no-lock,
+              each  deposito fields (cod-depos   cons-saldo)
+                  where deposito.cod-depos = saldo-estoq.cod-depos
+                    and deposito.cons-saldo no-lock:
+              if l-sald-est then DO:
+
+             /*********** KSM 40404 ************/                                
+
+                  FIND FIRST para-ped NO-LOCK NO-ERROR.
+
+                  IF para-ped.tp-aloca-ped = 2 THEN DO:
+
+                        FIND FIRST res-item WHERE res-item.it-codigo   = b-item.it-codigo
+                                             AND  res-item.cod-refer   = c-cod-refer
+                                             AND  res-item.cod-estabel = saldo-estoq.cod-estabel NO-LOCK NO-ERROR.
+
+                        IF AVAIL res-item THEN DO:
+                            assign de-aloc = res-item.qt-alocada.
+                        END.
+                        ELSE
+                            assign de-aloc = 0.
+
+                  END.
+                  ELSE 
+
+                      ASSIGN de-aloc = 0.
+                      
+                  assign de-aloc-total = de-aloc-total + de-aloc.
+
+              &if '{&bf_lote_avancado_liberado}' = 'yes' &then
+                assign l-retorno = yes.
+
+                if l-lote-avancado and 
+                   b-item.tipo-con-est > 2 then do:
+
+                    run pi-identifica-saldo in h-ceapi030 (input 1,
+                                                           input saldo-estoq.it-codigo,
+                                                           input saldo-estoq.cod-estabel,
+                                                           input saldo-estoq.lote,
+                                                           input 0,
+                                                           output l-retorno,
+                                                           output table tt-valores2,
+                                                           output table tt-erro).
+                    if return-value = "ok":u and
+                       not l-retorno then
+                        assign de-qtidade = 0.
+
+                end.
+                
+                if l-retorno then
+              &endif
+
+                  /*Para saldos OEM nÆo desconta quantidades alocadas em pedidos*/
+                  if l-apenas-oem then do:
+                      assign de-qtidade = (saldo-estoq.qtidade-atu).
+                  end.
+                  else do:
+                      assign de-qtidade = (saldo-estoq.qtidade-atu  - saldo-estoq.qt-alocada -
+                                           saldo-estoq.qt-aloc-prod - saldo-estoq.qt-aloc-ped).
+                  end.
+
+                  if param-global.modulo-per-ppm and 
+                      (b-item.tipo-formula = 2 or b-item.tipo-formula = 3) then
+                      assign de-saldo-inic      = de-saldo-inic + de-qtidade
+                             de-saldo-inic-teor = de-saldo-inic-teor + f-conv-qtde(de-qtidade,saldo-estoq.per-ppm,b-item.per-ppm).
+                  ELSE 
+                      assign de-saldo-inic = de-saldo-inic + de-qtidade.
+              END.
+          END.
+         assign de-saldo-inic = de-saldo-inic - de-aloc-total.
+
+             /*********** KSM 40404 ************/  
+
+          if l-sald-terc then do:
+            for each  saldo-terc fields (it-codigo cod-estabel cod-refer
+                                         tipo-sal-terc quantidade lote)
+                where saldo-terc.it-codigo  = b-item.it-codigo
+                  and saldo-terc.cod-refer  = c-cod-refer
+                  and saldo-terc.cod-estabel >= c-estab-ini
+                  and saldo-terc.cod-estabel <= c-estab-fim NO-LOCK,
+                 each deposito where deposito.cod-depos = saldo-terc.cod-depos
+                  and deposito.cons-saldo no-lock:
+
+                /* UPC - Regina Festas - In­cio */ 
+                IF PROGRAM-NAME(3) = "cdp/cd0420rp.p":U THEN DO:
+
+                    for each tt-epc exclusive-lock
+                        where tt-epc.cod-event = "rg-desc-saldo-terc":U:
+                        delete tt-epc.
+                    end.
+
+                    create tt-epc. 
+                    assign tt-epc.cod-event     = "rg-desc-saldo-terc":U
+                           tt-epc.cod-parameter = "saldo-terc-rowid":U
+                           tt-epc.val-parameter = string(ROWID(saldo-terc)). 
+
+                    {include/i-epc201.i "rg-desc-saldo-terc"}
+
+                    IF RETURN-VALUE = "OK":U THEN DO:
+
+                        FIND FIRST tt-epc
+                            WHERE tt-epc.cod-event     = "rg-desc-saldo-terc":U
+                            AND   tt-epc.cod-parameter = "considera-saldo":U NO-LOCK NO-ERROR.
+
+                        IF AVAIL tt-epc AND tt-epc.val-parameter = "N":U THEN DO:
+                            NEXT.
+                        END.
+
+                    END.
+
+                END.
+                ELSE IF PROGRAM-NAME(1) = "pi-calc-sim-estoque inbrw/b47in172.w":U THEN DO:
+
+                    run pi-upc (input "RG-DESC-SALDO-TERC":U,
+                                input "CONTAINER":U,
+                                input ?,
+                                input ?,
+                                input "saldo-terc-rowid":U,
+                                input ROWID(saldo-terc)).
+
+                    IF RETURN-VALUE = "NOK":U THEN DO:
+                        NEXT.
+                    END.
+                END.
+                /* UPC - Regina Festas - Fim */
+
+              &if '{&bf_lote_avancado_liberado}' = 'yes' &then
+                assign l-retorno = yes.
+
+                if l-lote-avancado and 
+                   b-item.tipo-con-est > 2 then do:
+
+                    run pi-identifica-saldo in h-ceapi030 (input 1,
+                                                           input saldo-terc.it-codigo,
+                                                           input saldo-terc.cod-estabel,
+                                                           input saldo-terc.lote,
+                                                           input 0,
+                                                           output l-retorno,
+                                                           output table tt-valores2,
+                                                           output table tt-erro).
+                    if return-value = "ok":u and
+                       not l-retorno then
+                        assign de-quant = 0.
+
+                end.
+                
+                if l-retorno then do:
+              &endif
+
+                IF param-global.modulo-per-ppm AND 
+                   (b-item.tipo-formula = 2 OR
+                    b-item.tipo-formula = 3) THEN DO:
+                    FOR FIRST saldo-estoq FIELDS (it-codigo cod-estabel cod-refer lote per-ppm)
+                         WHERE saldo-estoq.it-codigo   = saldo-terc.it-codigo   AND
+                               saldo-estoq.cod-estabel = saldo-terc.cod-estabel AND
+                               saldo-estoq.cod-refer   = saldo-terc.cod-refer   AND
+                               saldo-estoq.lote        = saldo-terc.lote NO-LOCK:
+                        ASSIGN de-quant = f-conv-qtde(saldo-terc.quantidade,saldo-estoq.per-ppm,b-item.per-ppm).
+                    END.
+                END.
+                ELSE 
+                    ASSIGN de-quant = saldo-terc.quantidade.
+
+                if (l-remessa and saldo-terc.tipo-sal-terc = 1) OR
+                   (l-transfer and saldo-terc.tipo-sal-terc = 3) OR
+                   (l-remessa-con and saldo-terc.tipo-sal-terc = 4) then DO:
+                    assign de-saldo-inic      = de-saldo-inic + saldo-terc.quantidade
+                           de-saldo-terc      = de-saldo-terc + saldo-terc.quantidade
+                           de-saldo-inic-teor = de-saldo-inic-teor + de-quant 
+                           de-saldo-terc-teor = de-saldo-terc-teor + de-quant.
+                END.
+
+                if (l-entrada and saldo-terc.tipo-sal-terc = 2) OR
+                   (l-ent-con and saldo-terc.tipo-sal-terc = 5) THEN 
+                    assign de-saldo-terc      = de-saldo-terc + saldo-terc.quantidade                    
+                           de-saldo-terc-teor = de-saldo-terc-teor + de-quant.      
+                    
+              &if '{&bf_lote_avancado_liberado}' = 'yes' &then
+                end.
+              &endif
+            end.
+          end.
+        end.
+
+        if c-estab-ini <> c-estab-fim THEN DO:
+            FIND FIRST item-man WHERE
+                       item-man.it-codigo = b-item.it-codigo NO-LOCK NO-ERROR.
+            IF AVAIL item-man THEN
+                assign de-quant-segur = if item-man.tipo-est-seg = 2 and not item-man.conv-tempo-seg 
+                                        then 0
+                                        ELSE ITEM-man.quant-segur.
+        END.
+            
+            
+        ELSE DO:                
+            FOR FIRST item-uni-estab FIELDS (tipo-est-seg conv-tempo-seg quant-segur 
+                                             qt-min-res-fabr var-tempo-res-fabr it-codigo 
+                                             cod-estabel res-cq-fabr var-qtd-res-fabr tempo-segur)
+                WHERE item-uni-estab.it-codigo = b-item.it-codigo   
+                  AND item-uni-estab.cod-estabel = c-estab-ini NO-LOCK:
+            END.
+            IF AVAIL item-uni-estab THEN DO:
+            assign de-quant-segur = if item-uni-estab.tipo-est-seg = 2 and not item-uni-estab.conv-tempo-seg 
+                                    then 0
+                                    else item-uni-estab.quant-segur.
+            end.
+        END.
+
+/*     assign de-quant-segur = if b-item.tipo-est-seg = 2 and      */
+/*                                not b-item.conv-tempo-seg then 0 */
+/*                             else b-item.quant-segur.            */
+end.
+
+if  not(b-item.fraciona) 
+and de-quant-segur <> integer(de-quant-segur) then
+    assign de-quant-segur = truncate(de-quant-segur,0) + 1.
+IF param-global.modulo-per-ppm THEN
+    assign de-saldo = de-saldo-inic-teor.
+ELSE
+    assign de-saldo = de-saldo-inic.
+
+/*---------------------------------------------------------------------------*/
+
+if  param-global.modulo-cp 
+and l-ord-prod then do:
+
+    find first tt-depositos no-lock no-error.
+    if  avail tt-depositos then do:
+
+        for each ord-prod fields (it-codigo dt-inicio    dt-termino  cod-estabel  cod-depos
+                                  qt-ordem  qt-produzida estado      nr-ord-produ nr-pedido 
+                                  cod-refer lote-serie)
+            where ord-prod.it-codigo   = b-item.it-codigo
+            and   ord-prod.cod-refer   = c-cod-refer
+            and   ord-prod.dt-termino <= da-dt-corte
+            and   ord-prod.estado     <  7 no-lock,
+            first tt-depositos where
+                  tt-depositos.cod-estabel = ord-prod.cod-estabel and
+                  tt-depositos.cod-depos   = ord-prod.cod-depos   no-lock:
+
+            assign de-saldo = ord-prod.qt-ordem - ord-prod.qt-produzida.
+            if  de-saldo <= 0 then 
+                next.
+
+            create tt-estoq.
+            assign tt-estoq.tipo = c-liter[1]
+                   tt-estoq.referencia = trim(string(ord-prod.nr-ord-produ,"999,999,999")) + " " + 
+                                         trim(substring({ininc/i01in271.i 04 ord-prod.estado},1,1)) +
+                                         if  ord-prod.nr-pedido <> "" 
+                                         then " - " + ord-prod.nr-pedido
+                                         else ""
+                   tt-estoq.quantidade = de-saldo
+                   tt-estoq.dt-inicio  = ord-prod.dt-inicio
+                   tt-estoq.dt-termino = ord-prod.dt-termino
+                   &IF DEFINED(bf_man_206b) &THEN
+                   tt-estoq.unid-negoc = c-unid-retornada
+                   &ENDIF
+                   .
+        end.
+    end.
+    else do:
+        for each  ord-prod fields (it-codigo  dt-inicio    dt-termino   cod-estabel   cod-depos
+                                   qt-ordem   qt-produzida estado       nr-ord-produ
+                                   nr-pedido  cod-refer    lote-serie)
+            where ord-prod.it-codigo    = b-item.it-codigo
+              and ord-prod.cod-refer    = c-cod-refer
+              and ord-prod.dt-termino  <= da-dt-corte
+              and ord-prod.cod-estabel >= c-estab-ini
+              and ord-prod.cod-estabel <= c-estab-fim
+              and ord-prod.estado      <  7 NO-LOCK:
+
+        &if defined (bf_man_sfc_lc) &then
+            FIND FIRST deposito
+                WHERE deposito.cod-depos = ord-prod.cod-depos
+                AND   deposito.log-ordens-mrp  NO-LOCK NO-ERROR.
+        &else
+            FIND first deposito where 
+                deposito.cod-depos = ord-prod.cod-depos AND 
+                deposito.log-ordens-mrp NO-LOCK NO-ERROR.
+        &endif
+        
+            IF NOT AVAIL deposito THEN NEXT.
+
+            assign de-saldo = ord-prod.qt-ordem - ord-prod.qt-produzida.
+
+            if  de-saldo <= 0 then 
+                next.
+
+            create tt-estoq.
+            assign tt-estoq.tipo = c-liter[1]
+                   tt-estoq.referencia = trim(string(ord-prod.nr-ord-produ,"999,999,999")) + " " + 
+                                         trim(substring({ininc/i01in271.i 04 ord-prod.estado},1,1)) +
+                                         if  ord-prod.nr-pedido <> ""
+                                         then " - " + ord-prod.nr-pedido
+                                         else ""
+                   tt-estoq.quantidade = de-saldo
+                   tt-estoq.dt-inicio  = ord-prod.dt-inicio
+                   tt-estoq.dt-termino = ord-prod.dt-termino
+                   &IF DEFINED(bf_man_206b) &THEN
+                   tt-estoq.unid-negoc = c-unid-retornada
+                   &ENDIF
+                   .
+        end.
+    end.
+end.
+
+/*---------------------------------------------------------------------------*/
+
+if  param-global.modulo-cc then do:
+    find first tt-depositos no-lock no-error.
+
+    if  avail tt-depositos 
+    and l-ord-comp then do:
+        for each prazo-compra fields (it-codigo     situacao    data-entrega   quant-saldo  
+                                      numero-ordem  parcela     pedido-clien   cod-refer)
+            where prazo-compra.it-codigo     = b-item.it-codigo
+              and prazo-compra.cod-refer     = c-cod-refer
+              and prazo-compra.situacao     <> 4 
+              and prazo-compra.situacao     <> 6
+              and prazo-compra.data-entrega <= da-dt-corte no-lock:
+
+            if  prazo-compra.quant-saldo <= 0 then 
+                next.
+
+            for each  ordem-compra fields (it-codigo  numero-ordem  cod-emitente  situacao   cod-estabel   
+                                           cod-refer  dep-almoxar   natureza      num-pedido ordem-servic)  
+                where ordem-compra.numero-ordem = prazo-compra.numero-ordem 
+                  and ordem-compra.situacao <> 4 no-lock,
+                first tt-depositos
+                     where tt-depositos.cod-estabel = ordem-compra.cod-estabel
+                     and   tt-depositos.cod-depos   = ordem-compra.dep-almoxar no-lock:
+
+                if  ordem-compra.natureza = 3 
+                and i-benefic             = 2 then 
+                    next.
+
+                find emitente 
+                    where emitente.cod-emitente = ordem-compra.cod-emitente no-lock no-error.
+
+                create tt-estoq.
+                assign tt-estoq.tipo = if  ordem-compra.natureza = 3
+                                       and i-benefic = 3 then c-liter[2]
+                                                         else c-liter[3]
+                       tt-estoq.referencia = trim(string(prazo-compra.numero-ordem,"zzzzz9,99"))  + "/" +
+                                             string(prazo-compra.parcela) + "/" +
+                                            (if  not avail emitente then " " 
+                                                                    else trim(string(emitente.nome-abrev,"x(12)"))) + "/" +
+                                             trim(string(ordem-compra.num-pedido,"zzzz9,999")) + 
+                                            (if  prazo-compra.pedido-clien <> ""
+                                             then " - " + prazo-compra.pedido-clien
+                                             else if  ordem-compra.natureza      = 3
+                                                  and ordem-compra.ordem-servic <> 0 
+                                                  then " - " + c-liter[4] + trim(string(ordem-compra.ordem-servic,"zzz,zz9,999"))
+                                                  else "")
+                       tt-estoq.dt-inicio  = ?
+                       tt-estoq.dt-termino = prazo-compra.data-entrega
+                       &IF DEFINED(bf_man_206b) &THEN
+                       tt-estoq.unid-negoc = c-unid-retornada
+                       &ENDIF
+                       .
+                
+                assign tt-estoq.quantidade = prazo-compra.quant-saldo.
+
+            end.
+        end.
+    end.
+    else if l-ord-comp then do:
+        for each prazo-compra fields (it-codigo    situacao   data-entrega   quant-saldo
+                                      numero-ordem parcela    pedido-clien   cod-refer)
+            where prazo-compra.it-codigo     = b-item.it-codigo
+              and prazo-compra.cod-refer     = c-cod-refer
+              and prazo-compra.situacao     <> 4 
+              and prazo-compra.situacao     <> 6
+              and prazo-compra.data-entrega <= da-dt-corte no-lock,
+            first ordem-compra fields (it-codigo  numero-ordem  cod-emitente  situacao   cod-estabel 
+                                       cod-refer  dep-almoxar   natureza      num-pedido ordem-servic)
+                where ordem-compra.numero-ordem = prazo-compra.numero-ordem
+                  and ordem-compra.cod-estabel >= c-estab-ini
+                  and ordem-compra.cod-estabel <= c-estab-fim no-lock,
+
+      &if defined (bf_man_sfc_lc) &then 
+            first deposito fields (cod-depos  log-ordens-mrp) 
+                where deposito.cod-depos = ordem-compra.dep-almoxar
+                and   deposito.log-ordens-mrp no-lock:
+      &else
+            first deposito fields (cod-depos  log-ordens-mrp) 
+                where deposito.cod-depos = ordem-compra.dep-almoxar
+                and   deposito.log-ordens-mrp no-lock:
+      &endif
+
+            if  prazo-compra.quant-saldo <= 0 then next.
+            if  ordem-compra.situacao = 4     then next.
+            if  ordem-compra.natureza = 3 
+            and i-benefic             = 2     then next.
+
+            find emitente 
+                where emitente.cod-emitente = ordem-compra.cod-emitente no-lock no-error.
+
+            create tt-estoq.
+            assign tt-estoq.tipo = if  ordem-compra.natureza = 3
+                                   and i-benefic = 3 then c-liter[2]
+                                                     else c-liter[3]
+                   tt-estoq.referencia = trim(string(prazo-compra.numero-ordem,"zzzzz9,99")) + "/" +
+                                         string(prazo-compra.parcela) + "/" +
+                                        (if  not avail emitente then " " 
+                                                                else trim(string(emitente.nome-abrev,"x(12)"))) + "/" +
+                                         trim(string(ordem-compra.num-pedido,"zzzz9,999")) + 
+                                         if  prazo-compra.pedido-clien <> ""
+                                         then " - " + prazo-compra.pedido-clien
+                                         else if  ordem-compra.natureza = 3
+                                              and ordem-compra.ordem-servic <> 0
+                                              then " - " + c-liter[4] + trim(string(ordem-compra.ordem-servic,"zzz,zz9,999"))
+                                              else ""
+                   tt-estoq.dt-inicio  = ?
+                   tt-estoq.dt-termino = prazo-compra.data-entrega
+                   &IF DEFINED(bf_man_206b) &THEN
+                   tt-estoq.unid-negoc = c-unid-retornada
+                   &ENDIF
+                   .
+
+            assign tt-estoq.quantidade = prazo-compra.quant-saldo.
+        end.
+    end.
+end.
+/*---------------------------------------------------------------------------*/
+
+if  param-global.modulo-cp and l-res-comp then do:
+    find first tt-depositos no-lock no-error.
+    if  avail tt-depositos then
+        for each  reservas fields (it-codigo   dt-reserva   estado    quant-aloc
+                                   quant-atend quant-orig   cod-depos nr-ord-produ
+                                   cod-refer qt-aloc-lote qt-atend-lote) 
+            where reservas.it-codigo   = b-item.it-codigo
+              and reservas.cod-refer   = c-cod-refer
+              and reservas.dt-reserva <= da-dt-corte
+              and reservas.estado      = 1 no-lock:
+            
+            assign de-saldo = reservas.quant-orig - reservas.quant-aloc - reservas.quant-atend.
+
+            if reservas.quant-orig = 0 then next.
+            if reservas.quant-orig < 0 and de-saldo >= 0 then next.
+            if reservas.quant-orig > 0 and de-saldo <= 0 then next.
+
+            for first ord-prod fields (it-codigo  dt-termino    cod-estabel  cod-depos
+                                       qt-ordem   qt-produzida  estado       nr-ord-produ
+                                       nr-pedido  cod-refer     lote-serie)
+                where reservas.nr-ord-produ = ord-prod.nr-ord-produ
+                  and ord-prod.estado < 7 no-lock: end.
+            if  not avail ord-prod then 
+                next.
+
+            find first tt-depositos
+                 where tt-depositos.cod-estabel = ord-prod.cod-estabel
+                   and tt-depositos.cod-depos   = reservas.cod-depos
+                 no-lock no-error.
+            if  not avail tt-depositos then 
+                next.
+
+            create tt-estoq.
+            assign tt-estoq.tipo = c-liter[5]
+                   tt-estoq.referencia = string(reservas.nr-ord-produ, "999,999,999") + " - " + 
+                                         ord-prod.it-codigo
+                   tt-estoq.quantidade = de-saldo
+                   tt-estoq.dt-inicio  = ?
+                   tt-estoq.dt-termino = reservas.dt-reserva
+                   &IF DEFINED(bf_man_206b) &THEN
+                   tt-estoq.unid-negoc = c-unid-retornada
+                   &ENDIF
+                   .
+        end.
+    else 
+        for each  reservas fields (it-codigo   dt-reserva   estado    quant-aloc
+                                   quant-atend quant-orig   cod-depos nr-ord-produ
+                                   cod-refer qt-aloc-lote qt-atend-lote)
+            where reservas.it-codigo   = b-item.it-codigo
+              and reservas.cod-refer   = c-cod-refer
+              and reservas.dt-reserva <= da-dt-corte
+              and reservas.estado      = 1 no-lock,
+            first deposito fields (cod-depos   cons-saldo)
+                where deposito.cod-depos = reservas.cod-depos
+                  and deposito.cons-saldo no-lock:
+
+            assign de-saldo = reservas.quant-orig - reservas.quant-aloc - reservas.quant-atend.
+
+            if reservas.quant-orig = 0 then next.
+            if reservas.quant-orig < 0 and de-saldo >= 0 then next.
+            if reservas.quant-orig > 0 and de-saldo <= 0 then next.
+
+            for first ord-prod fields (it-codigo  dt-termino    cod-estabel  cod-depos
+                                       qt-ordem   qt-produzida  estado       nr-ord-produ
+                                       nr-pedido  cod-refer     lote-serie)
+                where ord-prod.nr-ord-produ = reservas.nr-ord-produ
+                  and ord-prod.cod-estabel   >= c-estab-ini
+                  and ord-prod.cod-estabel   <= c-estab-fim
+                  and ord-prod.estado < 7 no-lock:
+
+                create tt-estoq.
+                assign tt-estoq.tipo = c-liter[5]
+                       tt-estoq.referencia = string(reservas.nr-ord-produ, "999,999,999") 
+                                           + " - " + ord-prod.it-codigo
+                       tt-estoq.quantidade = de-saldo
+                       tt-estoq.dt-inicio  = ?
+                       tt-estoq.dt-termino = reservas.dt-reserva
+                       &IF DEFINED(bf_man_206b) &THEN
+                       tt-estoq.unid-negoc = c-unid-retornada
+                       &ENDIF
+                       .
+            end.
+        end.
+end.
+/*----------------------------------------------------------------------------*/
+
+IF l-apenas-oem THEN DO:
+
+    RUN esp/es0018p.p (INPUT  "clientes-oem":U,
+                       INPUT  1,
+                       INPUT  0,
+                       INPUT  "":U,
+                       OUTPUT TABLE tt-prog-ponto).
+
+    ASSIGN c-clientes-oem = "".
+
+    FOR EACH tt-prog-ponto:
+
+        FOR FIRST emitente NO-LOCK
+            WHERE emitente.cod-emitente = int(tt-prog-ponto.conteudo):
+
+            ASSIGN c-clientes-oem = c-clientes-oem + emitente.nome-abrev + ";".
+
+        END.
+
+    END.
+    
+    IF length(c-clientes-oem) > 0 THEN
+        ASSIGN c-clientes-oem = SUBSTRING(c-clientes-oem, 1, LENGTH(c-clientes-oem) - 1).
+
+END.
+
+if  param-global.modulo-pd and l-pedidos and b-item.baixa-estoq then 
+    for  each ped-ent fields (it-codigo   dt-entrega   cd-sit-prog   cod-sit-ent
+                              nome-abrev  nr-pedcli    nr-sequencia  cod-refer
+                              qt-pedida   qt-atendida  qt-alocada    qt-log-aloc
+                              char-2      qtd-aloc-op  qtd-reporta-op-ped)
+    where ped-ent.it-codigo = b-item.it-codigo
+      and ped-ent.cod-refer = c-cod-refer
+      and ped-ent.dt-entrega <= da-dt-corte
+      and (ped-ent.qt-log-aloca = 0
+       or (ped-ent.qt-pedida - ped-ent.qt-log-aloca) > 0)
+      and ped-ent.cd-sit-prog = 2
+      and (ped-ent.cod-sit-ent = 1 
+       or ped-ent.cod-sit-ent = 2
+       or ped-ent.cod-sit-ent = 4) no-lock,
+        first ped-item fields (nome-abrev   nr-pedcli    nr-sequencia   it-codigo
+                               cod-refer    nat-operacao ind-componen
+                               cod-sit-item it-codigo ind-componen)
+            where ped-item.nome-abrev   = ped-ent.nome-abrev
+              and ped-item.nr-pedcli    = ped-ent.nr-pedcli
+              and ped-item.nr-sequencia = ped-ent.nr-sequencia
+              and ped-item.it-codigo    = ped-ent.it-codigo
+              and ped-item.cod-refer    = ped-ent.cod-refer no-lock:
+
+        IF l-apenas-oem THEN DO:
+
+            IF LOOKUP(ped-ent.nome-abrev, c-clientes-oem, ";") = 0 THEN
+                NEXT.
+
+        END.
+
+
+        for first natur-oper fields (nat-operacao   baixa-estoq ind-entfu)
+            where natur-oper.nat-operacao = ped-item.nat-operacao no-lock: end.
+
+        if (avail natur-oper and not natur-oper.baixa-estoq
+                             and not natur-oper.ind-entfu) then
+            next.
+
+        if  ped-item.ind-componen = 3 then do:
+            find first b-ped-item
+                where b-ped-item.nome-abrev   = ped-item.nome-abrev
+                  and b-ped-item.nr-pedcli    = ped-item.nr-pedcli
+                  and b-ped-item.nr-sequencia = ped-item.nr-sequencia
+                  and b-ped-item.ind-componen = 2 no-lock no-error.
+            find b3-item where b3-item.it-codigo = b-ped-item.it-codigo no-lock no-error.
+            if  not avail b-ped-item or not avail b3-item or b3-item.baixa-estoq then
+                next.
+        end.  
+
+        if  c-estab-ini = ""  and c-estab-fim = "ZZZ" then do:
+            if  not l-cred-aprov then 
+                for first ped-venda fields (nome-abrev   nr-pedcli 
+                                            cod-sit-aval cod-estabel)
+                    where ped-venda.nome-abrev = ped-item.nome-abrev
+                      and ped-venda.nr-pedcli  = ped-item.nr-pedcli
+                      AND ped-venda.completo
+                      AND NOT ped-venda.log-cotacao  no-lock: end.
+            else
+                for first ped-venda fields (nome-abrev   nr-pedcli 
+                                            cod-sit-aval cod-estabel)
+                    where ped-venda.nome-abrev   = ped-item.nome-abrev
+                      and ped-venda.nr-pedcli    = ped-item.nr-pedcli
+                      AND ped-venda.completo
+                      and ped-venda.cod-sit-aval > 1 
+                      and ped-venda.cod-sit-aval < 4
+                      AND NOT ped-venda.log-cotacao  no-lock: end.
+        end.
+        else 
+            if  not l-cred-aprov then            
+                for first ped-venda fields (nome-abrev   nr-pedcli 
+                                            cod-sit-aval cod-estabel)
+                    where ped-venda.nome-abrev = ped-item.nome-abrev
+                      and ped-venda.nr-pedcli  = ped-item.nr-pedcli
+                      AND ped-venda.completo      
+                      and ped-venda.cod-estabel >= c-estab-ini
+                      and ped-venda.cod-estabel <= c-estab-fim
+                      AND NOT ped-venda.log-cotacao  no-lock: end.
+            else
+                for first ped-venda fields (nome-abrev   nr-pedcli 
+                                            cod-sit-aval cod-estabel)
+                    where ped-venda.nome-abrev = ped-item.nome-abrev
+                      and ped-venda.nr-pedcli  = ped-item.nr-pedcli
+                      AND ped-venda.completo
+                      and ped-venda.cod-estabel >= c-estab-ini
+                      and ped-venda.cod-estabel <= c-estab-fim 
+                      and ped-venda.cod-sit-aval > 1 
+                      and ped-venda.cod-sit-aval < 4
+                      AND NOT ped-venda.log-cotacao  no-lock: end.
+
+
+        if  avail ped-venda then do:
+            if  avail tt-depositos then do:
+                find first tt-depositos 
+                     where tt-depositos.cod-estabel = ped-venda.cod-estabel no-lock no-error.
+                if not avail tt-depositos then next.
+            end.
+
+            if ped-item.ind-componen = 2 then do:              
+               /*------------------------------------------------------------*
+                * Procura um pedido de Produto Configurado                   *
+                *         A                                                  *
+                *     +---+---+   onde A eh ind-componen 1 (Configurado)     *
+                *     B       C        B e C ind-conponen 2 (Comp.do Config) *
+                * Neste caso,se A nao baixa estoque, deve considerar o pedido*
+                * de B ou C.                                                 *
+                *------------------------------------------------------------*/
+
+                for first b-ped-item fields (nome-abrev   nr-pedcli   nr-sequencia
+                                             ind-componen it-codigo)
+                    where b-ped-item.nome-abrev   = ped-item.nome-abrev
+                      and b-ped-item.nr-pedcli    = ped-item.nr-pedcli
+                      and b-ped-item.nr-sequencia = ped-item.nr-sequencia
+                      and b-ped-item.ind-componen = 1 no-lock: end.
+                if avail b-ped-item then 
+                   for first b1-item fields (it-codigo   baixa-estoq)
+                       where b1-item.it-codigo = b-ped-item.it-codigo no-lock: end.
+                /*-----------------------------------------------------* 
+                 * Se nao encontrou ped-item com ind-componen 1,
+                 * ou nao achou o item do b-ped-item, ou o item localizado
+                 * baixa estoque, entao nao considera o ped b-item.
+                 *-----------------------------------------------------*/
+                 if not avail b-ped-item
+                 or not avail b1-item 
+                 or b1-item.baixa-estoq then 
+                    next.
+            end.
+
+           assign de-saldo-item = 
+                  if (ped-ent.qt-pedida - ped-ent.qt-atendida ) > 0 
+                      then  (ped-ent.qt-pedida - ped-ent.qt-atendida )
+                  else 0
+                  de-saldo-aloc = 
+                  if (ped-ent.qt-alocada - ped-ent.qt-atendida)  > 0
+                      then (ped-ent.qt-alocada - ped-ent.qt-atendida)
+                  else 0.        
+                  de-ped-saldo  =  (de-saldo-item - de-saldo-aloc).
+                  IF ((ped-ent.qt-pedida - ped-ent.qt-log-aloc) >= 0) THEN
+                   ASSIGN de-ped-saldo = de-ped-saldo - ped-ent.qt-log-aloc.
+
+                 /* Alocacao de OP no Embarque (FT3000) - ksm41636 - GL - FO 1899.998*/
+                  IF (( ped-ent.qtd-aloc-op - ped-ent.qtd-reporta-op-ped) > 0) THEN
+
+                   ASSIGN de-ped-saldo = de-ped-saldo + 
+                                         ped-ent.qtd-aloc-op -  /* quantidade alocada na producao */
+                                         ped-ent.qtd-reporta-op-ped. /* quantidade reportada */
+                 /* - FIM - Aloca»’o de Orden de Produ»’o no Embarque - FIM - */
+
+
+           if  de-ped-saldo <> 0 then do:
+               create tt-estoq.
+               assign tt-estoq.tipo  = c-liter[6]
+                      tt-estoq.referencia =
+                          trim(string(ped-ent.nome-abrev,"x(12)")) +
+                                            "/"               +
+                          string(ped-ent.nr-pedcli,"x(12)") + 
+                      (if ped-item.cod-sit-item = 4 then
+                          "*"
+                       else "")
+                      tt-estoq.quantidade = de-ped-saldo
+                      tt-estoq.dt-inicio  = ?
+                      tt-estoq.dt-termino = ped-ent.dt-entrega
+                      &IF DEFINED(bf_man_206b) &THEN
+                      tt-estoq.unid-negoc = c-unid-retornada
+                      &ENDIF
+                      .
+           end.
+        end.
+    end.
+
+
+/*----------------------------------------------------------------------------*/
+
+if  l-planejada or  l-res-plan then
+    for first pl-prod  fields (cd-plano pl-estado cd-tipo tp-seg-comp tp-seg-fabr 
+                               log-multi-estabel  num-calc-plano) 
+        where pl-prod.cd-plano = i-cod-plano no-lock:
+        {esp/ccp/esccp032.i21}
+
+        for first pl-it-calc fields (it-codigo  cd-plano nr-dias-desl   res-cq-fabri
+                                     tempo-segur ressup-fabri   char-1)
+            where pl-it-calc.cd-plano  = pl-prod.cd-plano and
+                  pl-it-calc.it-codigo = b-item.it-codigo no-lock:
+
+            find item where item.it-codigo = pl-it-calc.it-codigo no-lock no-error.
+
+            if pl-prod.log-multi-estabel  then do:
+               for each  estabelec 
+                   where estabelec.cod-estabel >= c-estab-ini 
+                   and   estabelec.cod-estabel <= c-estab-fim no-lock:
+
+                   /*** C¢digo Duplicado - estabel ****/
+
+                   for each it-periodo
+                       where it-periodo.num-calc-plano = pl-prod.num-calc-plano                
+                       and   it-periodo.cod-estabel    = estabelec.cod-estabel
+                       and   it-periodo.it-codigo      = pl-it-calc.it-codigo
+                       and   it-periodo.cod-refer      = c-cod-refer
+                       and ((it-periodo.qt-ord-plan    > 0 and l-planejada)
+                       or  ((it-periodo.qt-res-plan - it-periodo.qt-pedidos > 0)
+                       and l-res-plan)) no-lock:
+
+
+                       FIND first periodo where
+                           periodo.nr-periodo = it-periodo.periodo and
+                           periodo.ano        = it-periodo.ano     and
+                           periodo.cd-tipo    = pl-prod.cd-tipo NO-LOCK NO-ERROR.
+                       IF AVAIL periodo THEN DO:
+                           if periodo.dt-inicio <= da-dt-plan then do:
+                              if b-item.compr-fabr = 1 then do:
+                                 {esp/ccp/esccp032.i23 item} /*calcula da-inicio da-termino - compras*/
+                                 assign da-dat    = da-termino
+                                        da-dat-in = da-inicio.
+                                 IF i-tam-per = 1 THEN DO:
+                                     for first calen-prod fields (cod-estabel   data   tipo-dia)
+                                         where calen-prod.cod-estabel = param-cp.cod-estabel
+                                         and   calen-prod.data        = da-dat no-lock: end.
+    
+                                     if avail calen-prod then
+                                     repeat:
+                                        if calen-prod.tipo-dia = 1 then
+                                           leave.
+                                        else do:
+                                            assign da-inicio = da-inicio - 1
+                                                   da-dat    = da-dat - 1.
+                                            for first calen-prod fields (cod-estabel   data   tipo-dia)
+                                                where calen-prod.cod-estabel = param-cp.cod-estabel 
+                                                and   calen-prod.data        = da-dat no-lock: end.
+                                        end.
+                                     end.
+                                     assign da-termino = da-dat.
+                                 END.
+                              end.
+                              else do:
+                                      RUN pi-cd0901(INPUT 1). /* 1 - item */
+/*                                      {cdp/cd0901.i5 item} */
+                              end.
+
+                              if it-periodo.qt-ord-plan > 0 and
+                                 da-termino <= da-op-corte  and
+                                 l-planejada then do:
+                                 create tt-estoq.
+                                 assign tt-estoq.tipo = c-liter[7]
+                                        tt-estoq.referencia = ""
+                                        tt-estoq.dt-inicio  = da-inicio
+                                        tt-estoq.dt-termino = da-termino
+                                        &IF DEFINED(bf_man_206b) &THEN
+                                        tt-estoq.unid-negoc = c-unid-retornada
+                                        &ENDIF
+                                        .
+
+                                  assign tt-estoq.quantidade = it-periodo.qt-ord-plan.
+
+
+                              end.
+                              if (it-periodo.qt-res-plan - it-periodo.qt-pedidos) > 0 and
+                                  periodo.dt-inicio <= da-op-corte and
+                                  l-res-plan then do:
+                                  assign de-qt-seg = 0.           
+
+                                 /*----------------------------------------------------------*
+                                  * tipo-res => 1 -> plano producao/previsao vendas          *
+                                  *             2 -> interna                                 *
+                                  *             3 -> pedido                                  *
+                                  *             4 -> planejada                               *
+                                  *             ? -> reserva interna reprogramada por O.P de *
+                                  *                  nivel superior                          *
+                                  *----------------------------------------------------------*/
+
+                                 for each  res-aber fields (it-codigo   cod-refer   ano   periodo
+                                           nr-pedcli   nome-abrev  quantidade item-pai
+                                           num-id-it-periodo  cod-estabel)
+                                     where res-aber.num-id-it-periodo = it-periodo.num-id-it-periodo 
+                                     and res-aber.it-codigo  = it-periodo.it-codigo
+                                     and res-aber.cod-refer  = it-periodo.cod-refer
+                                     and res-aber.ano        = it-periodo.ano       
+                                     and res-aber.periodo    = it-periodo.periodo   
+                                     AND res-aber.cod-estabel = estabelec.cod-estabel
+                                     and (res-aber.tipo-res   = 4 or
+                                          res-aber.tipo-res   = 7) no-lock:
+
+                                     create tt-estoq.
+                                     assign tt-estoq.tipo = c-liter[8]
+                                            tt-estoq.referencia = res-aber.item-pai
+                                            tt-estoq.dt-inicio  = ?
+                                            tt-estoq.dt-termino = periodo.dt-inicio
+                                            &IF DEFINED(bf_man_206b) &THEN
+                                            tt-estoq.unid-negoc = c-unid-retornada
+                                            &ENDIF
+                                            tt-estoq.item-pai   = res-aber.item-pai. 
+
+                                     assign tt-estoq.quantidade = res-aber.quantidade.
+                                 end.
+                              end.
+                           end.
+                       end.   
+                   end.
+                  /**** FIM ****/ 
+               end.
+            end.
+
+            else do:
+               /*** C¢digo duplicado - estabel ***/
+
+               for each it-periodo
+                   where it-periodo.num-calc-plano = pl-prod.num-calc-plano                
+                   and   it-periodo.cod-estabel    = " "
+                   and   it-periodo.it-codigo    = pl-it-calc.it-codigo
+                   and   it-periodo.cod-refer    = c-cod-refer
+                   and ((it-periodo.qt-ord-plan > 0 and l-planejada)
+                   or  ((it-periodo.qt-res-plan - it-periodo.qt-pedidos > 0)
+                   and l-res-plan)) no-lock:
+
+
+                   FIND first periodo where
+                       periodo.nr-periodo = it-periodo.periodo and
+                       periodo.ano        = it-periodo.ano     and
+                       periodo.cd-tipo    = pl-prod.cd-tipo NO-LOCK NO-ERROR.
+                   IF AVAIL periodo THEN DO:
+                           for first item-uni-estab 
+                               where item-uni-estab.it-codigo = b-item.it-codigo
+                               and item-uni-estab.cod-estabel = b-item.cod-estabel no-lock: 
+                           end.
+
+                       if periodo.dt-inicio <= da-dt-plan then do:
+                          if b-item.compr-fabr = 1 then do:
+                            if avail item-uni-estab then do:
+                               {esp/ccp/esccp032.i23 item-uni-estab} /*calcula da-inicio da-termino - compras*/
+                            end.
+                            else do:
+                               {esp/ccp/esccp032.i23 item} /*calcula da-inicio da-termino - compras*/
+                            end.
+                             assign da-dat    = da-termino
+                                    da-dat-in = da-inicio.
+                            IF i-tam-per = 1 THEN DO:
+                                for first calen-prod fields (cod-estabel   data   tipo-dia)
+                                    where calen-prod.cod-estabel = param-cp.cod-estabel
+                                    and   calen-prod.data        = da-dat no-lock: end.
+                                if avail calen-prod then
+                                    repeat:
+                                       if calen-prod.tipo-dia = 1 then
+                                          leave.
+                                       else do:
+                                          assign da-inicio = da-inicio - 1
+                                                 da-dat    = da-dat - 1.
+                                          for first calen-prod fields (cod-estabel   data   tipo-dia)
+                                              where calen-prod.cod-estabel = param-cp.cod-estabel 
+                                              and   calen-prod.data        = da-dat no-lock: end.
+                                       end.
+                                    end.
+                                assign da-termino = da-dat.
+                            END.
+                          end.
+                          else do:
+                              if avail item-uni-estab then do:                                             
+                                  RUN pi-cd0901(INPUT 2). /* 2 - item-uni-estab */
+/*                                  {cdp/cd0901.i5 item-uni-estab} /*calcula da-inicio da-termino - compras*/ */
+                              end.                                                                         
+                              else do:                                                                     
+                                  RUN pi-cd0901(INPUT 2). /* 2 - item-uni-estab */
+/*                                 {cdp/cd0901.i5 item} /*calcula da-inicio da-termino - compras*/ */
+                              end.                                                                         
+                          end.
+
+                          if it-periodo.qt-ord-plan > 0 and
+                             da-termino <= da-op-corte and
+                             l-planejada then do:
+                             create tt-estoq.
+                             assign tt-estoq.tipo = c-liter[7]
+                                    tt-estoq.referencia = ""
+                                    tt-estoq.dt-inicio  = da-inicio
+                                    tt-estoq.dt-termino = da-termino
+                                    &IF DEFINED(bf_man_206b) &THEN
+                                    tt-estoq.unid-negoc = c-unid-retornada
+                                    &ENDIF
+                                    .
+
+                             assign tt-estoq.quantidade = it-periodo.qt-ord-plan.
+
+                          end.
+
+                          if (it-periodo.qt-res-plan - it-periodo.qt-pedidos) > 0 and
+                              periodo.dt-inicio <= da-op-corte and
+                              l-res-plan then do:
+                              assign de-qt-seg = 0.           
+
+                             /*----------------------------------------------------------*
+                              * tipo-res => 1 -> plano producao/previsao vendas          *
+                              *             2 -> interna                                 *
+                              *             3 -> pedido                                  *
+                              *             4 -> planejada                               *
+                              *             ? -> reserva interna reprogramada por O.P de *
+                              *                  nivel superior                          *
+                              *----------------------------------------------------------*/
+
+                             for each  res-aber fields (it-codigo   cod-refer   ano   periodo
+                                       nr-pedcli   nome-abrev  quantidade item-pai
+                                       num-id-it-periodo cod-estabel)
+                                 where res-aber.num-id-it-periodo = it-periodo.num-id-it-periodo 
+                                 and res-aber.it-codigo  = it-periodo.it-codigo
+                                 and res-aber.cod-refer  = it-periodo.cod-refer
+                                 and res-aber.ano        = it-periodo.ano       
+                                 and res-aber.periodo    = it-periodo.periodo   
+                                 and (res-aber.tipo-res   = 4 or
+                                      res-aber.tipo-res   = 7) no-lock:
+
+                                 create tt-estoq.
+                                 assign tt-estoq.tipo = c-liter[8]
+                                        tt-estoq.referencia = res-aber.item-pai
+                                        tt-estoq.dt-inicio  = ?
+                                        tt-estoq.dt-termino = periodo.dt-inicio
+                                        &IF DEFINED(bf_man_206b) &THEN
+                                        tt-estoq.unid-negoc = c-unid-retornada
+                                        &ENDIF
+                                        tt-estoq.item-pai   = res-aber.item-pai. 
+
+                                 assign tt-estoq.quantidade = res-aber.quantidade.
+                             end.
+                          end.
+                       end. 
+                   end.   
+               end.
+
+               /*** FIM ***/  
+            end.     
+
+
+        end.
+    end.
+/********************************************************************/        
+/* CONSIDERAR SEMPRE DEPOSITO EXP - GIZELLE - Parte 2/2 */
+/* Quando o parametro "Informa Dep¢sitos" estiver desmarcado deve sempre considerar o dep¢sito EXP */ 
+
+for each deposito no-lock
+   where deposito.cod-depos = "EXP":
+   find first b-deposito exclusive-lock
+        where rowid(b-deposito) = rowid(deposito) no-error.
+   assign b-deposito.cons-saldo     = l-status-ant-exp-cons-saldo
+          b-deposito.log-ordens-mrp = l-status-ant-exp-cons-mrp.
+   release b-deposito.
+   
+end.
+
+for each deposito no-lock
+   where deposito.cod-depos = "ACA":
+   find first b-deposito exclusive-lock
+        where rowid(b-deposito) = rowid(deposito) no-error.
+   assign b-deposito.cons-saldo     = l-status-ant-aca-cons-saldo
+          b-deposito.log-ordens-mrp = l-status-ant-aca-cons-mrp.
+   release b-deposito.
+end. 
+
+for each deposito no-lock
+   where deposito.cod-depos = "WEX":    
+   find first b-deposito exclusive-lock
+        where rowid(b-deposito) = rowid(deposito) no-error.
+   assign b-deposito.cons-saldo     = l-status-ant-wex-cons-saldo
+          b-deposito.log-ordens-mrp = l-status-ant-wex-cons-mrp.
+   release b-deposito.
+end.
+    
+for each deposito no-lock
+   where deposito.cod-depos = "CDN":
+   find first b-deposito exclusive-lock
+        where rowid(b-deposito) = rowid(deposito) no-error.
+   assign b-deposito.cons-saldo     = l-status-ant-cdn-cons-saldo
+          b-deposito.log-ordens-mrp = l-status-ant-cdn-cons-mrp.
+   release b-deposito.
+end.
+    
+for each deposito no-lock
+   where deposito.cod-depos = "EPE":
+   find first b-deposito exclusive-lock
+        where rowid(b-deposito) = rowid(deposito) no-error.
+   assign b-deposito.cons-saldo     = l-status-ant-epe-cons-saldo
+          b-deposito.log-ordens-mrp = l-status-ant-epe-cons-mrp.
+   release b-deposito.
+end. 
+
+
+/********************************************************************/
+    &IF DEFINED(bf_man_206b) &THEN
+        IF VALID-HANDLE(h-cdapi024) THEN DO:
+            DELETE PROCEDURE h-cdapi024.
+            ASSIGN h-cdapi024 = ?.
+        END.
+    &ENDIF
+    
+    &if '{&bf_lote_avancado_liberado}' = 'yes' &then
+        if valid-handle(h-ceapi030) then
+            delete procedure h-ceapi030.
+    &endif
+
+/*-------------------------------------------------------------------------*/
+END PROCEDURE.
+
+PROCEDURE pi-cd0901.
+    /******************************************************************************
+    ** CD0901.i5 - Include para calculo da data de termino e inicio da
+    **             ordem de producao
+    ** comum aos prgs: PL0603.p  pl0604a.p pl0604b.p pl0604c.p plpl0704b.p pl0704b.i
+    **                 pl0704g.i  pl0901a.p pl0901.i1 pl0901.i3
+    ******************************************************************************/
+    DEF INPUT PARAMETER i-estab AS INT NO-UNDO.
+
+    /************************** data de termino ****************************/
+	&IF DEFINED(bf_man_203) &THEN
+
+	assign i-nr-dias = if pl-it-calc.nr-dias-desl <> 999
+						  then pl-it-calc.nr-dias-desl
+					   else 0.
+
+	IF i-estab = 1 THEN DO:
+	   if item.compr-fabr = 2 then
+		   ASSIGN i-ressup = if ITEM.tipo-est-seg = 2   /* tempo */
+							 and ITEM.conv-tempo-seg = no /* converte tempo seguran‡a */
+							 and pl-prod.tp-seg-fabr
+							 then if substring(program-name(1),1,3) = "plp"
+									 then ITEM.res-cq-fabr
+										  + ITEM.tempo-segur
+										  - i-nr-dias
+									 else ITEM.res-cq-fabr
+										  + ITEM.tempo-segur
+										  - i-nr-dias
+							 else if substring(program-name(1),1,3) = "plp"
+									 then ITEM.res-cq-fabr - i-nr-dias
+									 else ITEM.res-cq-fabr - i-nr-dias.
+	   else 
+		   assign i-ressup = 0.
+
+    END.
+    ELSE DO:
+		if item.compr-fabr = 2 then
+			ASSIGN i-ressup = if ITEM-uni-estab.tipo-est-seg = 2   /* tempo */
+							  and ITEM-uni-estab.conv-tempo-seg = no /* converte tempo seguran‡a */
+							  and pl-prod.tp-seg-fabr
+							  then if substring(program-name(1),1,3) = "plp"
+									  then ITEM-uni-estab.res-cq-fabr
+										   + ITEM-uni-estab.tempo-segur
+										   - i-nr-dias
+									  else ITEM-uni-estab.res-cq-fabr
+										   + ITEM-uni-estab.tempo-segur
+										   - i-nr-dias
+						   else if substring(program-name(1),1,3) = "plp"
+								   then ITEM-uni-estab.res-cq-fabr - i-nr-dias
+								   else ITEM-uni-estab.res-cq-fabr - i-nr-dias.
+		else
+			assign i-ressup = 0.
+
+    END.
+
+
+	&ELSE
+
+	assign i-nr-dias = if pl-it-calc.nr-dias-desl <> 999
+						  then pl-it-calc.nr-dias-desl
+					   else 0.
+
+	if item.compr-fabr = 2 then
+		assign i-ressup = if item.tipo-est-seg = 2   /* tempo */
+						 and item.conv-tempo-seg = no /* converte tempo seguran‡a */
+						 and pl-prod.tp-seg-fabr
+						 then if substring(program-name(1),1,3) = "plp"
+								 then pl-it-calc.res-cq-fabr
+									  + pl-it-calc.tempo-segur
+									  - i-nr-dias
+								 else item.res-cq-fabr
+									  + item.tempo-segur
+									  - i-nr-dias
+					  else if substring(program-name(1),1,3) = "plp"
+							  then pl-it-calc.res-cq-fabr - i-nr-dias
+							  else item.res-cq-fabr - i-nr-dias.
+	else
+		assign i-ressup = 0.
+
+	&ENDIF
+
+	find b-periodo where recid(b-periodo) = recid(periodo) no-lock no-error.
+
+	IF i-tam-per > 1 THEN DO:
+		find prev b-periodo use-index codigo
+			where b-periodo.cd-tipo = pl-prod.cd-tipo no-lock no-error.
+		ASSIGN da-termino = b-periodo.dt-termino
+			   da-termino-f = da-termino.
+		IF i-ressup > 0 THEN DO:
+			IF i-ressup > i-tam-per THEN
+				ASSIGN da-termino = da-termino-f - i-ressup.
+			ELSE
+				ASSIGN da-termino = da-termino-f - i-tam-per.
+			/*Marcos - Se houver ressuprimento e buscar o registro do ultimo periodo*/
+			FIND FIRST periodo WHERE periodo.cd-tipo   = pl-prod.cd-tipo
+								AND periodo.dt-termino > da-termino NO-LOCK NO-ERROR.  
+			ASSIGN da-termino = periodo.dt-termino.
+			find b-periodo
+			  where b-periodo.cd-tipo = pl-prod.cd-tipo
+			  and   b-periodo.dt-termino = da-termino no-lock no-error.
+		END.
+	END.
+
+	if i-tam-per = 1 then
+		do  i-ind = 1 to i-ressup:
+			find prev b-periodo use-index codigo
+				where b-periodo.cd-tipo = pl-prod.cd-tipo no-lock no-error.
+		end.
+
+	if  not avail b-periodo then
+		find first b-periodo use-index codigo
+			 where b-periodo.cd-tipo = pl-prod.cd-tipo no-lock no-error.
+	assign da-termino = b-periodo.dt-termino.
+
+
+	/************************ data de inicio ****************************/
+
+	&IF DEFINED(bf_man_203) &THEN
+		assign de-qt-min = dec(substring(item.char-1,20,12))
+			   de-qt-dlt = dec(substring(item.char-1,35,12))
+			   i-dias-dlt = int(substring(item.char-1,15,4)).
+			   
+		IF i-estab = 1 THEN DO:
+			if not avail item-uni-estab then
+					find first item-uni-estab where
+							item-uni-estab.it-codigo   = item.it-codigo and
+							item-uni-estab.cod-estabel = it-periodo.cod-estabel no-lock no-error.
+			if avail item-uni-estab then                
+					assign de-qt-min  = item-uni-estab.qt-min-res-fabr
+						   i-dias-dlt = item-uni-estab.var-tempo-res-fabr
+						   de-qt-dlt  = item-uni-estab.var-qtd-res-fabr.
+		end.
+		
+		if it-periodo.qt-ord-plan > de-qt-min then
+		   assign de-vezes = (it-periodo.qt-ord-plan - de-qt-min) / de-qt-dlt
+				  de-vezes = (if de-vezes = ? then
+								 0
+							  else
+								 de-vezes)
+				  de-vezes = (if trunc(de-vezes,0) = de-vezes then
+								 de-vezes
+							  else
+								 trunc(de-vezes,0) + 1)
+				  i-res-var = (de-vezes * i-dias-dlt).             
+
+		if item.compr-fabr = 2 then
+			assign i-ressup = if item.tipo-est-seg = 2     /* tempo */
+							  and item.conv-tempo-seg = no /* converte tempo seguran‡a */
+							  and pl-prod.tp-seg-fabr
+							  then if substring(program-name(1),1,3) = "plp"
+									  then item.res-cq-fabri + item.tempo-segur - i-nr-dias
+									  else item.res-cq-fabri + item.tempo-segur - i-nr-dias
+							  else if substring(program-name(1),1,3) = "plp"
+								   then item.res-cq-fabri - i-nr-dias
+								   else item.res-cq-fabri - i-nr-dias.
+		else
+			assign i-ressup = 0.
+
+	&ELSE
+
+	assign de-qt-min = dec(substring(pl-it-calc.char-1,20,12))
+		   de-qt-dlt = dec(substring(pl-it-calc.char-1,35,12))
+		   i-dias-dlt = int(substring(pl-it-calc.char-1,15,4)).
+	if it-periodo.qt-ord-plan > de-qt-min then
+	   assign de-vezes = (it-periodo.qt-ord-plan - de-qt-min) / de-qt-dlt
+			  de-vezes = (if de-vezes = ? then
+							 0
+						  else
+							 de-vezes)
+			  de-vezes = (if trunc(de-vezes,0) = de-vezes then
+							 de-vezes
+						  else
+							 trunc(de-vezes,0) + 1)
+			  i-res-var = (de-vezes * i-dias-dlt).             
+
+	if item.compr-fabr = 2 then
+		assign i-ressup = if item.tipo-est-seg = 2     /* tempo */
+						  and item.conv-tempo-seg = no /* converte tempo seguran‡a */
+						  and pl-prod.tp-seg-fabr
+						  then if substring(program-name(1),1,3) = "plp"
+								  then i-ressup 
+									   + pl-it-calc.res-cq-fabri
+									   + pl-it-calc.tempo-segur - i-nr-dias
+								  else item.ressup-fabri + item.res-cq-fabri
+									   + item.tempo-segur - i-nr-dias
+						  else if substring(program-name(1),1,3) = "plp"
+							   then i-ressup 
+									+ pl-it-calc.res-cq-fabri - i-nr-dias
+							   else item.ressup-fabri 
+									+ item.res-cq-fabri - i-nr-dias.
+	else
+		assign i-ressup = 0.
+
+	&ENDIF
+
+	IF i-tam-per > 1 THEN DO:
+		ASSIGN i-ressup = i-ressup + i-res-var + item.ressup-fabri.
+		IF i-ressup > i-tam-per THEN
+			ASSIGN da-termino-f = da-termino-f - i-ressup.
+		ELSE
+			ASSIGN da-termino-f = da-termino-f - i-tam-per.
+		FIND LAST periodo WHERE periodo.cd-tipo   = pl-prod.cd-tipo
+						   AND periodo.dt-termino <= da-termino-f NO-LOCK NO-ERROR.  
+		ASSIGN da-termino-f = periodo.dt-termino.
+		/*Marcos - Se houver ressuprimento e buscar o registro do ultimo periodo*/
+		FIND FIRST periodo WHERE periodo.cd-tipo   = pl-prod.cd-tipo
+							AND periodo.dt-termino > da-termino-f NO-LOCK NO-ERROR.  
+		ASSIGN da-termino-f = periodo.dt-termino.
+		find b-periodo
+		  where b-periodo.cd-tipo = pl-prod.cd-tipo
+		  and   b-periodo.dt-termino = da-termino-f no-lock no-error.
+	END.
+	else
+	   find b-periodo where recid(b-periodo) = recid(periodo) no-lock no-error.
+
+	if i-tam-per = 1 then do:
+		assign i-ressup = i-ressup + i-res-var + item.ressup-fabri.
+		do  i-ind = 1 to i-ressup:
+			find prev b-periodo use-index codigo
+				 where b-periodo.cd-tipo = pl-prod.cd-tipo no-lock no-error.
+		end.
+	end.
+	if  not avail b-periodo then
+		find first b-periodo use-index codigo
+			 where b-periodo.cd-tipo = pl-prod.cd-tipo no-lock.
+	assign da-inicio = b-periodo.dt-inicio.
+
+	/* fim do include */
+
+    
+END PROCEDURE.

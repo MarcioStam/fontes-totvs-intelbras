@@ -1,0 +1,15 @@
+for each int-rel-ped-import use-index {1} no-lock
+   where int-rel-ped-import.{2} = ordem-compra.num-pedido
+     and int-rel-ped-import.{3} = ordem-compra.numero-ordem,
+   first prazo-compra no-lock
+   where prazo-compra.numero-ordem = ordem-compra.numero-ordem
+     and prazo-compra.parcela      = int-rel-ped-import.{4},
+   first b-ordem-compra no-lock
+   where b-ordem-compra.numero-ordem = int-rel-ped-import.{5},
+   first b-pedido-compr no-lock
+   where b-pedido-compr.num-pedido = b-ordem-compra.num-pedido,
+   first b-prazo-compra no-lock
+   where b-prazo-compra.numero-ordem = b-ordem-compra.numero-ordem
+     and b-prazo-compra.parcela      = int-rel-ped-import.{6}:
+    {esp/ccp/esccp054rp.i}
+end. /* for each int-rel-ped-import */

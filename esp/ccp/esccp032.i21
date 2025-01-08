@@ -1,0 +1,15 @@
+/*cd0501.i.  */
+
+find tipo-per where tipo-per.cd-tipo = pl-prod.cd-tipo no-lock no-error.
+if available tipo-per then do:
+    if  tipo-per.nr-dia = 0 then do:
+        if  tipo-per.tipo = 3 then    
+            assign i-tam-per = 7.
+        else if  tipo-per.tipo = 2 then   
+                 assign i-tam-per = 15.
+             else if  tipo-per.tipo = 1 then         
+                      assign i-tam-per = 30.
+    end.
+    else
+        assign i-tam-per = tipo-per.nr-dia.
+end.

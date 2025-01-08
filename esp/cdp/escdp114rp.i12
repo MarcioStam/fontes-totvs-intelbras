@@ -1,0 +1,100 @@
+procedure pi-procedimento-12:
+    form tt-operacao.ferramenta format "x(16)" column-label "Ferramenta"
+         tt-operacao.it-codigo  format "x(16)" column-label "Item"
+         tt-operacao.desc-item  format "x(60)" column-label "Descri‡Æo"
+         tt-operacao.op-codigo  format ">>>>9" column-label "Oper"
+         tt-operacao.gm-codigo  format "x(9)"  column-label "Grupo Maq"
+         with width 132 down no-box stream-io frame f-12.
+
+    empty temp-table tt-ferr-prod.
+    empty temp-table tt-operacao.
+    empty temp-table tt-grup-maquina.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "mesma-ferramenta-gm-diferentes.txt"
+           c-titulo-relat = "Mesma Ferramenta em Grupos de M quina diferentes".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Mesma Ferramenta em GM diferentes...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each ferr-prod fields(cod-ferr-prod) no-lock
+       where ferr-prod.char-1 = "Ferramenta":U,
+        each op-ferram fields() use-index ferramenta no-lock
+       where op-ferram.ferramenta = ferr-prod.cod-ferr-prod,
+       first operacao fields(it-codigo op-codigo gm-codigo) use-index token no-lock
+       where operacao.num-id-operacao = op-ferram.num-id-operacao
+         and operacao.data-termino   >= today
+         and operacao.it-codigo      <> ""
+         and operacao.tipo-oper       = 1,
+       first item fields(desc-item) no-lock
+       where item.it-codigo = operacao.it-codigo
+             break by ferr-prod.cod-ferr-prod:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 10 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if not can-find(first tt-grup-maquina where
+                              tt-grup-maquina.gm-codigo = operacao.gm-codigo)
+        then do:
+             create tt-grup-maquina.
+             assign tt-grup-maquina.gm-codigo = operacao.gm-codigo.
+             find current tt-grup-maquina no-error.
+        end.
+
+        create tt-operacao.
+        assign tt-operacao.ferramenta = ferr-prod.cod-ferr-prod
+               tt-operacao.gm-codigo  = operacao.gm-codigo
+               tt-operacao.it-codigo  = operacao.it-codigo
+               tt-operacao.desc-item  = item.desc-item
+               tt-operacao.op-codigo  = operacao.op-codigo.
+
+        if last-of(ferr-prod.cod-ferr-prod)
+        then do:
+             find tt-grup-maquina no-error.
+
+             if ambiguous(tt-grup-maquina)
+             then do:
+                  create tt-ferr-prod.
+                  assign tt-ferr-prod.cod-ferr-prod = ferr-prod.cod-ferr-prod.
+                  find current tt-ferr-prod no-error.
+             end. /* if ambiguous(tt-grup-maquina) */
+
+             empty temp-table tt-grup-maquina.
+        end. /* if last-of(ferr-prod.cod-ferr-prod) */        
+    end. /* for each ferr-prod */
+    find current tt-operacao no-error.
+
+    for each tt-ferr-prod,
+        each tt-operacao
+       where tt-operacao.ferramenta = tt-ferr-prod.cod-ferr-prod:
+        if  i-cont mod 15 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        disp stream st-relat
+             tt-operacao.ferramenta
+             tt-operacao.it-codigo
+             tt-operacao.desc-item
+             tt-operacao.op-codigo
+             tt-operacao.gm-codigo
+             with frame f-12.
+        down stream st-relat with frame f-12.
+    end. /* for each tt-ferr-prod */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-12 */

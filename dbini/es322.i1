@@ -1,0 +1,15 @@
+    /***********************************************************************
+    **  Programa..: dbini\es322.i1
+    **  Autor.....: Chaves - Gestech
+    **  Data......: NOVEMBRO/2004 - Desenvolvimento
+    **  Descricao.: Faz o relacionamento autom†tico das tabelas da lista
+    **  Vers∆o....: 001-11/11/2004
+    **                  Desenvolvimento Programa
+    ************************************************************************/
+        WHERE {1}.cod-estabel  = {2}.cod-estabel  
+        AND   {1}.cod-depos    = {2}.cod-depos    
+        AND   {1}.cod-localiz  = {2}.cod-localiz  
+        AND   {1}.lote         = {2}.lote         
+        AND   {1}.it-codigo    = {2}.it-codigo    
+        AND   {1}.cod-refer    = {2}.cod-refer 
+

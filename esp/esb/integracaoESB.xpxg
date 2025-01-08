@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<WSAD xmlns="urn:schemas-progress-com:WSAD:0009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <AppObject>
+    <PGVersion>
+      <PXGVersion>03</PXGVersion>
+    </PGVersion>
+    <PGGenInfo isSessionFree="true">
+      <Author />
+      <VersionString />
+      <VersionNumber>1</VersionNumber>
+      <Package />
+      <Service>ascrmte</Service>
+      <WorkDir>\\totvs\spool\fe039190\</WorkDir>
+      <VerboseLogging>true</VerboseLogging>
+      <SaveBeforeGen>true</SaveBeforeGen>
+      <DotNetClient>false</DotNetClient>
+      <JavaClient>false</JavaClient>
+      <WebServicesClient>true</WebServicesClient>
+      <ESBClient>false</ESBClient>
+      <ESBClient2>false</ESBClient2>
+      <UserDefinedAppService>true</UserDefinedAppService>
+      <JavaCompilerType>1</JavaCompilerType>
+      <JavaCompiler>&lt;Install Dir&gt;\jdk\bin\javac</JavaCompiler>
+      <JavaSwitches />
+      <JavaClasspathSwitch>-classpath</JavaClasspathSwitch>
+      <JavaClasspath>&lt;Proxy Dir&gt;;&lt;Install Dir&gt;\java\progress.jar;&lt;Install Dir&gt;\java\messages.jar;;&lt;Default classes.zip&gt;</JavaClasspath>
+      <DotNetCompilerType>4</DotNetCompilerType>
+      <DotNetCompiler>csc</DotNetCompiler>
+      <DotNetSwitches />
+      <DotNetXSDGenerator>xsd</DotNetXSDGenerator>
+      <DotNetNamespace />
+      <DotNetTitle />
+      <DotNetVersion />
+      <DotNetDesc />
+      <DotNetCompany />
+      <DotNetProduct />
+      <DotNetPublicKey />
+      <DotNetDelaySign>false</DotNetDelaySign>
+      <DotNetRuntime>digitally signed</DotNetRuntime>
+      <DotNetDataSetNamespace>StrongTypesNS</DotNetDataSetNamespace>
+      <DNUseDefaultDSNamespace>true</DNUseDefaultDSNamespace>
+      <DNUseNamespaceAsDirs>true</DNUseNamespaceAsDirs>
+      <DotNetUseNullableTypes>false</DotNetUseNullableTypes>
+    </PGGenInfo>
+    <DeploymentWizard>
+      <CurrentEncoding>3</CurrentEncoding>
+      <SoapEndpointURL>http://wsa.intelbras.com.br:8080/wsa2/wsa2</SoapEndpointURL>
+      <WebServiceNamespace userDefined="true">urn:esb:intelbras.com.br</WebServiceNamespace>
+      <SoapAction appendToSoapAction="false" />
+      <ConnectReturnString userDefined="false" />
+      <TestWSDL bGen="true" RPCEncoded="false" RPCLiteral="false" DocLiteral="true" />
+      <ESBEncoding>3</ESBEncoding>
+      <EntryEndpoint useDefault="true" />
+      <FaultEndpoint useDefault="true" />
+      <RejectedEndpoint useDefault="true" />
+      <Container />
+      <AppserverURL>AppServerDC://localhost:3091</AppserverURL>
+      <FileName overWrite="false">integracaoESB</FileName>
+      <ResourceDirectory>/Resources/OpenEdgeServices</ResourceDirectory>
+      <SonicAppService useFileSystem="false" deployToDS="false" createXAR="false">
+        <ResourceDirectory overWrite="false" />
+        <XARName />
+      </SonicAppService>
+      <SonicConnectionInfo>
+        <SonicURL>tcp://localhost:2506</SonicURL>
+        <SonicDomain>Domain1</SonicDomain>
+        <User>Administrator</User>
+        <Password />
+      </SonicConnectionInfo>
+    </DeploymentWizard>
+    <Name>integracaoESB</Name>
+    <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    <HelpString />
+    <ODLHelpString />
+    <ObjectType>false</ObjectType>
+    <AllowUnknown>false</AllowUnknown>
+    <IsTTResultSet>false</IsTTResultSet>
+    <WriteDatasetBeforeImage>false</WriteDatasetBeforeImage>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>esesb001</Name>
+      <ProcPath>esp\esb\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="true" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>Postar</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>requisicao</Name>
+          <Type>39</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>resposta</Name>
+          <Type>39</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>esesb002</Name>
+      <ProcPath>esp\esb\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="true" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>Ping</Name>
+        <HelpString />
+        <ODLHelpString />
+      </ProcDetail>
+    </Procedure>
+  </AppObject>
+</WSAD>

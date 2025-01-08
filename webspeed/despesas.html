@@ -1,0 +1,293 @@
+<script language="SpeedScript">
+procedure output-header:
+   if (get-cgi("HTTP_ACCEPT") matches "*application/xhtml+xml*") then
+      output-content-type("application/xhtml+xml; charset=utf-8").
+   else
+      output-content-type("text/html; charset=utf-8").
+end.
+
+session:numeric-format = 'EUROPEAN'.
+
+define temp-table tt-despesa
+   field cod-estabel like ordem-compra.cod-estabel
+   field tp-despesa  like ordem-compra.tp-despesa
+   field descricao   like tipo-rec-desp.descricao
+   field vl-total    like recebimento.valor-total
+   index ch-pri as primary unique cod-estabel tp-despesa.
+
+define variable h-util as handle no-undo.
+run html-util.p persistent set h-util.
+
+define variable c-mes         as character no-undo.
+define variable c-ano         as character no-undo.
+define variable i-ano         as integer   no-undo.
+define variable c-ini-mes     as character no-undo.
+define variable c-fim-mes     as character no-undo.
+define variable dt-ini-mes    as date      no-undo.
+define variable dt-fim-mes    as date      no-undo.
+define variable de-total      as decimal   no-undo.
+define variable de-subtotal   as decimal   no-undo.
+define variable c-cod-estabel as character no-undo.
+define variable c-color       as character no-undo.
+
+define variable hQuery as handle no-undo.
+define variable cQuery as character no-undo.
+</script>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt_BR">
+<head>
+  <title>Despesas</title>
+  <style type="text/css">
+body {
+  text-align: center;
+  background-color: #ffffff;
+  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-size: 0.8em;
+}
+a {
+  text-decoration: none;
+}
+h2 {
+  font-size: 1.8em;
+}
+h5 {
+  font-size: 1em;
+}
+h6 {
+  font-size: 0.9em;
+}
+table {
+  font-size: 1em;
+  margin: auto;
+}
+th {
+  background-color: #aaaaaa;
+}
+.light {
+  background-color: #ffffff;
+}
+.dark {
+  background-color: #e7e7e7;
+}
+.total {
+  background-color: #cccccc;
+  font-weight: bold;
+}
+input {
+  font-size: 0.9em;
+}
+select {
+  font-size: 0.9em;
+}
+fieldset {
+  height: 5em;
+}
+legend {
+  margin-bottom: 0.5em;
+}
+#ajuda {
+  margin: auto;
+  width: 600px;
+}
+#despesa {
+  font-size: 0.9em;
+  margin: auto;
+  width: 600px;
+}
+#despesa .col1 {
+  clear: both;
+  display: block;
+  float: left;
+  width: 20%;
+}
+#despesa .col2 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#despesa .col3 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#despesa .col4 {
+  display: block;
+  float: left;
+  text-align: center;
+  width: 10%;
+}
+#resultado {
+  font-size: 0.9em;
+  padding-top: 1em;
+}
+</style>
+</head>
+
+<body>
+<script language="SpeedScript">
+assign c-ano = get-value("ano")
+       c-mes = get-value("mes").
+</script>
+<h2>Despesas</h2>
+<div id="despesa">
+  <form action="" method="post">
+    <fieldset>
+      <legend>Per&iacute;odo</legend>
+      <span class="col1">
+        <label for="mes">M&ecirc;s</label>
+        <select name="mes" id="mes">
+          <option <!--WSS if (c-mes) = '1'  or ((c-mes = '') and (month(today) = 1)) then do: {&out} --> selected="selected" <!--WSS end. --> value="1">Janeiro</option>
+          <option <!--WSS if (c-mes) = '2'  or ((c-mes = '') and (month(today) = 2)) then do: {&out} --> selected="selected" <!--WSS end. --> value="2">Fevereiro</option>
+          <option <!--WSS if (c-mes) = '3'  or ((c-mes = '') and (month(today) = 3)) then do: {&out} --> selected="selected" <!--WSS end. --> value="3">Mar&ccedil;o</option>
+          <option <!--WSS if (c-mes) = '4'  or ((c-mes = '') and (month(today) = 4)) then do: {&out} --> selected="selected" <!--WSS end. --> value="4">Abril</option>
+          <option <!--WSS if (c-mes) = '5'  or ((c-mes = '') and (month(today) = 5)) then do: {&out} --> selected="selected" <!--WSS end. --> value="5">Maio</option>
+          <option <!--WSS if (c-mes) = '6'  or ((c-mes = '') and (month(today) = 6)) then do: {&out} --> selected="selected" <!--WSS end. --> value="6">Junho</option>
+          <option <!--WSS if (c-mes) = '7'  or ((c-mes = '') and (month(today) = 7)) then do: {&out} --> selected="selected" <!--WSS end. --> value="7">Julho</option>
+          <option <!--WSS if (c-mes) = '8'  or ((c-mes = '') and (month(today) = 8)) then do: {&out} --> selected="selected" <!--WSS end. --> value="8">Agosto</option>
+          <option <!--WSS if (c-mes) = '9'  or ((c-mes = '') and (month(today) = 9)) then do: {&out} --> selected="selected" <!--WSS end. --> value="9">Setembro</option>
+          <option <!--WSS if (c-mes) = '10' or ((c-mes = '') and (month(today) = 10)) then do: {&out} --> selected="selected" <!--WSS end. --> value="10">Outubro</option>
+          <option <!--WSS if (c-mes) = '11' or ((c-mes = '') and (month(today) = 11)) then do: {&out} --> selected="selected" <!--WSS end. --> value="11">Novembro</option>
+          <option <!--WSS if (c-mes) = '12' or ((c-mes = '') and (month(today) = 12)) then do: {&out} --> selected="selected" <!--WSS end. --> value="12">Dezembro</option>
+        </select>
+      </span>
+      <span class="col2">
+        <label for="ano">Ano:</label>
+        <select name="ano" id="ano">
+<script language="SpeedScript">
+do i-ano = 2005 to year(today):
+</script>
+          <option <!--WSS if (int(c-ano) = i-ano) or ((c-ano = '') and (i-ano = year(today))) then do: {&out} --> selected="selected" <!--WSS end. {&out} --> value="`string(i-ano)`">`string(i-ano)`</option>
+<script language="SpeedScript">
+end.
+</script>
+        </select>
+      </span>
+      <span class="col3">
+        &nbsp;
+      </span>
+      <span class="col4">
+        <input type="submit" style="width: 90%;" value="OK"/>
+      </span>
+    </fieldset>
+  </form>
+</div>
+<p/>
+<script language="SpeedScript">
+if (c-ano <> ?) and (c-ano <> '') and (c-mes <> ?) and (c-mes <> '') then do:
+
+   assign dt-ini-mes = date(int(c-mes), 1, int(c-ano))
+          dt-fim-mes = date(month(dt-ini-mes + 32),
+                            1,
+                            year(dt-ini-mes + 32)) - 1.
+
+   for each recebimento fields (valor-total) no-lock
+      where recebimento.data-movto >= dt-ini-mes
+        and recebimento.data-movto <= dt-fim-mes
+        and recebimento.cod-movto   = 1,
+      each ordem-compra fields (tp-despesa cod-estabel) of recebimento no-lock
+         where ordem-compra.natureza <> 3,
+      each tipo-rec-desp fields (descricao) no-lock
+         where tipo-rec-desp.tp-codigo = ordem-compra.tp-despesa
+      by ordem-compra.cod-estabel
+      by ordem-compra.tp-despesa:
+
+      find first tt-despesa
+         where tt-despesa.cod-estabel = ordem-compra.cod-estabel
+           and tt-despesa.tp-despesa  = ordem-compra.tp-despesa no-error.
+   
+      if not available (tt-despesa) then do:
+         create tt-despesa.
+         assign tt-despesa.cod-estabel = ordem-compra.cod-estabel
+                tt-despesa.tp-despesa  = ordem-compra.tp-despesa
+                tt-despesa.descricao   = tipo-rec-desp.descricao.
+      end.
+   
+      assign tt-despesa.vl-total = tt-despesa.vl-total + recebimento.valor-total.
+   end.
+
+   if not can-find (first tt-despesa) then do:
+</script>
+<div style="text-align: center;">
+  Sem registros a exibir.
+</div>
+<script language="SpeedScript">
+   end.
+   else do:
+</script>
+<p style="clear: both;" />
+<div id="resultado">
+<script language="SpeedScript">
+      for each tt-despesa no-lock
+         break by tt-despesa.cod-estabel
+               by tt-despesa.tp-despesa:
+
+         if (c-color = "light") then
+            assign c-color = "dark".
+         else
+            assign c-color = "light".
+
+         if first-of (tt-despesa.cod-estabel) then do:
+            assign de-subtotal = 0.
+</script>           
+  <table border="0" cellspacing="0" width="600">
+    <colgroup>
+      <col width="10%" />
+      <col width="30%" />
+      <col width="30%" />
+      <col width="30%" />
+    </colgroup>
+    <tr>
+      <th>Estabel</th>
+      <th>Tipo Despesa</th>
+      <th>Descri&ccedil;&atilde;o</th>
+      <th>Valor Total</th>
+    </tr>
+<script language="SpeedScript">
+         end.
+
+         assign de-total    = de-total + tt-despesa.vl-total
+                de-subtotal = de-subtotal + tt-despesa.vl-total.
+</script>
+    <tr class="`c-color`">
+      <td>`tt-despesa.cod-estabel`</td>
+      <td>`string(tt-despesa.tp-despesa)`</td>
+      <td style="text-align: left;">`tt-despesa.descricao`</td>
+      <td style="text-align: right;"><a href="`AppURL`/despesas-detalhe.html?a=`c-ano`&amp;m=`c-mes`&amp;e=`tt-despesa.cod-estabel`&amp;t=`string(tt-despesa.tp-despesa)`">`string(tt-despesa.vl-total, ">>>,>>>,>>9.99")`</a></td>
+    </tr>
+<script language="SpeedScript">
+         if last-of (tt-despesa.cod-estabel) then do:
+</script>
+    <tr class="total">
+      <td style="text-align: right;" colspan="3">Subtotal</td>
+      <td style="text-align: right;">`string(de-subtotal, ">>>,>>>,>>9.99")`</td>
+    </tr>
+    </table>
+<script language="SpeedScript">
+         end.
+      end. /** for each **/
+</script>
+  <table border="0" cellspacing="0" width="600">
+    <colgroup>
+      <col width="70%" />
+      <col width="30%" />
+    </colgroup>
+    <tr class="total">
+      <td style="text-align: right;">Total geral</td>
+      <td style="text-align: right;">`string(de-total, ">>>,>>>,>>9.99")`</td>
+    </tr>
+  </table>
+  </div>
+<script language="SpeedScript">
+   end. /** else do **/
+end. /** if **/
+
+if valid-handle(h-util) then
+   delete object h-util.
+</script>
+
+</body>
+</html>
+

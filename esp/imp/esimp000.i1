@@ -1,0 +1,15 @@
+DEFINE TEMP-TABLE tt-emb NO-UNDO
+    FIELD cod-estabel       LIKE embarque-imp.cod-estabel
+    FIELD embarque          LIKE embarque-imp.embarque
+    FIELD conhecimento      LIKE embarque-imp.cod-conhecto-master
+    FIELD situacao          AS INT
+    FIELD cod-itiner        LIKE itinerario.cod-itiner
+    FIELD dt-ult-prev       LIKE historico-embarque.dt-ult-prev
+    FIELD dt-efetiva        LIKE historico-embarque.dt-efetiva
+    FIELD dt-embarque       AS DATE FORMAT "99/99/9999"
+    FIELD dt-ent-eadi       AS DATE FORMAT "99/99/9999"
+    FIELD dt-sai-eadi       AS DATE FORMAT "99/99/9999"
+    FIELD dt-ent-int        AS DATE FORMAT "99/99/9999"
+    FIELD dt-ult-pto-contr  AS DATE FORMAT "99/99/9999"
+    FIELD des-ult-pto-contr LIKE pto-contr.descricao
+    INDEX codigo IS PRIMARY situacao.

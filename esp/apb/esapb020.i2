@@ -1,0 +1,252 @@
+/******************************************************************************
+** Programa..............: esp/apb/esapb020.p
+** Autor.................: Fabiano Zarpe Henke
+** Criado em.............: 26/02/2010
+******************************************************************************/
+
+/*************************** Definition Begin - API Pagamento ********************/
+
+def var v_hdl_apb902ze
+    as Handle
+    format ">>>>>>9":U
+    no-undo.
+
+DEFINE VARIABLE h-esapb020-api AS HANDLE      NO-UNDO.
+
+/*************************** Query Definition Begin *************************/
+DEF QUERY qr_tt_concil
+    FOR tt_concil
+    SCROLLING.
+
+/*************************** Query Definition End ***************************/
+
+DEF BUFFER btt_concil        FOR tt_concil.
+
+/************************** Browse Definition Begin *************************/
+def browse br_tt_concil query qr_tt_concil display 
+    cod_estab
+    cdn_fornec
+    cod_espec        
+    cod_ser          
+    cod_tit_ap         
+    cod_parcela      
+    dat_transacao    
+    cod_indic_econ   
+    val_sdo          
+    log_conf        
+    des_status
+  with no-box separators 
+         size 92 by 21.3
+         font 1
+         bgcolor 15.
+
+/*************************** Browse Definition End **************************/
+
+/************************** Variable Definition Begin ***********************/
+
+DEF RECTANGLE rt_mold SIZE 1 BY 1 EDGE-PIXELS 2.
+DEF RECTANGLE rt_cxcf SIZE 1 BY 1 FGCOLOR 1 EDGE-PIXELS 2.
+
+DEF BUTTON bt_pagto LABEL "Pagamento" TOOLTIP "Pagamento" SIZE 1 BY 1 AUTO-GO.
+DEF BUTTON bt_can   LABEL "Sair"      TOOLTIP "Sair"      SIZE 1 BY 1 AUTO-ENDKEY.
+
+DEFINE VARIABLE v_val_sdo AS DECIMAL     NO-UNDO.
+DEFINE VARIABLE v_rec_con AS INTEGER     NO-UNDO.
+
+
+/*************************** Varable Definition End *************************/
+
+/************************** Frame Definition Begin **************************/
+
+def frame f_comiss_det
+    rt_cxcf
+         at row 23.00 col 02.00 bgcolor 7 
+    br_tt_concil
+         AT ROW 1.21 COL 2
+/*         
+    bt_pagto
+         at row 23.21 col 14.00 font ?
+         help "Pagamento"
+*/         
+    bt_can
+         at row 23.21 col 3.00 font ?
+         help "Cancela"
+    with 1 down side-labels no-validate keep-tab-order three-d
+         size-char 95 by 25 default-button bt_can
+         view-as dialog-box
+         font 1 fgcolor ? bgcolor 8
+         title "Concilia‡Æo Antecipa‡Æo".
+/* adjust size of objects in this frame */
+assign bt_can:width-chars           in frame f_comiss_det = 10.00
+       bt_can:height-chars          in frame f_comiss_det = 01.00
+       rt_cxcf:width-chars          in frame f_comiss_det = 91
+       rt_cxcf:height-chars         in frame f_comiss_det = 01.42.
+
+
+/*************************** Frame Definition End ***************************/
+
+/*************************** Trigger Definition Begins **********************/
+
+ON ROW-DISPLAY OF br_tt_concil IN FRAME f_comiss_det
+DO:
+    IF  tt_concil.cod_tip_reg = 3
+    THEN DO:
+         ASSIGN tt_concil.val_sdo:BGCOLOR IN BROWSE br_tt_concil    = 12  
+                tt_concil.cdn_fornec:FGCOLOR IN BROWSE br_tt_concil = 15  
+                tt_concil.log_conf:BGCOLOR IN BROWSE br_tt_concil   = 12
+                tt_concil.des_status:BGCOLOR IN BROWSE br_tt_concil = 12.
+    END.
+
+    IF  tt_concil.cod_tip_reg = 4
+    THEN DO:
+         ASSIGN tt_concil.val_sdo:FGCOLOR IN BROWSE br_tt_concil    = 15  
+                tt_concil.cdn_fornec:FGCOLOR IN BROWSE br_tt_concil = 15  
+                tt_concil.log_conf:FGCOLOR IN BROWSE br_tt_concil   = 15.
+    END.
+
+    IF tt_concil.cod_tip_reg = 1
+    THEN DO:
+         ASSIGN tt_concil.cod_estab:BGCOLOR IN BROWSE br_tt_concil      = 17
+                tt_concil.cdn_fornec:BGCOLOR IN BROWSE br_tt_concil     = 17
+                tt_concil.cod_espec:BGCOLOR IN BROWSE br_tt_concil      = 17
+                tt_concil.cod_ser:BGCOLOR IN BROWSE br_tt_concil        = 17   
+                tt_concil.cod_tit_ap:BGCOLOR IN BROWSE br_tt_concil     = 17    
+                tt_concil.cod_parcela:BGCOLOR IN BROWSE br_tt_concil    = 17   
+                tt_concil.dat_transacao:BGCOLOR IN BROWSE br_tt_concil  = 17  
+                tt_concil.cod_indic_econ:BGCOLOR IN BROWSE br_tt_concil = 17  
+                tt_concil.val_sdo:BGCOLOR IN BROWSE br_tt_concil        = 17  
+                tt_concil.log_conf:BGCOLOR IN BROWSE br_tt_concil       = 17
+                tt_concil.des_status:BGCOLOR IN BROWSE br_tt_concil     = 17.    
+    END.
+
+    IF tt_concil.cod_tip_reg = 2
+    THEN DO:
+         ASSIGN tt_concil.cod_estab:BGCOLOR IN BROWSE br_tt_concil      = 18
+                tt_concil.cdn_fornec:BGCOLOR IN BROWSE br_tt_concil     = 18
+                tt_concil.cod_espec:BGCOLOR IN BROWSE br_tt_concil      = 18
+                tt_concil.cod_ser:BGCOLOR IN BROWSE br_tt_concil        = 18   
+                tt_concil.cod_tit_ap:BGCOLOR IN BROWSE br_tt_concil     = 18    
+                tt_concil.cod_parcela:BGCOLOR IN BROWSE br_tt_concil    = 18   
+                tt_concil.dat_transacao:BGCOLOR IN BROWSE br_tt_concil  = 18  
+                tt_concil.cod_indic_econ:BGCOLOR IN BROWSE br_tt_concil = 18  
+                tt_concil.val_sdo:BGCOLOR IN BROWSE br_tt_concil        = 18  
+                tt_concil.log_conf:BGCOLOR IN BROWSE br_tt_concil       = 18
+                tt_concil.des_status:BGCOLOR IN BROWSE br_tt_concil     = 18.    
+    END.
+
+END.
+
+
+ON MOUSE-SELECT-DBLCLICK OF br_tt_concil IN FRAME f_comiss_det DO:
+
+/*     DEF VAR v_rec_control AS RECID NO-UNDO.                                                      */
+/*     DEF VAR v_val_sdo     AS DEC   NO-UNDO.                                                      */
+/*     DEF VAR v_log_status  AS LOG   NO-UNDO.                                                      */
+/*                                                                                                  */
+/*     IF AVAIL tt_concil                                                                           */
+/*     THEN DO:                                                                                     */
+/*          IF tt_concil.cod_tip_reg = 1 /* ** Antecipa‡Æo - seleciona todos ou desmarca todos ***/ */
+/*          THEN DO:                                                                                */
+/*               ASSIGN v_log_status = NOT(tt_concil.log_conf).                                     */
+/*               FOR EACH btt_concil                                                                */
+/*                   WHERE btt_concil.num_id_tt_concil = tt_concil.num_id_tt_concil:                */
+/*                   IF btt_concil.cod_tip_reg = 3                                                  */
+/*                   OR btt_concil.cod_tip_reg = 4                                                  */
+/*                      THEN NEXT.                                                                  */
+/*                   ASSIGN btt_concil.log_conf = v_log_status.                                     */
+/*               END.                                                                               */
+/*          END.                                                                                    */
+/*          IF tt_concil.cod_tip_reg = 2 /* ** Duplicata - inverte sinal ***/                       */
+/*          THEN DO:                                                                                */
+/*               ASSIGN tt_concil.log_conf = NOT(tt_concil.log_conf).                               */
+/*          END.                                                                                    */
+/*                                                                                                  */
+/*          /* ** Totaliza Abatimento ***/                                                          */
+/*          FOR EACH btt_concil                                                                     */
+/*              WHERE btt_concil.num_id_tt_concil = tt_concil.num_id_tt_concil                      */
+/*                AND btt_concil.log_conf:                                                          */
+/*              IF btt_concil.cod_tip_reg = 1                                                       */
+/*                 THEN ASSIGN v_val_sdo = v_val_sdo - btt_concil.val_sdo.                          */
+/*              IF btt_concil.cod_tip_reg = 2                                                       */
+/*                 THEN ASSIGN v_val_sdo = v_val_sdo + btt_concil.val_sdo.                          */
+/*          END.                                                                                    */
+/*          FIND btt_concil                                                                         */
+/*             WHERE btt_concil.num_id_tt_concil = tt_concil.num_id_tt_concil                       */
+/*               AND btt_concil.cod_tip_reg      = 3.                                               */
+/*          ASSIGN btt_concil.val_sdo = v_val_sdo.                                                  */
+/*          IF btt_concil.val_sdo  = 0                                                              */
+/*          OR btt_concil.val_sdo >= de-val-max-ava                                                      */
+/*          OR btt_concil.val_sdo <= (de-val-max-ava * -1)                                               */
+/*             THEN ASSIGN btt_concil.log_conf = NO.                                                */
+/*             ELSE ASSIGN btt_concil.log_conf = YES.                                               */
+/*                                                                                                  */
+/*          /* ** Localiza a Antecipa‡Æo do Bloco para posicionar ***/                              */
+/*          FIND btt_concil                                                                         */
+/*             WHERE btt_concil.num_id_tt_concil = tt_concil.num_id_tt_concil                       */
+/*               AND btt_concil.cod_tip_reg      = 1.                                               */
+/*          ASSIGN v_rec_control = RECID(btt_concil).                                               */
+/*                                                                                                  */
+/*          IF br_tt_concil:REFRESH() THEN.                                                         */
+/*          IF v_rec_control <> ? THEN REPOSITION qr_tt_concil TO RECID v_rec_control.              */
+/*                                                                                                  */
+/*     END.                                                                                         */
+
+END.
+
+/*************************** Trigger Definition End *************************/
+
+/************************** Main Code Begin *********************************/
+
+filter_block:
+DO ON ERROR UNDO filter_block, RETRY filter_block
+                 ON ENDKEY UNDO filter_block, LEAVE filter_block:
+
+     IF SESSION:SET-WAIT-STATE('general') THEN.
+
+     RUN esp/apb/esapb020-api.p PERSISTENT SET h-esapb020-api.
+     
+     EMPTY TEMP-TABLE tt_log_erros_tit_ap_alteracao.
+     EMPTY TEMP-TABLE tt_log_erros_atualiz.
+     EMPTY TEMP-TABLE tt_concil.
+
+     RUN pi-inicializar IN h-esapb020-api (INPUT v_cod_empres_usuar,
+                                           INPUT v_cod_estab_usuar, 
+                                           INPUT rs-conciliacao,
+                                           INPUT dt-pagto,
+                                           INPUT de-val-max-ava,
+                                           INPUT c-conta-ava,
+                                           input de-val-min-parcial,
+                                           OUTPUT TABLE tt_concil).
+     IF SESSION:SET-WAIT-STATE('') THEN.
+
+     VIEW FRAME f_comiss_det.
+
+     concil_block:
+     DO ON ERROR UNDO concil_block, RETRY concil_block
+                      ON ENDKEY UNDO concil_block, LEAVE concil_block:
+
+          ENABLE ALL WITH FRAME f_comiss_det.
+
+          OPEN QUERY qr_tt_concil
+               FOR EACH tt_concil NO-LOCK.
+
+          WAIT-FOR GO OF FRAME f_comiss_det.
+
+/*
+          EMPTY TEMP-TABLE tt_log_erros_tit_ap_alteracao.
+          EMPTY TEMP-TABLE tt_log_erros_atualiz.
+          
+          RUN pi_atualizar IN h-esapb020-api.
+*/
+
+          IF  VALID-HANDLE(h-esapb020-api)
+          THEN DO:
+              DELETE PROCEDURE h-esapb020-api.
+              ASSIGN h-esapb020-api = ?.
+          END.
+     END.
+
+     HIDE FRAME f_comiss_det.
+END.
+
+

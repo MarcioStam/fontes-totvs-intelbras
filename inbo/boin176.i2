@@ -1,0 +1,33 @@
+/********************************************************************************
+*
+*    Defini‡Æo da temp-table de totais
+*
+*********************************************************************************/
+
+   def temp-table tt-total-item no-undo
+       field tot-peso           like docum-est.tot-peso
+       field peso-bruto-tot     like docum-est.peso-bruto-tot
+       field tot-desconto       like docum-est.tot-desconto
+       field despesa-nota       like docum-est.despesa-nota
+       field valor-mercad       like docum-est.valor-mercad
+       field base-ipi           like docum-est.base-ipi
+       field valor-ipi          like docum-est.ipi-deb-cre
+       field base-icm           like docum-est.base-icm
+       field valor-icm          like docum-est.icm-deb-cre
+       field base-iss           like docum-est.base-iss
+       field valor-iss          like docum-est.iss-deb-cre
+       field base-subs          like docum-est.base-subs
+       field valor-subs         like docum-est.vl-subs
+       field base-icm-complem   as decimal
+       field icm-complem        like docum-est.icm-complem 
+       field fundo-pobreza      as decimal
+       field ipi-outras         like docum-est.ipi-deb-cre
+       field valor-pis          as decimal
+       field valor-cofins       as decimal
+       field total-pis-subst    as decimal
+       field total-cofins-subs  as decimal
+       field total-icms-diferim as decimal
+       field valor-frete        as decimal
+       field valor-pedagio      as decimal
+       field valor-icm-trib     as decimal
+       FIELD de-tot-valor-calc  like docum-est.tot-valor.

@@ -1,0 +1,26 @@
++----------------------------------------------------------------------+
+|             Layout do Arquivo de Importacao de Itens                 |
+|             que devera ser alterado o campo FATURAVEL                |
+|----------------------------------------------------------------------|
+|      Nome do Arquivo: A ser informado.                               |
+|              Formato: Arquivo Microsoft Excel (*.csv).               |
+|----------------------------------------------------------------------|
+|      Regra 1) Se a opcao for Faturavel                               |
+|               Sera alterado os registros DO cd0147 e cd0903          |
+|      Regra 2) Se a opcao for Nao Faturavel                           |
+|            a) Se informado estabelecimento, sera alterado somente    |
+|               registros DO cd0147                                    |
+|            b) Se NAO informado estabelecimento,                      |
+|               Sera alterado os registros DO cd0147 e cd0903          |
+|      Regra 3) Se informado estabelec,sera atualizado o campo origem  |
+|               somente no programa cd0147. Se marcado a opcao atualiza|
+|               origem cd0903 tambem sera atualizado no item. Sera     |
+|               atualizado somente se a origem for diferente de branco |
+|----------------------------------------------------------------------|
+|Coluna |  Descricao                                                   |
+|-------+--------------------------------------------------------------|
+|   01  |  Item                                                        |
+|   02  |  Estabelecimento                                             |
+|   03  |  Origem                                                      |
+|   04  |  Ft Conv Unidade Tributavel                                  |
++----------------------------------------------------------------------+

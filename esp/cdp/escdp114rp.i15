@@ -1,0 +1,57 @@
+procedure pi-procedimento-15:
+    form item.it-codigo       format "x(16)" column-label "Item"
+         item.desc-item       format "x(60)" column-label "Descri‡Æo Item"
+         operacao.op-codigo   format ">>>>9" column-label "Oper"
+         operacao.descricao   format "x(34)" column-label "Descri‡Æo Oper"
+         operacao.gm-codigo   format "x(9)"  column-label "Grupo Maq"
+         operacao.nr-unidades format ">>>>9" column-label "Unid"
+         operacao.char-1      format "x(12)" column-label "UM Tmp"
+         with width 172 down no-box stream-io frame f-15.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "oper-com-un-dif-1-ou-dif-min.txt"
+           c-titulo-relat = "Opera‡äes c/ Unidade dif de 1 ou dif de Minutos".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Oper c/ Un dif de 1 ou de Min...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-172.
+    view stream st-relat frame f-rodape-172.
+
+    for each item fields(it-codigo desc-item) use-index cod-obsoleto no-lock
+       where item.cod-obsoleto = 1,
+        each operacao fields(op-codigo descricao gm-codigo nr-unidades un-med-tempo) no-lock
+       where operacao.it-codigo     = item.it-codigo
+         and operacao.data-termino >= today
+         and operacao.tipo-oper     = 1
+         and not (operacao.un-med-tempo = 2 and
+                  operacao.nr-unidades  = 1):
+        assign i-cont = i-cont + 1.
+
+        if valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        disp stream st-relat
+             item.it-codigo
+             item.desc-item
+             operacao.op-codigo
+             operacao.descricao
+             operacao.gm-codigo
+             operacao.nr-unidades
+             c-unid[operacao.un-med-tempo] @ operacao.char-1
+             with frame f-15.
+        down stream st-relat with frame f-15.
+    end. /* for each item */   
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-15 */

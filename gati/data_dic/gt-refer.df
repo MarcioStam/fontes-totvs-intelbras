@@ -1,0 +1,148 @@
+ADD TABLE "gt-refer-docto"
+  AREA "Schema Area"
+  DESCRIPTION "Documentos de Referencia Encontrados na Importacao dos XML Entrada"
+  DUMP-NAME "gt-refer"
+
+ADD FIELD "id-sequencia" OF "gt-refer-docto" AS integer 
+  DESCRIPTION "Sequencia de Inser‡Æo, pois posso ter Redespacho"
+  FORMAT ">,>>>,>>>,>>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 2
+  MAX-WIDTH 4
+  COLUMN-LABEL "Seq"
+  ORDER 10
+  MANDATORY    
+
+ADD FIELD "chave-saida" OF "gt-refer-docto" AS character 
+  DESCRIPTION "Chave Acesso Nota Saida"
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Chave Acesso Nota Saida"
+  POSITION 3
+  MAX-WIDTH 160
+  COLUMN-LABEL "Ch Aces Nota Saida"
+  ORDER 20
+  MANDATORY  
+
+ADD FIELD "chave-entrada" OF "gt-refer-docto" AS character 
+  DESCRIPTION "Chave Acesso XML Entrada"
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Chave Acesso XML Entrada"
+  POSITION 4
+  MAX-WIDTH 160
+  VIEW-AS ""
+  COLUMN-LABEL "Ch Acesso XML Entr"
+  ORDER 30
+  MANDATORY
+  
+ADD FIELD "tipo-nota" OF "gt-refer-docto" AS integer 
+  DESCRIPTION "Tipo XML: NFe ou CTe"
+  FORMAT ">9"
+  INITIAL "1"
+  LABEL "NF-e ou CTe"
+  POSITION 5
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "NFe/CTe"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "ep-codigo" OF "gt-refer-docto" AS integer 
+  DESCRIPTION "Empresa"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Empresa"
+  POSITION 6
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Empresa"
+  ORDER 50
+
+ADD FIELD "cod-estabel" OF "gt-refer-docto" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 7
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 60
+
+ADD FIELD "serie-docto" OF "gt-refer-docto" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 8
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 70
+  MANDATORY
+
+ADD FIELD "nro-docto" OF "gt-refer-docto" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 9
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "N£mero Documento"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "cod-emitente" OF "gt-refer-docto" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 10
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 90
+  MANDATORY
+
+ADD FIELD "i-saida" OF "gt-refer-docto" AS integer 
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "NF-e Faturamento"
+  POSITION 11
+  MAX-WIDTH 4
+  COLUMN-LABEL "Fatur"
+  ORDER 100
+
+ADD FIELD "i-receb" OF "gt-refer-docto" AS integer 
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "NF-e Recebimento"
+  POSITION 12
+  MAX-WIDTH 4
+  COLUMN-LABEL "Recbto"
+  ORDER 110
+
+ADD FIELD "i-atualiz" OF "gt-refer-docto" AS integer 
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "NF-e Atualizada Recebimento"
+  POSITION 13
+  MAX-WIDTH 4
+  COLUMN-LABEL "Atual Recbto"
+  ORDER 120
+
+ADD INDEX "IDX-Primary" ON "gt-refer-docto" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "id-sequencia" ASCENDING 
+  INDEX-FIELD "chave-saida" ASCENDING 
+
+ADD INDEX "Docto" ON "gt-refer-docto" 
+  AREA "Schema Area"
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+
+.
+PSC
+cpstream=ibm850
+.
+0000003165

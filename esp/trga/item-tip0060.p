@@ -1,0 +1,1 @@
+trigger procedure for assign of item-tipo-loc.mistura old value c-anterior like item-tipo-loc.mistura.                                                                                                                                                                                            

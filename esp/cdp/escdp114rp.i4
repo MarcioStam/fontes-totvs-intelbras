@@ -1,0 +1,60 @@
+procedure pi-procedimento-04:
+    form estrutura.it-codigo format "x(16)" column-label "Item"
+         item.desc-item      format "x(60)" column-label "Descri‡Æo"
+         item.codigo-refer   format "x(30)" column-label "Situa‡Æo"
+         estrutura.es-codigo format "x(16)" column-label "Componente"
+         b-item.desc-item    format "x(60)" column-label "Descri‡Æo"
+         b-item.codigo-refer format "x(30)" column-label "Situa‡Æo"
+         with width 250 down no-box stream-io frame f-04.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "itens-fantasma-com-roteiro.txt"
+           c-titulo-relat = "Itens fantasma com Roteiro".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Itens fantasma com Roteiro...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-250.
+    view stream st-relat frame f-rodape-250.
+
+    for each estrutura fields(it-codigo es-codigo) no-lock
+       where estrutura.fantasma      = yes
+         and estrutura.data-termino >= today,
+       first item fields(desc-item codigo-refer cod-obsoleto) no-lock
+       where item.it-codigo    = estrutura.it-codigo
+         and item.cod-obsoleto < 4,
+       first b-item fields(desc-item codigo-refer cod-obsoleto) no-lock
+       where b-item.it-codigo    = estrutura.es-codigo
+         and b-item.cod-obsoleto < 4,
+       first operacao fields(descricao) no-lock
+       where operacao.it-codigo     = estrutura.es-codigo
+         and operacao.data-termino >= today:
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 10 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        disp stream st-relat
+             estrutura.it-codigo
+             item.desc-item
+             c-obsol[item.cod-obsoleto]   @ item.codigo-refer
+             estrutura.es-codigo
+             b-item.desc-item
+             c-obsol[b-item.cod-obsoleto] @ b-item.codigo-refer
+             with frame f-04.
+        down stream st-relat with frame f-04.
+    end. /* for each estrutura */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-04 */

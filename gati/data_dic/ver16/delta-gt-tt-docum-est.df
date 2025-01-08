@@ -1,0 +1,15 @@
+
+
+ADD FIELD "tt-backup-itens" OF "gt-tt-docum-est" AS blob 
+  FORMAT "x(8)"
+  INITIAL ?
+  POSITION 54
+  LOB-AREA "Schema Area"
+  LOB-BYTES 104857600
+  LOB-SIZE 100M
+  ORDER 540
+.
+PSC
+cpstream=ibm850
+.
+0000009872

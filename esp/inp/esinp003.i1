@@ -1,0 +1,22 @@
+/*********************************************************************************************************/
+/* Parƒmetros:                                                                                           */
+/*                                                                                                       */
+/* {1} Tabela Principal                                                                                  */                                                                                                      
+/* {2} Temp-table que estiver sendo atualizada                                                           */
+/* {3} Campos principais da chave da tabela                                                                */
+/*                                                                                                       */
+/*********************************************************************************************************/
+
+/*
+FIND FIRST {1} EXCLUSIVE-LOCK
+    WHERE  {1}.codigo = tt-ncm.codigo
+    AND    {1}.dt-baixa  = dt-baixa NO-ERROR.
+IF  NOT AVAIL {1} THEN DO:
+*/
+    CREATE {1}.
+    ASSIGN {1}.codigo-ncm  = tt-ncm.codigo
+           {1}.dt-baixa = dt-baixa.
+/*
+END.
+*/
+

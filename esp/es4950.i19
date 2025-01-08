@@ -1,0 +1,187 @@
+/*****************************************************************************
+**
+**   Programa: es4054.p
+**
+**   Funcao: Programa de Criacao da tabela de complememento de Clientes
+**           
+**   Data: 16/07/2000
+**
+**   Autor: Claudio 
+**   Altera‡Æo: Natureza de servi‡o e natureza de manaus - 09/03/2006
+**
+******************************************************************************/
+
+define variable c-nat-operacao like emitente.nat-operacao.
+define variable c-nat-ope-ext  like emitente.nat-ope-ext.
+
+   if b-emitente.pais = "Brasil" then do:
+      find int-emitente 
+           where int-emitente.cod-emit = b-emitente.cod-emitente no-error.
+      if not avail int-emitente then do:
+         create int-emitente.
+         assign int-emitente.cod-emit = b-emitente.cod-emitente.
+      end.
+
+      if b-emitente.estado = "sc" then do: 
+         if b-emitente.cod-gr-cli = 8 then do:  /********* COLABORADORES *****/
+            assign int-emitente.nat-oper-ind  = "510101"
+                   int-emitente.nat-oper-rev  = "510201"
+                   int-emitente.nat-oper-serv = "593300"
+                   c-nat-operacao             = "510101"
+                   c-nat-ope-ext              = "610101".
+         end.
+         else do:
+            if (b-emitente.ins-estadual = "" or
+               b-emitente.ins-estadual = "isento") and
+               not b-emitente.contrib-icms then
+               assign int-emitente.nat-oper-ind  = "510102"
+                      int-emitente.nat-oper-rev  = "510203"
+                      int-emitente.nat-oper-serv = "593300"
+                      c-nat-operacao             = "510102"
+                      c-nat-ope-ext              = "610104".
+            else
+               assign int-emitente.nat-oper-ind  = "510100"
+                      int-emitente.nat-oper-rev  = "510200"
+                      int-emitente.nat-oper-serv = "593300"
+                      c-nat-operacao             = "510100"
+                      c-nat-ope-ext              = "610100".
+         end.
+      end.  /* DO ESTADO SC */
+      
+      if b-emitente.estado <> "sc" then do:  
+          /***TRAT. P/ AMAZONIA - ALTERADO EM 13/07/2001 ****/
+         
+         if b-emitente.estado = "AM" or b-emitente.estado = "AC" or
+            b-emitente.estado = "RR" or b-emitente.estado = "RO" or
+           (b-emitente.estado = "AP" and
+           (b-emitente.cidade = "Santana" or b-emitente.cidade = "macapa")) then do:
+            if b-emitente.contrib-icms then do:
+               if b-emitente.ins-estadual <> "" and
+                  not b-emitente.ins-estadual begins "isen" then do:
+                  if b-emitente.cod-suframa <> "" then do:
+                     assign int-emitente.nat-oper-ind  = "610103"
+                            int-emitente.nat-oper-rev  = "610203"
+                            int-emitente.nat-oper-serv = "693300"
+                            c-nat-operacao             = "510103"
+                            c-nat-ope-ext              = "610103".
+
+                     /**** Tratar cidades zf  *****/
+                     find first cidade-zf 
+                          where cidade-zf.cidade = b-emitente.cidade no-error.
+                     IF avail cidade-zf then
+                        assign int-emitente.nat-oper-ind  = "610901"
+                               int-emitente.nat-oper-rev  = "611001"
+                               int-emitente.nat-oper-serv = "693300"
+                               c-nat-operacao             = "510901"
+                               c-nat-ope-ext              = "610901".
+
+                     if b-emitente.estado = "AM" and
+                        b-emitente.cidade = "Manaus" then 
+                        assign int-emitente.nat-oper-ind  = "610900"
+                               int-emitente.nat-oper-rev  = "611000"
+                               int-emitente.nat-oper-serv = "693300"
+                               c-nat-operacao             = "510900"
+                               c-nat-ope-ext              = "610900".
+            
+                     if b-emitente.estado = "AP" and
+                        b-emitente.cidade = "Macapa" or
+                        b-emitente.cidade = "Santana" then
+                        assign int-emitente.nat-oper-ind  = "610901"
+                               int-emitente.nat-oper-rev  = "611001"
+                               int-emitente.nat-oper-serv = "693300"
+                               c-nat-operacao             = "510901"
+                               c-nat-ope-ext              = "610901".
+                     
+                  end. 
+                  else do:
+                     if b-emitente.estado = "AM" and
+                        b-emitente.cidade = "Manaus" then
+                        assign int-emitente.nat-oper-ind  = "610102"
+                               int-emitente.nat-oper-rev  = "610202"
+                               int-emitente.nat-oper-serv = "693300"
+                               c-nat-operacao             = "510102"
+                               c-nat-ope-ext              = "610102".
+                     else
+                        assign int-emitente.nat-oper-ind  = "610100"
+                               int-emitente.nat-oper-rev  = "610200"
+                               int-emitente.nat-oper-serv = "693300"
+                               c-nat-operacao             = "510100"
+                               c-nat-ope-ext              = "610100".
+                  end.
+               end.
+               else 
+                  assign int-emitente.nat-oper-ind  = "610700"
+                         int-emitente.nat-oper-rev  = "610800"
+                         int-emitente.nat-oper-serv = "693300"
+                         c-nat-operacao             = "510102"
+                         c-nat-ope-ext              = "610700".
+            end.
+            else do:
+               if b-emitente.estado = "AM" and
+                  b-emitente.cidade = "Manaus" then
+                  assign int-emitente.nat-oper-ind  = "610701"
+                         int-emitente.nat-oper-rev  = "610800"
+                         int-emitente.nat-oper-serv = "693300"
+                         c-nat-operacao             = "510102"
+                         c-nat-ope-ext              = "610701".
+               else
+                  assign int-emitente.nat-oper-ind  = "610700"
+                         int-emitente.nat-oper-rev  = "610800"
+                         int-emitente.nat-oper-serv = "693300"
+                         c-nat-operacao             = "510102"
+                         c-nat-ope-ext              = "610700".
+            end.
+         end. /****** ESTADOS AM, RO, RR, AC, AP *******/
+         else do:
+            if b-emitente.cod-gr-cli = 8 then do:  /****** COLABORADOR ******/
+               assign int-emitente.nat-oper-ind  = "610704"
+                      int-emitente.nat-oper-rev  = "610800"
+                      int-emitente.nat-oper-serv = "693300"
+                      c-nat-operacao             = "510102"
+                      c-nat-ope-ext              = "610704".
+            end.
+            else do:
+               if b-emitente.contrib-icms and
+                  (b-emitente.ins-estadual <> "" and
+                  not b-emitente.ins-estadual begins "isen") then
+                  assign int-emitente.nat-oper-ind  = "610100"
+                         int-emitente.nat-oper-rev  = "610200"
+                         int-emitente.nat-oper-serv = "693300"
+                         c-nat-operacao             = "510100"
+                         c-nat-ope-ext              = "610100".
+               else
+                  assign int-emitente.nat-oper-ind  = "610700"
+                         int-emitente.nat-oper-rev  = "610800"
+                         int-emitente.nat-oper-serv = "693300"
+                         c-nat-operacao             = "510102"
+                         c-nat-ope-ext              = "610700".
+            end.
+         end.
+      end. /***** ESTADO <> "SC" ********/
+      
+      assign b-emitente.nat-operacao = c-nat-operacao
+             b-emitente.nat-ope-ext  = c-nat-ope-ext.
+   end. /****** EMITENTE.PAIS = "BRASIL" ***********/
+   else do:
+      find int-emitente 
+           where int-emitente.cod-emit = b-emitente.cod-emitente no-error.
+      if not avail int-emitente then do:
+         create int-emitente.
+         assign int-emitente.cod-emit = b-emitente.cod-emitente.
+      end.
+
+      assign int-emitente.nat-oper-ind  = "710100"
+             int-emitente.nat-oper-rev  = "710100"
+             int-emitente.nat-oper-serv = "793300"
+             c-nat-operacao             = "710100"
+             c-nat-ope-ext              = "710100".
+      
+      assign b-emitente.nat-operacao = c-nat-operacao
+             b-emitente.nat-ope-ext  = c-nat-ope-ext.
+   end.
+
+   if avail int-emitente and int-emitente.senha = "" then
+      assign int-emitente.b2s   = no
+             int-emitente.senha = c-array[RANDOM(1,36)] + c-array[RANDOM(1,36)] + 
+                                  c-array[RANDOM(1,36)] + c-array[RANDOM(1,36)] + 
+                                  c-array[RANDOM(1,36)] + c-array[RANDOM(1,36)].

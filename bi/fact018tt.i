@@ -1,0 +1,40 @@
+define temp-table tt-param no-undo
+   field usuario     as character
+   field senha       as character
+   field dt-inicial  as date
+   field dt-final    as date.
+
+define temp-table ttFactFaturamentoResumo no-undo
+   field CD_Estabelecimento              like nota-fiscal.cod-estabel
+   field CD_Serie                        like nota-fiscal.serie
+   field CD_Nota_Fiscal                  like nota-fiscal.nr-nota-fis
+   field CD_Sequencia                    like it-nota-fisc.nr-seq-fat
+   field CD_Item                         like it-nota-fisc.it-codigo
+   field CD_Unidade_Negocio              like unid-neg-fat.cod_unid_negoc
+   field CD_Emitente                     like nota-fiscal.cod-emitente
+   field CD_Grupo_Cliente                like emitente.cod-gr-cli
+   field CD_Representante                like nota-fiscal.cod-rep
+   field CD_Pais                         like nota-fiscal.pais
+   field CD_Estado                       like nota-fiscal.estado
+   field CD_Cidade                       like nota-fiscal.cidade
+   field CD_Serie_Devolucao              like devol-cli.serie-docto
+   field CD_Nro_Devolucao                like devol-cli.nro-docto
+   field CD_Seq_Devolucao                like devol-cli.sequencia
+   field CD_Devolucao                      as integer
+   field CD_Cancelada                      as integer
+   field TX_Emitente_Nome_Abreviado      like emitente.nome-abrev
+   field TX_Emitente_Nome_Abrev_Matriz   like emitente.nome-abrev
+   field TX_Representante_Nome_Abreviado like repres.nome-abrev
+   field TX_Unidade_Negocio              like unid_negoc.des_unid_negoc
+   field TX_Segmento                     like fam-com-item.descricao
+   field TX_Familia                      like fam-com-item.descricao
+   field TX_Subfamilia                   like fam-com-item.descricao
+   field TX_Origem                       like fam-com-item.descricao
+   field TX_Item                         like item.desc-item
+   field DT_Emissao                      like nota-fiscal.dt-emis-nota
+   field NM_Quantidade                     as decimal
+   field NM_Vl_Unitario                    as decimal
+   field NM_Vl_Liquido                     as decimal
+   field NM_Vl_Total                       as decimal
+   index idx_pri is primary unique CD_Estabelecimento CD_Serie CD_Nota_Fiscal CD_Sequencia CD_Item CD_Serie_Devolucao
+                                   CD_Nro_Devolucao CD_Seq_Devolucao.

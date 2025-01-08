@@ -1,0 +1,92 @@
+for each tt-pedidos use-index {1}
+   where tt-pedidos.tipo-process = 2 /* Destino */
+         break by {2}
+               by {3}:
+    assign i-cont = i-cont + 1.
+
+    if i-cont mod 10 = 0
+    then run pi-acompanhar in h-acomp (input i-cont).   
+    
+    if first(tt-pedidos.num-pedido-dest)
+    then put unformatted skip(1) 
+                        "DESTINO"
+                         skip.
+    
+    if first-of(tt-pedidos.num-pedido-dest)
+    then do:
+         put skip(1).
+
+         case tt-param.classifica:
+                 when 1
+                 then put unformatted "Pedido Destino:"      at 1
+                          string(tt-pedidos.num-pedido-dest) + " (" + tt-pedidos.situacao + ") - " + tt-pedidos.desc-transp-dest at 17
+                          "Estabelecimento:"                 at 64
+                          tt-pedidos.cod-estabel             at 82
+                          "Fornecedor:"                      at 96
+                          tt-pedidos.cod-emitente            at 112
+                          "Data do Pedido:"                  at 128
+                          string(tt-pedidos.data-pedido,"99/99/9999") at 145
+                          skip(1).
+                 when 3
+                 then put unformatted "Fornecedor:"                      at 1
+                                      string(tt-pedidos.cod-emitente) + " - " + tt-pedidos.nome-emit at 13
+                                      "Pedido Destino:"                  at 1
+                                      string(tt-pedidos.num-pedido-dest) + " (" + tt-pedidos.situacao + ") - " + tt-pedidos.desc-transp-dest at 17
+                                      "Data do Pedido:"                  at 61
+                                      string(tt-pedidos.data-pedido,"99/99/9999") at 77
+                                      "Estabelecimento:"                 at 91
+                                      tt-pedidos.cod-estabel             at 109
+                                      skip(1).   
+                 when 4
+                 then put unformatted "Data do Pedido:"                  at 1
+                                      string(tt-pedidos.data-pedido,"99/99/9999") at 17
+                                      "Fornecedor:"                      at 33
+                                      tt-pedidos.cod-emitente            at 46
+                                      "Pedido Destino:"                  at 58
+                                      string(tt-pedidos.num-pedido-dest) + " (" + tt-pedidos.situacao + ") - " + tt-pedidos.desc-transp-dest at 74
+                                      "Estabelecimento:"                 at 119
+                                      tt-pedidos.cod-estabel             at 137
+                                      skip(1).                                                                     
+         end case. /* case tt-param.classifica */
+    end. /* if first-of(tt-pedidos.num-pedido-dest) */
+         
+    empty temp-table tt-editor.
+
+    run pi-print-editor(tt-pedidos.comentarios, 90).
+
+    for first tt-editor
+        where tt-editor.conteudo <> "": end.
+
+    disp tt-pedidos.numero-ordem-dest         
+         tt-pedidos.it-codigo                       
+         tt-pedidos.parcela-dest    
+         tt-pedidos.cod-cond-pag-dest    
+         tt-pedidos.quant-saldo-dest          
+         tt-pedidos.preco-fornec-dest   
+         tt-editor.conteudo when avail tt-editor      
+         tt-pedidos.num-pedido-orig           
+         tt-pedidos.numero-ordem-orig         
+         tt-pedidos.parcela-orig              
+         tt-pedidos.cod-cond-pag-orig                  
+         tt-pedidos.desc-transp-orig
+         tt-pedidos.quant-saldo-orig          
+         tt-pedidos.preco-fornec-orig              
+         with frame f-dados-dest.
+    down with frame f-dados-dest.
+    
+    if avail tt-editor
+    then delete tt-editor.
+
+    for each tt-editor
+       where tt-editor.conteudo <> "":
+        disp tt-editor.conteudo
+             with frame f-dados-dest.
+        down with frame f-dados-dest.
+    end. /* for each tt-editor */
+   
+    if last-of(tt-pedidos.num-pedido-dest)
+    then put unformatted skip(1)
+                         fill("-",250) at 1 
+                         skip.                         
+end. /* for each tt-pedidos */
+

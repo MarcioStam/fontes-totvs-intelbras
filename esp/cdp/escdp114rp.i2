@@ -1,0 +1,77 @@
+procedure pi-procedimento-02:
+    define variable c-msg-gm as character no-undo.
+
+    form grup-maquina.gm-codigo format "x(9)"  column-label "Grupo Maq"
+         grup-maquina.descricao format "x(32)" column-label "Descri‡Æo"
+         c-msg-gm               format "x(30)" column-label "Mensagem"
+         gm-estab.cod-estabel   format "x(5)"  column-label "Estab"
+         with width 80 down no-box stream-io frame f-02.
+
+    assign i-cont         = 0
+           c-arquivo      = tt-param.diretorio + "gms-ativos-sem-ct-ativo.txt"
+           c-titulo-relat = "GMaq ativos s/CTrab ou desativ".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Gr M q ativos s/ CTrab ou desativados...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-80.
+    view stream st-relat frame f-rodape-80.
+
+    for each grup-maquina fields(gm-codigo descricao log-1) no-lock:
+        if grup-maquina.log-1
+        then next.
+
+        assign i-cont = i-cont + 1.
+
+        if  i-cont mod 10 = 0
+        and valid-handle(h-acomp)
+        then run pi-acompanhar in h-acomp (input i-cont).
+
+        if can-find(first ctrab use-index grp-maq where
+                          ctrab.gm-codigo = grup-maquina.gm-codigo
+                      and ctrab.log-1     = no
+                          no-lock)
+        then next.
+        
+        if can-find(first ctrab use-index grp-maq where
+                          ctrab.gm-codigo = grup-maquina.gm-codigo
+                          no-lock)
+        then assign c-msg-gm = "Grupo M q s/ Centro Trab ativo".
+        else assign c-msg-gm = "Grupo M q s/ Centro Trab".
+
+        disp stream st-relat
+             grup-maquina.gm-codigo
+             grup-maquina.descricao
+             c-msg-gm
+             with frame f-02.
+
+        if not can-find(first gm-estab where
+                              gm-estab.gm-codigo = grup-maquina.gm-codigo
+                              no-lock)
+        then do:
+             down stream st-relat with frame f-02.
+
+             next.
+        end.
+
+        for each gm-estab fields(cod-estabel) no-lock
+           where gm-estab.gm-codigo = grup-maquina.gm-codigo:
+             disp stream st-relat
+                  gm-estab.cod-estabel
+                  with frame f-02.
+             down stream st-relat with frame f-02.            
+        end. /* for each gm-estab */
+    end. /* for each grup-maquina */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-02 */

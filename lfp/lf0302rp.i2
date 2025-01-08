@@ -1,0 +1,3 @@
+if  c-arquivo-log <> "" then do:
+    PUT STREAM s-excel-{1} unformatted c-message SKIP.
+end.    

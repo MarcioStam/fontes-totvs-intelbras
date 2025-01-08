@@ -1,0 +1,31 @@
++----------------------------------------------------------------------------+
+|           Layout do Arquivo de Importacao de Dados para o APS              |
+|----------------------------------------------------------------------------|
+|           Nome do Arquivo: a ser informado                                 |
+|                   Formato: arquivo CSV (separado por ponto e virgula)      |
+|----------------------------------------------------------------------------|
+|**Obs.: A primeira linha do arquivo ficou reservada para titulos da coluna**|
+|----------------------------------------------------------------------------|
+|     Coluna    |  Descricao                                                 |
+|---------------+------------------------------------------------------------|
+|       01      |  Estabelecimento                                           |
+|       02      |  Item                                                      |
+|       03      |  Permite Compra Spot (Sim/Nao)                             |
+|       04      |  Permite Modal Aereo (Sim/Nao)                             |
+|       05      |  Item Phase-in (Sim/Nao)                                   |
+|       06      |  Item Phase-out (Sim/Nao)                                  |
+|       07      |  Tempo Transf. Estab (em dias)                             |
+|       08      |  Modelo                                                    |
+|       09      |  Lote Minimo Compras CKD/SKD                               |
+|       10      |  Lote Minimo Fabricacao CKD/SKD                            |
+|       11      |  Lote Maximo Compras                                       |
+|       12      |  Lote Maximo Fabricacao                                    |
+|       13      |  Qtd Dias Minimo                                           |
+|       14      |  Qtd Dias Alvo                                             |
+|       15      |  Qtd Dias Cobertura MP Kit CKD/SKD                         |
+|       16      |  Qtd Dias Alvo MP Kit CKD/SKD                              |
+|       17      |  Qtd Dias Antec                                            |
+|       18      |  Item Restritivo (Sim/Nao)                                 |
+|       19      |  Bloqueado Producao (Sim/Nao)                              |
+|       20      |  Requer Avaliacao (Sim/Nao)                                |
++----------------------------------------------------------------------------+

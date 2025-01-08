@@ -1,0 +1,40 @@
+
+DEFINE TEMP-TABLE msg0152 NO-UNDO XML-NODE-NAME 'MSG0152'
+   FIELD idm AS INT XML-NODE-TYPE 'HIDDEN'
+   FIELD CodigoSolicitacaoBeneficio            AS CHAR
+   FIELD NomeSolicitacaoBeneficio              AS CHAR
+   FIELD CodigoTipoSolicitacao                 AS CHAR
+   FIELD CodigoBeneficio                       AS CHAR
+   FIELD BeneficioCodigo                       AS INT
+   FIELD CodigoBeneficioCanal                  AS CHAR
+   FIELD CodigoUnidadeNegocio                  AS CHAR
+   FIELD CodigoConta                           AS CHAR
+   FIELD ValorSolicitado                       AS DEC DECIMALS 4
+   FIELD ValorAprovado                         AS DEC DECIMALS 4
+   FIELD DescricaoSolicitacao                  AS CHAR
+   FIELD SolicitacaoIrregular                  AS LOG
+   FIELD DescricaoSituacaoIrregular            AS CHAR
+   FIELD CodigoAcaoSubsidiadaVMC               AS CHAR
+   FIELD DataPrevistaRetornoAcao               AS DATE FORMAT "99/99/9999"
+   FIELD ValorAcao                             AS DEC DECIMALS 4
+   FIELD CodigoFormaPagamento                  AS CHAR
+   FIELD SituacaoSolicitacaoBeneficio          AS INT
+   FIELD RazaoStatusSolicitacaoBeneficio       AS INT
+   FIELD situacao                              AS INT
+   FIELD Proprietario                          AS CHAR
+   FIELD TipoProprietario                      AS CHAR
+   FIELD CodigoAssistente                      AS INT
+   FIELD CodigoSupervisorEMS                   AS CHAR
+   FIELD CodigoFilial                          AS CHAR
+   FIELD StatusPagamento                       AS INT
+   FIELD SolicitacaoAjuste                     AS LOG 
+   FIELD ValorAbater                           AS DEC DECIMALS 4
+   FIELD ValorPago                             AS DEC DECIMALS 4
+   FIELD ValorCancelado                        AS DEC DECIMALS 4
+   FIELD DataCriacao                           AS DATE
+   FIELD DataValidade                          AS DATE
+   FIELD CodigoCondicaoPagamento               AS INTEGER init ?
+   FIELD DescartarVerba                        AS LOG     init ?
+   FIELD TrimestreCompetencia                  AS CHAR    init ?
+   FIELD FormaCancelamento                     AS INTEGER init ?
+   FIELD StatusCalculoPriceProtection          AS INTEGER INIT ?.

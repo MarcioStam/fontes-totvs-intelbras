@@ -1,0 +1,13 @@
+DEFINE TEMP-TABLE {1} NO-UNDO 
+  FIELD checkingAcctCode AS character
+  FIELD transactionDate AS date
+  FIELD sequence AS integer
+  FIELD gLScenario AS character
+  FIELD economicIndicator AS character
+  FIELD cashTransactionType AS character
+  FIELD standardHistoryCode AS character
+  FIELD transactionFlow AS integer
+  FIELD transactionValue AS decimal decimals 4  
+  FIELD transactionID AS integer
+
+.

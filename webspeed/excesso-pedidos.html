@@ -1,0 +1,300 @@
+<script language="SpeedScript">
+procedure output-header:
+   if (get-cgi("HTTP_ACCEPT") matches "*application/xhtml+xml*") then
+      output-content-type("application/xhtml+xml; charset=utf-8").
+   else
+      output-content-type("text/html; charset=utf-8").
+end.
+
+session:numeric-format = 'EUROPEAN'.
+
+define variable h-util as handle no-undo.
+run html-util.p persistent set h-util.
+
+define variable c-color                as character no-undo.
+define variable c-it-codigo            as character no-undo.
+define variable c-descricao            as character no-undo.
+define variable de-subtotal-consumo    as decimal   no-undo.
+define variable de-subtotal-compras    as decimal   no-undo.
+define variable de-subtotal-embarcado  as decimal   no-undo.
+define variable de-subtotal-eadi       as decimal   no-undo.
+define variable de-subtotal-saldo      as decimal   no-undo.
+define variable de-total-consumo       as decimal   no-undo.
+define variable de-total-compras       as decimal   no-undo.
+define variable de-total-embarcado     as decimal   no-undo.
+define variable de-total-eadi          as decimal   no-undo.
+define variable de-total-saldo         as decimal   no-undo.
+define variable i-cont                 as decimal   no-undo.
+</script>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt_BR">
+<head>
+  <title>Excesso de saldo - Pedidos</title>
+  <style type="text/css">
+body {
+  text-align: center;
+  background-color: #ffffff;
+  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-size: 0.75em;
+}
+a {
+  text-decoration: none;
+}
+h2 {
+  font-size: 1.8em;
+}
+h5 {
+  font-size: 1em;
+}
+h6 {
+  font-size: 0.9em;
+}
+table {
+  font-size: 1em;
+  margin: auto;
+}
+th {
+  background-color: #aaaaaa;
+}
+.light {
+  background-color: #ffffff;
+}
+.dark {
+  background-color: #e7e7e7;
+}
+.total {
+  background-color: #cccccc;
+  font-weight: bold;
+}
+input {
+  font-size: 0.9em;
+}
+select {
+  font-size: 0.9em;
+}
+fieldset {
+  height: 5em;
+}
+legend {
+  margin-bottom: 0.5em;
+}
+#ajuda {
+  margin: auto;
+  width: 600px;
+}
+#consumo {
+  font-size: 0.9em;
+  margin: auto;
+  width: 600px;
+}
+#consumo .col1 {
+  clear: both;
+  display: block;
+  float: left;
+  width: 20%;
+}
+#consumo .col2 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#consumo .col3 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#consumo .col4 {
+  display: block;
+  float: left;
+  text-align: center;
+  width: 10%;
+}
+#resultado {
+  font-size: 0.9em;
+  padding-top: 1em;
+}
+</style>
+</head>
+
+<body>
+<h2>Excesso de saldo - Pedidos</h2>
+<p/>
+<script language="SpeedScript">
+if not can-find (first consumo-itens) then do:
+</script>
+<div style="text-align: center;">
+  Sem registros a exibir.
+</div>
+<script language="SpeedScript">
+end.
+else do:
+</script>
+<p style="clear: both;" />
+<div id="resultado">
+  <table border="0" cellspacing="0" width="98%">
+    <colgroup>
+      <col width="6%" />
+      <col width="14%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="6%" />
+      <col width="5%" />
+      <col width="4%" />
+    </colgroup>
+<script language="SpeedScript">
+   for each consumo-itens no-lock
+      break by consumo-itens.cod-estabel
+            by consumo-itens.vl-compras desc:
+
+      if (c-color = "light") then
+         assign c-color = "dark".
+      else
+         assign c-color = "light".
+
+      run html-entities in h-util (input consumo-itens.it-codigo, output c-it-codigo).
+      run html-entities in h-util (input consumo-itens.desc-item, output c-descricao).
+
+      find int-item-uni-estab no-lock
+         where int-item-uni-estab.cod-estabel = consumo-itens.cod-estabel
+           and int-item-uni-estab.it-codigo   = consumo-itens.it-codigo no-error.
+
+      if first-of (consumo-itens.cod-estabel) then do:
+         assign de-subtotal-consumo    = 0
+                de-subtotal-compras    = 0
+                de-subtotal-embarcado  = 0
+                de-subtotal-eadi       = 0
+                de-subtotal-saldo      = 0.
+</script>           
+    <tr>
+      <th colspan="16">Estab. `consumo-itens.cod-estabel`</th>
+    </tr>
+    <tr>
+      <th>Item</th>
+      <th>Descri&ccedil;&atilde;o</th>
+      <th>Valor</th>
+      <th>Consumo M&eacute;dio 3 meses</th>
+      <th>Valor Consumo M&eacute;dio</th>
+      <th>Pedido</th>
+      <th>Valor Pedido</th>
+      <th>Data</th>
+      <th>Qt Embarcada</th>
+      <th>Vl Embarcado</th>
+      <th>Qt EADI</th>
+      <th>Vl EADI</th>
+      <th>Saldo</th>
+      <th>Valor Saldo</th>
+      <th>Pol&iacute;tica</th>
+      <th>%</th>
+    </tr>
+<script language="SpeedScript">
+      end.
+</script>
+    <tr class="`c-color`">
+      <td style="text-align: left;">`c-it-codigo`</td>
+      <td style="text-align: left;">`c-descricao`</td>
+      <td style="text-align: right;">`string(consumo-itens.preco, '->>>,>>>,>>9.9999')`</td>
+      <td style="text-align: right;">`string(consumo-itens.consumo-medio, '->>>,>>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string((consumo-itens.vl-cons-med), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(consumo-itens.compras, '->>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string((consumo-itens.vl-compras), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(consumo-itens.entrega, '99/99/9999')`</td>
+      <td style="text-align: right;">`string(consumo-itens.embarcado, '->>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string((consumo-itens.vl-embarc), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(consumo-itens.eadi, '->>>,>>>,>>9')`</td>
+      <td style="text-align: right;">`string((consumo-itens.vl-eadi), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string(consumo-itens.saldo, '->>>,>>9')`</td>
+      <td style="text-align: right;">`string((consumo-itens.vl-saldo), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string((if available int-item-uni-estab then int-item-uni-estab.qtd-pol else 0), '->>>,>>>,>>>,>>9.99')`</td>
+      <td style="text-align: right;">`string((if available int-item-uni-estab and int-item-uni-estab.qtd-pol > 0 then (consumo-itens.saldo + consumo-itens.compras) / int-item-uni-estab.qtd-pol else 100), '->>>,>>>,>>>,>>9.99')`</td>
+    </tr>
+<script language="SpeedScript">
+      assign de-subtotal-consumo   = de-subtotal-consumo + consumo-itens.vl-cons-med
+             de-subtotal-compras   = de-subtotal-compras + consumo-itens.vl-compras
+             de-subtotal-embarcado = de-subtotal-embarcado + consumo-itens.vl-embarc
+             de-subtotal-eadi      = de-subtotal-eadi + consumo-itens.vl-eadi
+             de-subtotal-saldo     = de-subtotal-saldo + consumo-itens.vl-saldo
+             de-total-consumo      = de-total-consumo + consumo-itens.vl-cons-med
+             de-total-compras      = de-total-compras + consumo-itens.vl-compras
+             de-total-embarcado    = de-total-embarcado + consumo-itens.vl-embarc
+             de-total-eadi         = de-total-eadi + consumo-itens.vl-eadi
+             de-total-saldo        = de-total-saldo + consumo-itens.vl-saldo
+             i-cont                = i-cont + 1.
+
+      if last-of (consumo-itens.cod-estabel) or (i-cont = 30) then do:
+</script>
+    <tr class="total">
+      <td style="text-align: right;" colspan="4">Subtotal</td>
+      <td style="text-align: right;">`string(de-subtotal-consumo, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-subtotal-compras, ">>>,>>>,>>9.99")`</td>
+      <td colspan="2">&nbsp;</td>
+      <td style="text-align: right;">`string(de-subtotal-embarcado, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-subtotal-eadi, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-subtotal-saldo, ">>>,>>>,>>9.99")`</td>
+      <td colspan="2">&nbsp;</td>
+    </tr>
+<script language="SpeedScript">
+         if (i-cont = 30) and not last-of (consumo-itens.cod-estabel) then do:
+            assign i-cont = 0.
+</script>
+    <tr>
+      <th>Item</th>
+      <th>Descri&ccedil;&atilde;o</th>
+      <th>Valor</th>
+      <th>Consumo M&eacute;dio 3 meses</th>
+      <th>Valor Consumo M&eacute;dio</th>
+      <th>Pedido</th>
+      <th>Valor Pedido</th>
+      <th>Data</th>
+      <th>Qt Embarcada</th>
+      <th>Vl Embarcado</th>
+      <th>Qt EADI</th>
+      <th>Vl EADI</th>
+      <th>Saldo</th>
+      <th>Valor Saldo</th>
+      <th>Pol&iacute;tica</th>
+      <th>%</th>
+    </tr>
+<script language="SpeedScript">
+         end.
+      end.
+   end. /** for each **/
+</script>
+    <tr class="total">
+      <td style="text-align: right;" colspan="4">Total</td>
+      <td style="text-align: right;">`string(de-total-consumo, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-total-compras, ">>>,>>>,>>9.99")`</td>
+      <td colspan="2">&nbsp;</td>
+      <td style="text-align: right;">`string(de-total-embarcado, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-total-eadi, ">>>,>>>,>>9.99")`</td>
+      <td>&nbsp;</td>
+      <td style="text-align: right;">`string(de-total-saldo, ">>>,>>>,>>9.99")`</td>
+      <td colspan="2">&nbsp;</td>
+    </tr>
+  </table>
+</div>
+<script language="SpeedScript">
+end. /** if **/
+
+if valid-handle(h-util) then
+   delete object h-util.
+</script>
+
+</body>
+</html>

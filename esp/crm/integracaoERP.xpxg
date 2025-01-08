@@ -1,0 +1,1615 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<WSAD xmlns="urn:schemas-progress-com:WSAD:0009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <AppObject>
+    <PGVersion>
+      <PXGVersion>03</PXGVersion>
+    </PGVersion>
+    <PGGenInfo isSessionFree="true">
+      <Author />
+      <VersionString />
+      <VersionNumber>1</VersionNumber>
+      <Package />
+      <Service>ascrmte</Service>
+      <WorkDir>c:\temp\</WorkDir>
+      <VerboseLogging>true</VerboseLogging>
+      <SaveBeforeGen>true</SaveBeforeGen>
+      <DotNetClient>false</DotNetClient>
+      <JavaClient>false</JavaClient>
+      <WebServicesClient>true</WebServicesClient>
+      <ESBClient>false</ESBClient>
+      <ESBClient2>false</ESBClient2>
+      <UserDefinedAppService>true</UserDefinedAppService>
+      <JavaCompilerType>1</JavaCompilerType>
+      <JavaCompiler>&lt;Install Dir&gt;\jdk\bin\javac</JavaCompiler>
+      <JavaSwitches />
+      <JavaClasspathSwitch>-classpath</JavaClasspathSwitch>
+      <JavaClasspath>&lt;Proxy Dir&gt;;&lt;Install Dir&gt;\java\progress.jar;&lt;Install Dir&gt;\java\messages.jar;;&lt;Default classes.zip&gt;</JavaClasspath>
+      <DotNetCompilerType>4</DotNetCompilerType>
+      <DotNetCompiler>csc</DotNetCompiler>
+      <DotNetSwitches />
+      <DotNetXSDGenerator>xsd</DotNetXSDGenerator>
+      <DotNetNamespace />
+      <DotNetTitle />
+      <DotNetVersion />
+      <DotNetDesc />
+      <DotNetCompany />
+      <DotNetProduct />
+      <DotNetPublicKey />
+      <DotNetDelaySign>false</DotNetDelaySign>
+      <DotNetRuntime>digitally signed</DotNetRuntime>
+      <DotNetDataSetNamespace>StrongTypesNS</DotNetDataSetNamespace>
+      <DNUseDefaultDSNamespace>true</DNUseDefaultDSNamespace>
+      <DNUseNamespaceAsDirs>true</DNUseNamespaceAsDirs>
+      <DotNetUseNullableTypes>false</DotNetUseNullableTypes>
+    </PGGenInfo>
+    <DeploymentWizard>
+      <CurrentEncoding>1</CurrentEncoding>
+      <SoapEndpointURL>http://wsa.intelbras.com.br:8080/wsadev/wsadev</SoapEndpointURL>
+      <WebServiceNamespace userDefined="true">urn:crm:intelbras.com.br</WebServiceNamespace>
+      <SoapAction appendToSoapAction="false" />
+      <ConnectReturnString userDefined="false" />
+      <TestWSDL bGen="true" RPCEncoded="false" RPCLiteral="false" DocLiteral="false" />
+      <ESBEncoding>3</ESBEncoding>
+      <EntryEndpoint useDefault="true" />
+      <FaultEndpoint useDefault="true" />
+      <RejectedEndpoint useDefault="true" />
+      <Container />
+      <AppserverURL>AppServerDC://localhost:3091</AppserverURL>
+      <FileName overWrite="false">integracaoERP</FileName>
+      <ResourceDirectory>/Resources/OpenEdgeServices</ResourceDirectory>
+      <SonicAppService useFileSystem="false" deployToDS="false" createXAR="false">
+        <ResourceDirectory overWrite="false" />
+        <XARName />
+      </SonicAppService>
+      <SonicConnectionInfo>
+        <SonicURL>tcp://localhost:2506</SonicURL>
+        <SonicDomain>Domain1</SonicDomain>
+        <User>Administrator</User>
+        <Password />
+      </SonicConnectionInfo>
+    </DeploymentWizard>
+    <Name>integracaoERP</Name>
+    <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    <HelpString />
+    <ODLHelpString />
+    <ObjectType>false</ObjectType>
+    <AllowUnknown>false</AllowUnknown>
+    <IsTTResultSet>false</IsTTResultSet>
+    <WriteDatasetBeforeImage>false</WriteDatasetBeforeImage>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm003</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>Buscar_DadosCep</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>piCep</Name>
+          <OrigName>piCep</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>ttRetornoCEP</Name>
+          <OrigName>ttRetornoCEP</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>Endereco</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Bairro</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Cidade</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>UF</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>CidadeZF</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ibge</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm004</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>Integrar</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>peEntity</Name>
+          <OrigName>peEntity</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>peAction</Name>
+          <OrigName>peAction</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>peMessage</Name>
+          <OrigName>peMessage</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>ttRetorno</Name>
+          <OrigName>tt-retorno</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>mensagem</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>chaveintegracao</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-entrega</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm006</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>Buscar_dadosCliente</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pccgc</Name>
+          <OrigName>pccgc</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>ttCliente</Name>
+          <OrigName>tt-cliente</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>cod-emitente</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>nome-emit</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>nome-abrev</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>nome-matriz</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>identific</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>portador</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-banco</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>agencia</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>conta-corren</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>tp-rec-padrao</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-cond-pag</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>emite-bloq</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>gera-ad</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>calcula-multa</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>recebe-inf-sci</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>address1_addresstypecode</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>address1_name</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>CEP</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>endereco</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Bairro</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Cidade</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Estado</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>Pais</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>address2_addresstypecode</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>address2_name</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cep-cob</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>endereco-cob</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>bairro-cob</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cidade-cob</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>estado-cob</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>pais-cob</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>telephone</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ramal</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>telephone2</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ramal2</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>fax</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ramalfax</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>email</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>home-page</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-rep</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>natureza</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cgc</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ins-estadual</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ins-municipal</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-gr-cli</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>lim-credito</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>dt-lim-credito</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>modalidade</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>contrib-icms</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-suframa</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-transp</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-canal-venda</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>insc-subs-trib</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>i-susp-ipi</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>agente-retencao</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>i-calc-pis-cofins-unid</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>i-recebe-nfe</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ind-forma-tributo</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>vl-desconto-cat</FieldName>
+            <Type>5</Type>
+            <Extent>0</Extent>
+            <TypeName>decimal</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>tipo-embalagem</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>observacao-ped</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>dispositivo-legal</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>dt-vcto-concessao</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-incoterm-exp</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>local-embarque</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>embarque-via</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>new_exporta_erp</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>new_mensagem</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>data-implant</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>new_status_integracao</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>new_status_cadastro</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>id-ativo</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>new_cpf</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>new_rg</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ind-vendas-alc</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm007</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarPreco</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodEstabel</Name>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pCodCliente</Name>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pDsUnidComerc</Name>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pCdCategoria</Name>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="5" writeXmlBeforeImage="false">
+          <Name>pItCodigo</Name>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="6" writeXmlBeforeImage="false">
+          <Name>pNrTabpre</Name>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="7" writeXmlBeforeImage="false">
+          <Name>pLgTbEspecifica</Name>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="8" writeXmlBeforeImage="false">
+          <Name>ttPrecoItem</Name>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>it-codigo</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>desc-item</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>fm-cod-com</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>desc-familia</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>preco</FieldName>
+            <Type>5</Type>
+            <Extent>0</Extent>
+            <TypeName>decimal</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>vl-ipi</FieldName>
+            <Type>5</Type>
+            <Extent>0</Extent>
+            <TypeName>decimal</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>quant-min</FieldName>
+            <Type>5</Type>
+            <Extent>0</Extent>
+            <TypeName>decimal</TypeName>
+          </MetaData>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="9" writeXmlBeforeImage="false">
+          <Name>ttErros</Name>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>mensagem</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm008</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarDesconto</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodCliente</Name>
+          <OrigName>p-cod-cliente</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pDsUnidComerc</Name>
+          <OrigName>p-ds-unid-comerc</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pCdCategoria</Name>
+          <OrigName>p-cd-categoria</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pFmCodCom</Name>
+          <OrigName>p-fm-cod-com</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="5" writeXmlBeforeImage="false">
+          <Name>pQuantidade</Name>
+          <OrigName>p-quantidade</OrigName>
+          <Type>5</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="6" writeXmlBeforeImage="false">
+          <Name>pDescontoQtd</Name>
+          <OrigName>p-desconto-qtd</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm009</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarDescManga</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodRep</Name>
+          <OrigName>p-cod-rep</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pCodCliente</Name>
+          <OrigName>p-cod-cliente</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pDsUnidComerc</Name>
+          <OrigName>p-ds-unid-comerc</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pCdCategoria</Name>
+          <OrigName>p-cd-categoria</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="5" writeXmlBeforeImage="false">
+          <Name>pFmCodCom</Name>
+          <OrigName>p-fm-cod-com</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="6" writeXmlBeforeImage="false">
+          <Name>pDescMaximo</Name>
+          <OrigName>p-desc-maximo</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm010</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarPedidoProgramado</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodCliente</Name>
+          <OrigName>p-cod-cliente</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pDsUnidComerc</Name>
+          <OrigName>p-ds-unid-comerc</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pCdCategoria</Name>
+          <OrigName>p-cd-categoria</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pFmCodCom</Name>
+          <OrigName>p-fm-cod-com</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="5" writeXmlBeforeImage="false">
+          <Name>pDescMaximo</Name>
+          <OrigName>p-desc-maximo</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm011</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarPedidoMinimo</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodCliente</Name>
+          <OrigName>p-cod-cliente</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pDsUnidComerc</Name>
+          <OrigName>p-ds-unid-comerc</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pCdCategoria</Name>
+          <OrigName>p-cd-categoria</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pVlMinimo</Name>
+          <OrigName>p-vl-minimo</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm012</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>criarPedido</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pPedVendaMessagem</Name>
+          <OrigName>pPedVendaMessagem</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pPedItemMessage</Name>
+          <OrigName>pPedItemMessage</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>ttErro</Name>
+          <OrigName>tt-erro</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>mensagem</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm013</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>Buscar_DadosGrCliente</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>piGrCli</Name>
+          <OrigName>piGrCli</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>ttRetornoGrupo</Name>
+          <OrigName>ttRetornoGrupo</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>cod-rep</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>desc-rep</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm022</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarProdutosCliente</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodCliente</Name>
+          <OrigName>pCod-cliente</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>ttProdutos</Name>
+          <OrigName>tt-produtos</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>it-codigo</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm029</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscaTabelas</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodCliente</Name>
+          <OrigName>p-cod-cliente</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>ttTbPreco</Name>
+          <OrigName>tt-tb-preco</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>nr-tabpre</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ds-descricao</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-rep</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cd-categoria</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ds-categoria</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cd-unid-negoc</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-cond-pag</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>cod-gr-cli</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>ds-gr-cli</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>lg-tb-especifica</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pValLimTotalSupcard</Name>
+          <OrigName>p-val-lim-total-supcard</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pValLimDispoSupcard</Name>
+          <OrigName>p-val-lim-dispo-supcard</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="5" writeXmlBeforeImage="false">
+          <Name>pValLimTotalIntelbras</Name>
+          <OrigName>p-val-lim-total-intelbras</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="6" writeXmlBeforeImage="false">
+          <Name>pValLimDispoIntelbras</Name>
+          <OrigName>p-val-lim-dispo-intelbras</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm031</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarEstabTabPreco</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pNrTabpre</Name>
+          <OrigName>p-nr-tabpre</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>ttEstabelec</Name>
+          <OrigName>tt-estabelec</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>cod-estabel</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>nome</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm032</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarCidadeZF</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCidade</Name>
+          <OrigName>p-cidade</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pUf</Name>
+          <OrigName>p-uf</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pCidadeZf</Name>
+          <OrigName>p-cidade-zf</OrigName>
+          <Type>3</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm033</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarIndiceFinanciamento</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodCondPag</Name>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pIndiceFinanciamento</Name>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm034</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>entradaPedidoAstec</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pPedVendaMessagem</Name>
+          <Type>39</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pRetorno</Name>
+          <Type>39</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm108</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>buscarEstruturaDoItemPor</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pSerie</Name>
+          <OrigName>pSerie</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pItem</Name>
+          <OrigName>pItem</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>ttEstrutura</Name>
+          <OrigName>tt-estrutura</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>seq</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>nivel</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>it-codigo</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>descricao</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>quant-usada</FieldName>
+            <Type>5</Type>
+            <Extent>0</Extent>
+            <TypeName>decimal</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>local-montag</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>garantia</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>venda</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>permite-os</FieldName>
+            <Type>3</Type>
+            <Extent>0</Extent>
+            <TypeName>logical</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm112</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarPrecoItemAstec</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCodEstabel</Name>
+          <OrigName>pCodEstabel</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pcodEmitente</Name>
+          <OrigName>pcodEmitente</OrigName>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pItem</Name>
+          <OrigName>pItem</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pTabPreco</Name>
+          <OrigName>pTabPreco</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="5" writeXmlBeforeImage="false">
+          <Name>pPreco</Name>
+          <OrigName>pPreco</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="6" writeXmlBeforeImage="false">
+          <Name>pIpi</Name>
+          <OrigName>pIpi</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="7" writeXmlBeforeImage="false">
+          <Name>pIcm</Name>
+          <OrigName>pIcm</OrigName>
+          <Type>5</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="8" writeXmlBeforeImage="false">
+          <Name>ttErros</Name>
+          <OrigName>tt-erros</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>mensagem</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>escrm114</Name>
+      <ProcPath>esp\crm\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscaItemPorNrSerie</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pSerie</Name>
+          <OrigName>pSerie</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pitCodigo</Name>
+          <OrigName>pit-codigo</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pdescItem</Name>
+          <OrigName>pdesc-item</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pkc</Name>
+          <OrigName>pkc</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0038</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarPedidoOrdem</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pnumPedido</Name>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pnumeroOrdem</Name>
+          <Type>4</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>ttOrdens</Name>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>num-pedido</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>numero-ordem</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0429rp</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0574</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0575rp</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0576</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0577rp</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0589</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0780</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+      <ProcDetail isCustomized="true" usesUnknownDefault="true" useRetVal="false" usesTTMappingDefault="true" IsTTResultSet="true" usesBeforeImageDefault="true">
+        <Name>BuscarItemCDB</Name>
+        <HelpString />
+        <ODLHelpString />
+        <Parameter allowUnknown="false" ordinal="1" writeXmlBeforeImage="false">
+          <Name>pCdb</Name>
+          <OrigName>p-cdb</OrigName>
+          <Type>1</Type>
+          <Mode>1</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="2" writeXmlBeforeImage="false">
+          <Name>pCorporativo</Name>
+          <OrigName>p-corporativo</OrigName>
+          <Type>3</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="3" writeXmlBeforeImage="false">
+          <Name>pSerie</Name>
+          <OrigName>p-serie</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="4" writeXmlBeforeImage="false">
+          <Name>pNrNotaFis</Name>
+          <OrigName>p-nr-nota-fis</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="5" writeXmlBeforeImage="false">
+          <Name>pDtEmisNota</Name>
+          <OrigName>p-dt-emis-nota</OrigName>
+          <Type>2</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="6" writeXmlBeforeImage="false">
+          <Name>pNomeEmit</Name>
+          <OrigName>p-nome-emit</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="7" writeXmlBeforeImage="false">
+          <Name>pItCodigo</Name>
+          <OrigName>p-it-codigo</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="8" writeXmlBeforeImage="false">
+          <Name>pDescItem</Name>
+          <OrigName>p-desc-item</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="9" writeXmlBeforeImage="false">
+          <Name>pNrOrdProd</Name>
+          <OrigName>p-nr-ord-prod</OrigName>
+          <Type>4</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="10" writeXmlBeforeImage="false">
+          <Name>pSigla</Name>
+          <OrigName>p-sigla</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="11" writeXmlBeforeImage="false">
+          <Name>pDescSigla</Name>
+          <OrigName>p-desc-sigla</OrigName>
+          <Type>1</Type>
+          <Mode>2</Mode>
+        </Parameter>
+        <Parameter allowUnknown="false" ordinal="12" writeXmlBeforeImage="false">
+          <Name>ttcomponente</Name>
+          <OrigName>ttcomponente</OrigName>
+          <Type>15</Type>
+          <Mode>2</Mode>
+          <MetaData>
+            <FieldName>seq</FieldName>
+            <Type>4</Type>
+            <Extent>0</Extent>
+            <TypeName>integer</TypeName>
+          </MetaData>
+          <MetaData>
+            <FieldName>componente</FieldName>
+            <Type>1</Type>
+            <Extent>0</Extent>
+            <TypeName>character</TypeName>
+          </MetaData>
+        </Parameter>
+      </ProcDetail>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es0888a</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>es4951rp</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+    </Procedure>
+    <Procedure isPersistent="false" useFullName="false">
+      <Name>esapi001</Name>
+      <ProcPath>esp\</ProcPath>
+      <ProPath>\\totvs\erp\intelbras\teste\</ProPath>
+      <ProcExt>p</ProcExt>
+    </Procedure>
+  </AppObject>
+</WSAD>

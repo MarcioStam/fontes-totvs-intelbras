@@ -1,0 +1,222 @@
+
+
+    /* Inicio criar pedido execucao */
+    {btb/btb912zb.i}
+    /*
+    DEFINE VARIABLE c-programa-mg97 AS CHARACTER   NO-UNDO.
+    DEFINE VARIABLE c-versao-mg97 AS CHARACTER   NO-UNDO.
+    */
+    DEFINE VARIABLE i-cont-aux AS INTEGER     NO-UNDO.
+    def var p_cod_prog_dtsul_w                              as character format "x(50)"      no-undo.
+    def var p_cod_prog_dtsul_rp                             as character format "x(50)"      no-undo.
+    def var p_cod_release                                   as character format "x(9)"       no-undo.
+    def var p_cdn_estil_dwb                                 as Integer   format ">>9"        no-undo.
+    def var p_arquivo                                       as character format "x(50)"      no-undo.
+    def var p_destino                                       as integer   format "9"          no-undo.
+    def var p_raw_param                                     as raw                           no-undo.
+    def VAR p_num_ped_exec                                  as integer   format ">>>>9"      no-undo.
+    def var v-log-agenda-auto-ok                            as logical   initial yes         no-undo.
+    def var v_num_aux                                       as INTEGER   format ">>>>,>>9"   no-undo.
+    def var v_dat_exec_ped_exec_old                         as DATE      format "99/99/9999" label "Data Execu»’o"   column-label "Data Exec" no-undo.
+    def var v_hra_exec_ped_exec_old                         as CHARACTER format "99:99:99"   label "Hora Execu»’o"   column-label "Hora Exec" no-undo.
+    def var v_log_answer                                    as logical                       no-undo. /*local*/
+    def var v_cod_msg_parameters                            as CHARACTER format "x(2000)"    NO-UNDO.
+    def var v_cod_prog_dtsul                                as CHARACTER format "x(50)"      label "Programa"        column-label "Programa" no-undo.
+    def var v_num_msg_erro                                  as INTEGER   format ">>>>>>9"    label "Mensagem"        column-label "Mensagem" no-undo.
+    def var v_cdn_empresa_aux                               like mgcad.empresa.ep-codigo    no-undo.
+    def var c-prmgems                                       as char                          no-undo.   
+    
+    def new global shared var v_rec_ped_exec                as RECID     format ">>>>>>9"    no-undo. 
+    def new global shared var v_cod_modul_dtsul_corren      as CHAR      format "x(3)"       label "M½dulo Corrente" column-label "M½dulo Corrente" no-undo.
+    def new global shared var v_cod_aplicat_dtsul_corren    as CHAR      format "x(3)"       no-undo. 
+    def new global shared var v_cod_modul_dtsul_empres      as CHAR      format "x(100)"     no-undo.
+    def new global shared var v_cod_unid_negoc_usuar        as CHAR      format "x(3)"       view-as COMBO-BOX 
+        list-items "" inner-lines 5 bgcolor 15 font 2 label "Unidade Neg½cio" column-label "Unid Neg½cio" no-undo.
+    def new global shared var v_cod_funcao_negoc_empres     as CHAR      format "x(50)"      no-undo.
+    def new global shared var v_cod_ccusto_corren           as CHAR      format "x(11)"      label "Centro Custo"    column-label "Centro Custo" no-undo.
+    def new global shared var l-autconlist                  as LOG                           no-undo.    
+    
+
+    /* fim criar pedido execucao */
+      
+    {esp/esb/esb0000rp.i}
+    
+    def var raw-param        as raw no-undo.
+    
+    def temp-table tt-raw-digita
+       FIELD raw-digita      as raw.
+    
+    define temp-table tt-digita no-undo
+        FIELD ordem            as integer   format ">>>>9"
+        FIELD exemplo          as character format "x(30)"
+        index id ordem.
+
+{esp/es0018.i}
+
+PROCEDURE piEnviaSaldosBarramento:
+
+    def input param p-cod-solicitacao as char format "x(36)" no-undo.
+    def input param p-programa as char no-undo.
+    DEF VAR c-rpw AS CHAR NO-UNDO.
+    
+    RUN pi-retorna-rpw (OUTPUT c-rpw).
+        
+    if  c-rpw = "" then
+        return "NOK".   
+
+    /*------------------------------------------------------*/
+    /*    ENVIO DE SALDO DE CONTA CORRENTE DE BENEFÖCIOS    */
+    /*------------------------------------------------------*/
+    FIND int-solicitacao
+        WHERE int-solicitacao.codigoSolicitacaoBeneficio =  p-cod-solicitacao NO-LOCK NO-ERROR.
+
+    IF  NOT AVAIL int-solicitacao THEN
+        RETURN "NOK".
+
+    empty temp-table tt-param.
+    empty temp-table tt_param_segur.
+    empty temp-table tt_ped_exec.
+    empty temp-table tt_ped_exec_param.
+    empty temp-table tt_ped_exec_param_aux.
+
+    create tt-param.
+    assign tt-param.usuario                     = c-seg-usuario
+           tt-param.destino                     = 2
+           tt-param.data-exec                   = today
+           tt-param.hora-exec                   = TIME + 5
+           tt-param.ind-execucao                = 2
+           tt-param.log-pais                    = no 
+           tt-param.log-indice                  = no 
+           tt-param.log-origem                  = no 
+           tt-param.log-rota                    = no 
+           tt-param.log-pedido                  = no 
+           tt-param.log-produto                 = no 
+           tt-param.log-uf                      = no 
+           tt-param.log-familia                 = no 
+           tt-param.log-mensagem                = no 
+           tt-param.log-segmento                = no 
+           tt-param.log-nota-fiscal             = no 
+           tt-param.log-portador                = no 
+           tt-param.log-transportadora          = no 
+           tt-param.log-unidade-medida          = no 
+           tt-param.log-municipio               = no 
+           tt-param.log-estabelecimento         = no 
+           tt-param.log-canal-venda             = no 
+           tt-param.log-sub-familia             = no 
+           tt-param.log-natureza-operacao       = no 
+           tt-param.log-unidade-negocio         = no 
+           tt-param.log-tabela-financiamento    = no 
+           tt-param.log-condicao-pagamento      = no 
+           tt-param.log-familia-material        = no 
+           tt-param.log-grupo-estoque           = no 
+           tt-param.log-receita-padrao          = no
+           tt-param.log-familia-comercial       = no
+           tt-param.log-solicitacao             = YES
+           tt-param.log-saldo-cc                = YES
+           tt-param.fi-canal                    = int-solicitacao.cod-emitente.
+
+    /*      
+    ASSIGN c-programa-mg97 = "esb0000rp"
+           c-versao-mg97   = "1.00.00.000".
+    */
+    /*Alterado 14/02/2005 - tech1007 - Alterado o teste para verificar se a op»’o de RTF estÿ selecionada*/
+    ASSIGN tt-param.arquivo = "esb0000rp-" + p-programa.
+
+    raw-transfer tt-param    to raw-param.
+    for each tt-raw-digita:
+        delete tt-raw-digita.
+    end.
+    for each tt-digita:
+        create tt-raw-digita.
+        raw-transfer tt-digita to tt-raw-digita.raw-digita.
+    end.  
+
+    ASSIGN p_cod_prog_dtsul_w    = "esb0000rp"           
+           p_cod_prog_dtsul_rp   = "esp/esb/esb0000rp.p"
+           p_cod_release         = '2.00.00.000'                    
+           p_cdn_estil_dwb       = 97                   
+           p_arquivo             = "esb0000rp.tmp" 
+           p_destino             = 2                    
+           p_raw_param           = raw-param.  
+
+    create tt_param_segur.
+    assign tt_param_segur.tta_num_vers_integr_api      = 3
+           tt_param_segur.tta_cod_aplicat_dtsul_corren = "MFT"
+           tt_param_segur.tta_cod_empres_usuar         = string(i-ep-codigo-usuario)
+           tt_param_segur.tta_cod_grp_usuar_lst        = v_cod_grp_usuar_lst
+           tt_param_segur.tta_cod_idiom_usuar          = "POR":U
+           tt_param_segur.tta_cod_modul_dtsul_corren   = "MFT"
+           tt_param_segur.tta_cod_pais_empres_usuar    = "BRA"
+           tt_param_segur.tta_cod_usuar_corren         = v_cod_usuar_corren
+           tt_param_segur.tta_cod_usuar_corren_criptog = v_cod_usuar_corren_criptog.
+
+    create tt_ped_exec.
+    assign tt_ped_exec.tta_num_seq                = 1
+           tt_ped_exec.tta_cod_usuario            = v_cod_usuar_corren
+           tt_ped_exec.tta_cod_prog_dtsul         = p_cod_prog_dtsul_w 
+           tt_ped_exec.tta_cod_prog_dtsul_rp      = p_cod_prog_dtsul_rp
+           tt_ped_exec.tta_cod_release_prog_dtsul = p_cod_release      
+           tt_ped_exec.tta_dat_exec_ped_exec      = today
+           tt_ped_exec.tta_hra_exec_ped_exec      = replace(string(time,"HH:MM:SS"), ":", "")
+           tt_ped_exec.tta_cod_servid_exec        = c-rpw
+           tt_ped_exec.tta_cdn_estil_dwb          = 97.
+
+    /* chamado 122447 */
+    create tt_ped_exec_param.
+    assign tt_ped_exec_param.tta_num_seq              = 1
+           tt_ped_exec_param.tta_cod_dwb_file         = p_cod_prog_dtsul_rp
+           tt_ped_exec_param.tta_cod_dwb_output       = 'Arquivo'
+           tt_ped_exec_param.tta_nom_dwb_printer      = p_arquivo. 
+
+    raw-transfer tt-param to tt_ped_exec_param.tta_raw_param_ped_exec.
+
+    ASSIGN i-cont-aux = 0.
+    FOR EACH tt-raw-digita NO-LOCK: 
+         ASSIGN i-cont-aux = i-cont-aux + 1.
+         CREATE tt_ped_exec_param_aux.
+         ASSIGN tt_ped_exec_param_aux.tta_num_dwb_order      = i-cont-aux
+                tt_ped_exec_param_aux.tta_num_seq            = 1
+                tt_ped_exec_param_aux.tta_raw_param_ped_exec = tt-raw-digita.raw-digita.
+    END.
+
+    run btb/btb912zb.p (input-output table tt_param_segur,
+                        input-output table tt_ped_exec,
+                        input table tt_ped_exec_param,
+                        input table tt_ped_exec_param_aux,
+                        input table tt_ped_exec_sel).
+
+
+    FIND FIRST tt_ped_exec NO-LOCK NO-ERROR.
+    
+   RETURN "OK".
+
+END PROCEDURE.
+
+PROCEDURE pi-retorna-rpw:
+
+    DEF OUTPUT PARAM p-rpw AS CHAR NO-UNDO.
+    DEF VAR c-ambiente AS char NO-UNDO.
+    
+    RUN esp/es0018p.p (INPUT  "ambiente":U,
+                       INPUT  1,
+                       INPUT  0,
+                       INPUT  "":U,
+                       OUTPUT TABLE tt-prog-ponto).
+    
+    FIND FIRST tt-prog-ponto NO-ERROR.
+    
+    IF  AVAILABLE tt-prog-ponto THEN
+        ASSIGN c-ambiente = tt-prog-ponto.conteudo.
+    
+    
+    RUN esp/es0018p.p (INPUT  "MSG0152":U,
+                       INPUT  1,
+                       INPUT  0,
+                       INPUT  "":U,
+                       OUTPUT TABLE tt-prog-ponto).
+    
+    FOR EACH tt-prog-ponto:
+        if entry(1, tt-prog-ponto.conteudo, ";") = c-ambiente then p-rpw =  entry(2, tt-prog-ponto.conteudo, ";").
+    END.
+END.
+ 

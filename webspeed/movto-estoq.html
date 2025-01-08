@@ -1,0 +1,336 @@
+<script language="SpeedScript">
+procedure output-header:
+   if (get-cgi("HTTP_ACCEPT") matches "*application/xhtml+xml*") then
+      output-content-type("application/xhtml+xml; charset=utf-8").
+   else
+      output-content-type("text/html; charset=utf-8").
+end.
+
+session:numeric-format = 'EUROPEAN'.
+
+define temp-table tt-estoq no-undo
+   field cod-estabel like saldo-estoq.cod-estabel
+   field it-codigo   like saldo-estoq.it-codigo
+   field dt-periodo  like movto-estoq.dt-trans
+   field qtidade-ini like saldo-estoq.qtidade-atu
+   field qtidade-ent like movto-estoq.quantidade
+   field qtidade-sai like movto-estoq.quantidade
+   field qtidade-fim like saldo-estoq.qtidade-atu
+   index ch-pri as primary unique cod-estabel it-codigo dt-periodo.
+
+define variable h-util as handle no-undo.
+run html-util.p persistent set h-util.
+
+define variable c-cod-estabel as character no-undo format 'x(3)'.
+define variable c-it-codigo   as character no-undo format 'x(16)'.
+define variable c-color       as character no-undo.
+define variable dt-inicial    as date no-undo format '99/99/9999'.
+define variable dt-final      as date no-undo format '99/99/9999'.
+define variable de-qtidade-atu like saldo-estoq.qtidade-atu.
+define variable c-mes-1       as character no-undo.
+define variable c-mes-2       as character no-undo.
+define variable c-mes-3       as character no-undo.
+define variable c-mes-4       as character no-undo.
+define variable c-periodo     as character no-undo.
+define variable c-descricao   as character no-undo.
+
+define buffer bmovto-estoq for movto-estoq.
+define buffer btt-estoq    for tt-estoq.
+</script>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt_BR">
+<head>
+  <title>Movimenta&ccedil;&otilde;es do Estoque</title>
+  <style type="text/css">
+body {
+  text-align: center;
+  background-color: #ffffff;
+  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-size: 0.8em;
+}
+h2 {
+  font-size: 1.8em;
+}
+h5 {
+  font-size: 1em;
+}
+h6 {
+  font-size: 0.9em;
+}
+table {
+  font-size: 1em;
+  margin: auto;
+}
+th {
+  background-color: #aaaaaa;
+}
+.light {
+  background-color: #ffffff;
+}
+.dark {
+  background-color: #e7e7e7;
+}
+input {
+  font-size: 0.9em;
+}
+select {
+  font-size: 0.9em;
+}
+fieldset {
+  height: 5em;
+}
+legend {
+  margin-bottom: 0.5em;
+}
+#ajuda {
+  margin: auto;
+  width: 600px;
+}
+#estoque {
+  font-size: 0.9em;
+  margin: auto;
+  width: 600px;
+}
+#estoque .col1 {
+  clear: both;
+  display: block;
+  float: left;
+  width: 20%;
+}
+#estoque .col2 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#estoque .col3 {
+  display: block;
+  text-align: left;
+  float: left;
+  width: 34%;
+}
+#estoque .col4 {
+  display: block;
+  float: left;
+  text-align: center;
+  width: 10%;
+}
+#resultado {
+  font-size: 0.9em;
+  padding-top: 1em;
+}
+</style>
+</head>
+
+<body>
+<script language="SpeedScript">
+assign c-it-codigo   = get-value("i")
+       c-cod-estabel = get-value("e").
+</script>
+<h2>Movimenta&ccedil;&otilde;es do Estoque</h2>
+<p/>
+<script language="SpeedScript">
+if (c-cod-estabel <> ?) and (c-cod-estabel <> '') and (c-it-codigo <> ?) and (c-it-codigo <> '') then do:
+   find first item no-lock
+      where item.it-codigo = c-it-codigo no-error.
+
+   assign c-descricao = item.descricao-1 + item.descricao-2.
+
+   run html-entities in h-util (input c-descricao, output c-descricao).
+   run html-entities in h-util (input item.it-codigo, output c-it-codigo).
+</script>
+<h4>Estab. `c-cod-estabel` / Item `c-it-codigo` - `c-descricao`</h4>
+<script language="SpeedScript">
+   assign dt-final = today + 32
+          dt-final = date(month(dt-final),
+                          1,
+                          year(dt-final)) - 1
+          dt-inicial = dt-final - 93
+          dt-inicial = date(month(dt-inicial),
+                            1,
+                            year(dt-inicial)).
+   
+   /** Saldo inicial **/
+   for each saldo-estoq no-lock
+      where  saldo-estoq.cod-estabel = c-cod-estabel
+        and  saldo-estoq.it-codigo   = item.it-codigo
+        and (saldo-estoq.cod-depos   = 'alm'
+         or  saldo-estoq.cod-depos   = 'rec'
+         or  saldo-estoq.cod-depos   = 'not')
+      break by saldo-estoq.cod-estabel:
+   
+      assign de-qtidade-atu = de-qtidade-atu + saldo-estoq.qtidade-atu.
+   
+      if last-of (saldo-estoq.cod-estabel) then do:
+         create tt-estoq.
+         assign tt-estoq.cod-estabel = saldo-estoq.cod-estabel
+                tt-estoq.it-codigo   = saldo-estoq.it-codigo
+                tt-estoq.dt-periodo  = date(month(today),
+                                              1,
+                                              year(today))
+                tt-estoq.qtidade-fim = de-qtidade-atu.
+      end.
+   end.
+   
+   /** Entradas **/
+   for each movto-estoq no-lock
+      where movto-estoq.cod-estabel = c-cod-estabel
+        and movto-estoq.it-codigo   = item.it-codigo
+        and movto-estoq.cod-depos   = 'REC'
+        and movto-estoq.esp-docto   = 21 /*NFE*/
+        and movto-estoq.dt-trans   >= dt-inicial
+        and movto-estoq.dt-trans   <= dt-final:
+   
+      find first tt-estoq
+         where tt-estoq.cod-estabel = movto-estoq.cod-estabel
+           and tt-estoq.it-codigo   = movto-estoq.it-codigo
+           and tt-estoq.dt-periodo  = date(month(movto-estoq.dt-trans),
+                                           1,
+                                           year(movto-estoq.dt-trans)) no-error.
+   
+      if not available (tt-estoq) then do:
+         create tt-estoq.
+         assign tt-estoq.cod-estabel = saldo-estoq.cod-estabel
+                tt-estoq.it-codigo   = saldo-estoq.it-codigo
+                tt-estoq.dt-periodo  = date(month(movto-estoq.dt-trans),
+                                              1,
+                                              year(movto-estoq.dt-trans)).
+         
+      end.
+   
+      assign tt-estoq.qtidade-ent = tt-estoq.qtidade-ent + movto-estoq.quantidade.
+   end.
+   
+   /** Entradas/sa¡das do ALM **/
+   for each movto-estoq no-lock
+      where  movto-estoq.cod-estabel = c-cod-estabel
+        and  movto-estoq.it-codigo   = item.it-codigo
+        and (movto-estoq.cod-depos   = 'alm'
+         or  movto-estoq.cod-depos   = 'not')
+        and  movto-estoq.dt-trans   >= dt-inicial
+        and  movto-estoq.dt-trans   <= dt-final:
+   
+      /* Ignora entradas vindas do REC */
+      if can-find (first bmovto-estoq no-lock
+                   where bmovto-estoq.cod-estabel = movto-estoq.cod-estabel
+                     and bmovto-estoq.it-codigo   = movto-estoq.it-codigo
+                     and bmovto-estoq.cod-depos   = 'REC'
+                     and bmovto-estoq.esp-docto   = movto-estoq.esp-docto
+                     and bmovto-estoq.dt-trans    = movto-estoq.dt-trans
+                     and bmovto-estoq.serie-docto = movto-estoq.serie-docto
+                     and bmovto-estoq.nro-docto   = movto-estoq.nro-docto
+                     and bmovto-estoq.tipo-trans  = 2
+                     and movto-estoq.tipo-trans   = 1) then next.
+      
+      find first tt-estoq
+         where tt-estoq.cod-estabel = movto-estoq.cod-estabel
+           and tt-estoq.it-codigo   = movto-estoq.it-codigo
+           and tt-estoq.dt-periodo  = date(month(movto-estoq.dt-trans),
+                                           1,
+                                           year(movto-estoq.dt-trans)) no-error.
+   
+      if not available (tt-estoq) then do:
+         create tt-estoq.
+         assign tt-estoq.cod-estabel = saldo-estoq.cod-estabel
+                tt-estoq.it-codigo   = saldo-estoq.it-codigo
+                tt-estoq.dt-periodo  = date(month(movto-estoq.dt-trans),
+                                              1,
+                                              year(movto-estoq.dt-trans)).
+         
+      end.
+   
+      if movto-estoq.tipo-trans = 1 then
+         assign tt-estoq.qtidade-ent = tt-estoq.qtidade-ent + movto-estoq.quantidade.
+      else
+         assign tt-estoq.qtidade-sai = tt-estoq.qtidade-sai + movto-estoq.quantidade.
+   end.
+   
+   
+   for each tt-estoq
+      by tt-estoq.dt-periodo desc:
+      
+      assign tt-estoq.qtidade-ini  = tt-estoq.qtidade-fim + tt-estoq.qtidade-sai - tt-estoq.qtidade-ent.
+             
+      find first btt-estoq no-lock
+         where rowid(btt-estoq) = rowid(tt-estoq).
+      find prev btt-estoq no-lock no-error.
+
+      if available (btt-estoq) then
+         assign btt-estoq.qtidade-fim = tt-estoq.qtidade-ini.
+   end.
+</script>
+<div id="resultado">
+  <table border="0" cellspacing="0" width="600">
+    <colgroup>
+      <col width="20%" />
+      <col width="20%" />
+      <col width="20%" />
+      <col width="20%" />
+      <col width="20%" />
+    </colgroup>
+    <tr>
+      <th>Per&iacute;odo</th>
+      <th>Saldo Inicial</th>
+      <th>Entradas</th>
+      <th>Sa&iacute;das</th>
+      <th>Saldo Final</th>
+    </tr>
+<script language="SpeedScript">
+   for each tt-estoq no-lock
+      break by tt-estoq.cod-estabel:
+      if (c-color = "light") then
+         assign c-color = "dark".
+      else
+         assign c-color = "light".
+
+      case month(tt-estoq.dt-periodo):
+         when 1 then
+            assign c-periodo = 'Janeiro'.
+         when 2 then
+            assign c-periodo = 'Fevereiro'.
+         when 3 then
+            assign c-periodo = 'Mar&ccedil;o'.
+         when 4 then
+            assign c-periodo = 'Abril'.
+         when 5 then
+            assign c-periodo = 'Maio'.
+         when 6 then
+            assign c-periodo = 'Junho'.
+         when 7 then
+            assign c-periodo = 'Julho'.
+         when 8 then
+            assign c-periodo = 'Agosto'.
+         when 9 then
+            assign c-periodo = 'Setembro'.
+         when 10 then
+            assign c-periodo = 'Outubro'.
+         when 11 then
+            assign c-periodo = 'Novembro'.
+         when 12 then
+            assign c-periodo = 'Dezembro'.
+      end case.
+
+      assign c-periodo = c-periodo + '/' + string(year(tt-estoq.dt-periodo), '9999').
+</script>
+    <tr class="`c-color`">
+      <td>`c-periodo`</td>
+      <td style="text-align: right;">`tt-estoq.qtidade-ini`</td>
+      <td style="text-align: right;">`tt-estoq.qtidade-ent`</td>
+      <td style="text-align: right;">`tt-estoq.qtidade-sai`</td>
+      <td style="text-align: right;">`tt-estoq.qtidade-fim`</td>
+    </tr>
+<script language="SpeedScript">
+   end.
+</script>
+    </table>
+  </div>
+<script language="SpeedScript">
+end. /** if **/
+
+if valid-handle(h-util) then
+   delete object h-util.
+</script>
+
+</body>
+</html>

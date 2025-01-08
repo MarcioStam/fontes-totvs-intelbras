@@ -1,0 +1,624 @@
+&ANALYZE-SUSPEND _VERSION-NUMBER AB_v10r12
+&ANALYZE-RESUME
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _DEFINITIONS Include 
+/*------------------------------------------------------------------------
+    File        : ESSDCV001API.I1
+    Purpose     : Integra‡Æo do ERP TOTVS/Datasul EMS 2 com o OutBuyCenter
+                  (Defini‡Æo dos principais m‚todos da API).
+    Syntax      : <none>
+    Description : <none>
+
+    Author(s)   : Fabiano Sakae Ribeiro (Exponencial TI)
+    Created     : Julho de 2013
+    Notes       : <none>
+----------------------------------------------------------------------*/
+
+/* ***************************  Definitions  ************************** */
+
+/* Local Temp-Table Definitions ---                                     */
+
+DEFINE TEMP-TABLE ttRegistro NO-UNDO
+    FIELD sequencia AS INTEGER   FORMAT ">>>,>>9":U LABEL "Sequˆncia":U COLUMN-LABEL "Seq":U
+    FIELD tabela    AS CHARACTER FORMAT "x(40)":U   LABEL "Tabela":U    COLUMN-LABEL "Tabela":U
+    FIELD id        AS CHARACTER FORMAT "x(80)":U   LABEL "Id":U        COLUMN-LABEL "Id":U
+    FIELD registro  AS CHARACTER FORMAT "x(256)":U  LABEL "Registro":U  COLUMN-LABEL "Registro":U
+    INDEX chPrimario IS PRIMARY UNIQUE
+        sequencia
+    INDEX chTabela
+        tabela
+        sequencia
+    INDEX chId
+        id
+        tabela
+        sequencia.
+
+/* Local Variable Definitions ---                                       */
+
+DEFINE NEW GLOBAL SHARED VARIABLE gc-plano AS CHARACTER NO-UNDO.
+DEFINE NEW GLOBAL SHARED VARIABLE gc-ccusto AS CHARACTER NO-UNDO.
+
+/* Vari veis de conexÆo com o Web Service */
+DEFINE VARIABLE vWSDL      AS CHARACTER   NO-UNDO.
+DEFINE VARIABLE vPORTTYPE  AS CHARACTER   NO-UNDO.
+DEFINE VARIABLE vOPERATION AS CHARACTER   NO-UNDO.
+
+/* Handle de conexÆo com o Web Service */
+DEFINE VARIABLE hServer   AS HANDLE      NO-UNDO.
+DEFINE VARIABLE hPortType AS HANDLE      NO-UNDO.
+
+/* Contador de erros do "ERROR-STATUS" */
+DEFINE VARIABLE iContErroStatus AS INTEGER     NO-UNDO.
+
+/* Vari vel para guardar o registro antes do envio */
+DEFINE VARIABLE cRegistro AS CHARACTER   NO-UNDO.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+&ANALYZE-SUSPEND _UIB-PREPROCESSOR-BLOCK 
+
+/* ********************  Preprocessor Definitions  ******************** */
+
+
+
+/* _UIB-PREPROCESSOR-BLOCK-END */
+&ANALYZE-RESUME
+
+
+
+/* *********************** Procedure Settings ************************ */
+
+&ANALYZE-SUSPEND _PROCEDURE-SETTINGS
+/* Settings for THIS-PROCEDURE
+   Type: Include
+   Allow: 
+   Frames: 0
+   Add Fields to: Neither
+   Other Settings: INCLUDE-ONLY
+ */
+&ANALYZE-RESUME _END-PROCEDURE-SETTINGS
+
+/* *************************  Create Window  ************************** */
+
+&ANALYZE-SUSPEND _CREATE-WINDOW
+/* DESIGN Window definition (used by the UIB) 
+  CREATE WINDOW Include ASSIGN
+         HEIGHT             = 16.5
+         WIDTH              = 36.86.
+/* END WINDOW DEFINITION */
+                                                                        */
+&ANALYZE-RESUME
+
+ 
+
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _CUSTOM _MAIN-BLOCK Include 
+
+
+/* ***************************  Main Block  *************************** */
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+
+/* **********************  Internal Procedures  *********************** */
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piBuscarRowErrors Include 
+PROCEDURE piBuscarRowErrors :
+/*------------------------------------------------------------------------------
+  Purpose:     Buscar a temp-table RowErrors.
+  Parameters:  OUTPUT RowErrors (TEMP-TABLE)
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    DEFINE OUTPUT PARAMETER TABLE FOR RowErrors.
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piBuscarTtRegistro Include 
+PROCEDURE piBuscarTtRegistro :
+/*------------------------------------------------------------------------------
+  Purpose:     Buscar a temp-table ttRegistro.
+  Parameters:  OUTPUT ttRegistro (TEMP-TABLE)
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    DEFINE OUTPUT PARAMETER TABLE FOR ttRegistro.
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piConectarWebService Include 
+PROCEDURE piConectarWebService PRIVATE :
+/*------------------------------------------------------------------------------
+  Purpose:     Conectar o Web Service.
+  Parameters:  <none>
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    RUN piDesconectarWebService IN THIS-PROCEDURE.
+
+    IF RETURN-VALUE = "NOK":U THEN
+        RETURN "NOK":U.
+
+    CREATE SERVER hServer.
+
+    IF NOT VALID-HANDLE(hServer) THEN DO:
+        RUN piCriarRowErrors IN THIS-PROCEDURE (INPUT 17006,
+                                                INPUT "NÆo foi poss¡vel criar o servidor WSDL.":U).
+
+        RUN piDesconectarWebService IN THIS-PROCEDURE.
+
+        RETURN "NOK":U.
+    END.
+
+    hServer:CONNECT("-WSDL '" + vWSDL + "'":U) NO-ERROR.
+
+    IF ERROR-STATUS:ERROR THEN DO:
+        DO iContErroStatus = 1 TO ERROR-STATUS:NUM-MESSAGES:
+            RUN piCriarRowErrors IN THIS-PROCEDURE (INPUT 17006,
+                                                    INPUT "Erro ao conectar com o servidor WSDL":U +
+                                                          "~~":U +
+                                                          ERROR-STATUS:GET-MESSAGE(iContErroStatus) + CHR(10) + "Favor entrar em contato com a TIC da Intelbras.":U).
+        END.
+
+        RUN piDesconectarWebService IN THIS-PROCEDURE.
+
+        RETURN "NOK":U.
+    END.
+
+    RUN VALUE(vPORTTYPE) SET hPortType ON SERVER hServer NO-ERROR.
+
+    IF ERROR-STATUS:ERROR THEN DO:
+        DO iContErroStatus = 1 TO ERROR-STATUS:NUM-MESSAGES:
+            RUN piCriarRowErrors IN THIS-PROCEDURE (INPUT 17006,
+                                                    INPUT "Erro so conectar com o PortType":U +
+                                                          "~~":U +
+                                                          ERROR-STATUS:GET-MESSAGE(iContErroStatus) + CHR(10) + "Favor entrar em contato com a TIC da Intelbras.":U).
+        END.
+
+        RUN piDesconectarWebService IN THIS-PROCEDURE.
+
+        RETURN "NOK":U.
+    END.
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piCria-integrado Include 
+PROCEDURE piCria-integrado :
+/*------------------------------------------------------------------------------
+  Purpose:     
+    Notes:       
+------------------------------------------------------------------------------*/
+
+    DEFINE INPUT PARAMETER pTabelaOBC AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pRegistro  AS CHARACTER NO-UNDO.
+    DEFINE INPUT PARAMETER pSituacao  AS INTEGER   NO-UNDO.
+    
+    DEFINE VARIABLE i-moeda   LIKE moeda.mo-codigo  NO-UNDO.
+    DEFINE VARIABLE i-posicao AS INTEGER FORMAT '9' NO-UNDO.
+    
+    CASE pTabelaOBC:
+        WHEN "CENTRO_CUSTO":U   THEN DO:
+            RUN pi-criaRegistros (INPUT pTabelaOBC,
+                                  INPUT SUBSTRING(pRegistro, 01, 3) + ";" + SUBSTRING(pRegistro, 04, 5) + ";" + SUBSTRING(pRegistro, 10, 3),
+                                  INPUT pSituacao).
+        END.
+        WHEN "NCM":U            THEN DO:
+            RUN pi-criaRegistros (INPUT pTabelaOBC,
+                                  INPUT SUBSTRING(pRegistro, 1, 10),
+                                  INPUT pSituacao).
+        END.
+        WHEN "COND_PGTO":U      THEN DO:
+            RUN pi-criaRegistros (INPUT pTabelaOBC,
+                                  INPUT entry(1, pRegistro, "#"),
+                                  INPUT pSituacao).
+        END.
+        WHEN "CONTA_CONTABIL":U THEN DO:
+            RUN pi-criaRegistros (INPUT pTabelaOBC,
+                                  INPUT SUBSTRING(pRegistro, 18, 8),
+                                  INPUT pSituacao).
+        END.
+        WHEN "FORNECEDOR":U     THEN DO:
+            RUN pi-criaRegistros (INPUT pTabelaOBC,
+                                  INPUT SUBSTRING(pRegistro, 1, 9),
+                                  INPUT pSituacao).
+        END.
+        WHEN "PLANO_CONTA":U    THEN DO:
+            RUN pi-criaRegistros (INPUT pTabelaOBC,
+                                  INPUT SUBSTRING(pRegistro, 1, 3) + ";" + SUBSTRING(pRegistro, 4, 5) + ";" + SUBSTRING(pRegistro, 10, 3) + ";" + SUBSTRING(pRegistro, 18, 8),
+                                  INPUT pSituacao).
+        END.
+        WHEN "COTACAO_MOEDA":U     THEN DO:
+        
+            ASSIGN i-moeda = int(SUBSTRING(pRegistro,1,2)) NO-ERROR.
+            IF  ERROR-STATUS:ERROR 
+            THEN ASSIGN i-moeda   = int(SUBSTRING(pRegistro,1,1))
+                        i-posicao = 7.
+            ELSE ASSIGN i-moeda   = int(SUBSTRING(pRegistro,1,2))
+                        i-posicao = 8.
+            
+            RUN pi-criaRegistros (INPUT pTabelaOBC,
+                                  INPUT STRING(i-moeda) + ";" + SUBSTRING(pRegistro, i-posicao, 10),
+                                  INPUT pSituacao).
+        END.
+    END CASE.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piCriarRowErrors Include 
+PROCEDURE piCriarRowErrors PRIVATE :
+/*------------------------------------------------------------------------------
+  Purpose:     Criar registro na temp-table "RowErrors" de acordo com o parƒme-
+               tro fornecido.
+  Parameters:  INPUT  pErrorNumber     (LIKE RowErrors.ErrorNumber) e
+               OUTPUT pErrorParameters (LIKE RowErrors.ErrorParameters).
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    DEFINE INPUT  PARAMETER pErrorNumber     LIKE RowErrors.ErrorNumber     NO-UNDO.
+    DEFINE INPUT  PARAMETER pErrorParameters LIKE RowErrors.ErrorParameters NO-UNDO.
+
+    DEFINE VARIABLE iErrorSequence LIKE RowErrors.ErrorSequence NO-UNDO.
+
+    FIND LAST RowErrors NO-ERROR.
+
+    ASSIGN iErrorSequence = IF AVAILABLE RowErrors THEN RowErrors.ErrorSequence + 1 ELSE 1.
+
+    CREATE RowErrors.
+    ASSIGN RowErrors.ErrorSequence   = iErrorSequence
+           RowErrors.ErrorNumber     = pErrorNumber
+           RowErrors.ErrorType       = "EMS":U
+           RowErrors.ErrorParameters = TRIM(pErrorParameters).
+
+    RUN utp/ut-msgs.p (INPUT "CODTYPE":U,
+                       INPUT RowErrors.ErrorNumber,
+                       INPUT RowErrors.ErrorParameters).
+
+    CASE TRIM(RETURN-VALUE):
+        WHEN "2":U THEN
+            ASSIGN RowErrors.ErrorSubType = "WARNING":U.
+        WHEN "3":U THEN
+            ASSIGN RowErrors.ErrorSubType = "QUESTION":U.
+        WHEN "4":U THEN
+            ASSIGN RowErrors.ErrorSubType = "INFORMATION":U.
+        OTHERWISE
+            ASSIGN RowErrors.ErrorSubType = "ERROR":U.
+    END CASE.
+
+    RUN utp/ut-msgs.p (INPUT "MSG":U,
+                       INPUT RowErrors.ErrorNumber,
+                       INPUT RowErrors.ErrorParameters).
+
+    ASSIGN RowErrors.ErrorDescription = TRIM(RETURN-VALUE).
+
+    RUN utp/ut-msgs.p (INPUT "HELP":U,
+                       INPUT RowErrors.ErrorNumber,
+                       INPUT RowErrors.ErrorParameters).
+
+    ASSIGN RowErrors.ErrorHelp = TRIM(RETURN-VALUE).
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piCriarTtRegistro Include 
+PROCEDURE piCriarTtRegistro PRIVATE :
+/*------------------------------------------------------------------------------
+  Purpose:     Criar registro na temp-table "ttRegistro".
+  Parameters:  INPUT pRegistro (CHARACTER).
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    DEFINE INPUT  PARAMETER pTabelaOBC AS CHARACTER   NO-UNDO.
+    DEFINE INPUT  PARAMETER pId        AS CHARACTER   NO-UNDO.
+    DEFINE INPUT  PARAMETER pRegistro  AS CHARACTER   NO-UNDO.
+
+    DEFINE VARIABLE iSequencia LIKE ttRegistro.sequencia NO-UNDO.
+
+
+    /* no caso da conta-contabil estava aparecendo v rias vezes a mesma linha */
+    if  pTabelaOBC = "CONTA_CONTABIL" then do:
+        if  can-find(first ttRegistro
+                     where ttRegistro.tabela   = pTabelaOBC
+                     and   ttRegistro.registro = pRegistro) then RETURN "OK":U.
+    end. /* if  pTabelaOBC = "CONTA_CONABIL" then do: */
+
+    FIND LAST ttRegistro NO-ERROR.
+
+    ASSIGN iSequencia = IF AVAILABLE ttRegistro THEN ttRegistro.sequencia + 1 ELSE 1.
+
+    CREATE ttRegistro.
+    ASSIGN ttRegistro.sequencia = iSequencia
+           ttRegistro.tabela    = pTabelaOBC
+           ttRegistro.id        = pId
+           ttRegistro.registro  = pRegistro.
+    
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piDesconectarWebService Include 
+PROCEDURE piDesconectarWebService PRIVATE :
+/*------------------------------------------------------------------------------
+  Purpose:     Desconectar o Web Service.
+  Parameters:  <none>
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    IF VALID-HANDLE(hPortType) THEN
+        DELETE OBJECT hPortType.
+
+    ASSIGN hPortType = ?.
+
+    IF VALID-HANDLE(hServer) THEN DO:
+        IF hServer:CONNECTED() THEN
+            hServer:DISCONNECT() NO-ERROR.
+
+        DELETE OBJECT hServer.
+    END.
+
+    ASSIGN hServer = ?.
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piEnviarInfoWebService Include 
+PROCEDURE piEnviarInfoWebService :
+/*------------------------------------------------------------------------------
+  Purpose:     Enviar informa‡äes para o Web Service.
+  Parameters:  <none>
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    DEFINE INPUT  PARAMETER pTabelaOBC AS CHARACTER   NO-UNDO.
+    DEFINE INPUT  PARAMETER pId        AS CHARACTER   NO-UNDO.
+    DEFINE INPUT  PARAMETER pRegistro  AS CHARACTER   NO-UNDO.
+
+    DEFINE VARIABLE cRetorno  AS CHARACTER NO-UNDO INITIAL "":U.
+    DEFINE VARIABLE lExiste   AS LOGICAL   NO-UNDO.
+    
+    DEFINE VARIABLE iSituacao AS INTEGER   NO-UNDO.
+            
+    RUN piExiste-integrado(INPUT pTabelaOBC, INPUT pRegistro, OUTPUT lExiste).
+    
+    IF lExiste THEN ASSIGN pAcao = "A":U.
+               ELSE ASSIGN pAcao = "I":U.
+    
+    if  pTabelaOBC = "PLANO_CONTA":U then do:
+        if gc-plano   = "APAGA":U 
+        then assign pAcao = "E":U.
+        else assign pAcao = "I":U.
+    end.
+    
+    RUN VALUE(vOPERATION) IN hPortType (INPUT  pAcao,
+                                        INPUT  pTabelaOBC,
+                                        INPUT  0,   /*pId*/ 
+                                        INPUT  pRegistro,
+                                        OUTPUT cRetorno) NO-ERROR.
+    
+    IF ERROR-STATUS:ERROR THEN DO:
+        IF  VALID-HANDLE(ERROR-STATUS:ERROR-OBJECT-DETAIL) THEN do:
+        
+            RUN piCriarRowErrors IN THIS-PROCEDURE (INPUT 17006,
+                                                    INPUT "Erro ao chamar a opera‡Æo do Web Service":U +
+                                                          "~~":U +
+                                                          ERROR-STATUS:ERROR-OBJECT-DETAIL:SOAP-FAULT-STRING).
+        end.
+        ELSE
+            DO  iContErroStatus = 1 TO ERROR-STATUS:NUM-MESSAGES:
+                RUN piCriarRowErrors IN THIS-PROCEDURE (INPUT 17006,
+                                                        INPUT "Erro ao chamar a opera‡Æo do Web Service":U +
+                                                              "~~":U +
+                                                              ERROR-STATUS:GET-MESSAGE(iContErroStatus) + CHR(10) + "Favor entrar em contato com a TIC da Intelbras.":U).
+            END.
+
+        RUN piDesconectarWebService IN THIS-PROCEDURE.
+
+        RETURN "NOK":U.
+    END.
+    ELSE DO:
+        ASSIGN iSituacao = 1. /* Ativo */
+        RUN piCria-integrado(INPUT pTabelaOBC, INPUT pRegistro, INPUT iSituacao).
+    END.
+
+    IF  NOT cRetorno BEGINS "Registros inseridos":U THEN DO:
+        RUN piCriarRowErrors IN THIS-PROCEDURE (INPUT 17006,
+                                                INPUT "Retorno: ":U + TRIM(cRetorno)).
+
+        RETURN "NOK":U.
+    END.
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piExiste-integrado Include 
+PROCEDURE piExiste-integrado :
+/*------------------------------------------------------------------------------
+  Purpose:     
+    Notes:       
+------------------------------------------------------------------------------*/
+
+    DEFINE INPUT  PARAMETER pTabelaOBC AS CHARACTER NO-UNDO.
+    DEFINE INPUT  PARAMETER pRegistro  AS CHARACTER NO-UNDO.
+    DEFINE OUTPUT PARAMETER pExiste    AS LOGICAL   NO-UNDO.
+    
+    DEFINE VARIABLE i-moeda   LIKE moeda.mo-codigo  NO-UNDO.
+    DEFINE VARIABLE i-posicao AS INTEGER FORMAT '9' NO-UNDO.
+
+    CASE pTabelaOBC:
+        WHEN "CENTRO_CUSTO":U   THEN DO:
+            IF CAN-FIND(FIRST int-integrado-obc
+                        WHERE int-integrado-obc.cod-tabela = pTabelaOBC
+                        AND   trim(ENTRY(1, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,1,3)  /* Unid.Neg.*/
+                        AND   trim(ENTRY(2, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,4,5)  /* CCusto   */
+                        AND   trim(ENTRY(3, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,10,3) /* Estabel. */ 
+                        AND   int-integrado-obc.idi-situacao = 1 /* Ativo */) 
+            THEN ASSIGN pExiste = TRUE.
+            ELSE ASSIGN pExiste = FALSE.
+        END.
+        WHEN "NCM":U            THEN DO:
+            IF CAN-FIND(FIRST int-integrado-obc
+                        WHERE int-integrado-obc.cod-tabela = pTabelaOBC
+                        AND   trim(int-integrado-obc.chave-tabela) = SUBSTRING(pRegistro,1,10) /* Class.Fisc. */
+                        AND   int-integrado-obc.idi-situacao = 1 /* Ativo */) 
+            THEN ASSIGN pExiste = TRUE.
+            ELSE ASSIGN pExiste = FALSE.
+        END.
+        WHEN "COND_PGTO":U      THEN DO:
+            IF CAN-FIND(FIRST int-integrado-obc
+                        WHERE int-integrado-obc.cod-tabela = pTabelaOBC
+                        AND   trim(int-integrado-obc.chave-tabela) = entry(1,pRegistro,"#") /* Cond.Pagto */
+                        AND   int-integrado-obc.idi-situacao = 1 /* Ativo */) 
+            THEN ASSIGN pExiste = TRUE.
+            ELSE ASSIGN pExiste = FALSE.
+        END.
+        WHEN "CONTA_CONTABIL":U THEN DO:
+            IF CAN-FIND(FIRST int-integrado-obc
+                        WHERE int-integrado-obc.cod-tabela = pTabelaOBC
+                        AND   trim(int-integrado-obc.chave-tabela) = SUBSTRING(pRegistro,18,8) /* Cta.Ctbl */
+                        AND   int-integrado-obc.idi-situacao = 1 /* Ativo */) 
+            THEN ASSIGN pExiste = TRUE.
+            ELSE ASSIGN pExiste = FALSE.
+        END.
+        WHEN "FORNECEDOR":U     THEN DO:
+            IF CAN-FIND(FIRST int-integrado-obc
+                        WHERE int-integrado-obc.cod-tabela = pTabelaOBC
+                        AND   trim(int-integrado-obc.chave-tabela) = SUBSTRING(pRegistro,1,9) /* Fornecedor */
+                        AND   int-integrado-obc.idi-situacao = 1 /* Ativo */) 
+            THEN ASSIGN pExiste = TRUE.
+            ELSE ASSIGN pExiste = FALSE.
+        END.
+        WHEN "PLANO_CONTA":U    THEN DO:
+            IF CAN-FIND(FIRST int-integrado-obc
+                        WHERE int-integrado-obc.cod-tabela = pTabelaOBC
+                        AND   trim(ENTRY(1, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,1,3)  /* Unid.Neg.*/
+                        AND   trim(ENTRY(2, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,4,5)  /* CCusto   */
+                        AND   trim(ENTRY(3, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,10,3) /* Estabel. */ 
+                        AND   trim(ENTRY(4, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,18,8) /* CtaCtbl. */
+                        AND   int-integrado-obc.idi-situacao = 1 /* Ativo */)
+            THEN ASSIGN pExiste = TRUE.
+            ELSE ASSIGN pExiste = FALSE.
+        END.
+        WHEN "COTACAO_MOEDA":U THEN DO:
+        
+            ASSIGN i-moeda = int(SUBSTRING(pRegistro,1,2)) NO-ERROR.
+            IF  ERROR-STATUS:ERROR 
+            THEN ASSIGN i-moeda   = int(SUBSTRING(pRegistro,1,1))
+                        i-posicao = 7.
+            ELSE ASSIGN i-moeda   = int(SUBSTRING(pRegistro,1,2))
+                        i-posicao = 8.
+
+            IF CAN-FIND(FIRST int-integrado-obc
+                        WHERE int-integrado-obc.cod-tabela = pTabelaOBC
+                        AND   trim(ENTRY(1, int-integrado-obc.chave-tabela, ";")) = string(i-moeda)  /* Moeda */
+                        AND   trim(ENTRY(2, int-integrado-obc.chave-tabela, ";")) = SUBSTRING(pRegistro,i-posicao,10)  /* Data  */
+                        AND   int-integrado-obc.idi-situacao = 1 /* Ativo */) 
+            THEN ASSIGN pExiste = TRUE.
+            ELSE ASSIGN pExiste = FALSE.
+            
+        END.
+    END CASE.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piIntegracao Include 
+PROCEDURE piIntegracao :
+/*------------------------------------------------------------------------------
+  Purpose:     Inicializar a API.
+  Parameters:  <none>
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    RUN piConectarWebService IN THIS-PROCEDURE.
+
+    IF  RETURN-VALUE = "NOK":U THEN
+        RETURN ERROR.
+
+    FOR EACH ttRegistro:
+    
+        RUN piEnviarInfoWebService IN THIS-PROCEDURE (INPUT ttRegistro.tabela, 
+                                                      INPUT ttRegistro.id,     
+                                                      INPUT ttRegistro.registro).
+    END.
+    
+    RUN piDesconectarWebService IN THIS-PROCEDURE.
+
+    /*
+    OUTPUT TO VALUE("\\totvs\spool\integracao-sdcv.txt":U) APPEND CONVERT TARGET "iso8859-1":U. 
+    FOR EACH ttRegistro:                                                                  
+        DISPLAY ttRegistro.sequencia                                                      
+                ttRegistro.tabela                                                         
+                ttRegistro.id                                                             
+                ttRegistro.registro                                                       
+            WITH SCROLLABLE.                                                              
+    END.                                                                                  
+    OUTPUT CLOSE.                                                                         
+    */
+    
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piLimparRowErrors Include 
+PROCEDURE piLimparRowErrors :
+/*------------------------------------------------------------------------------
+  Purpose:     Limpar a temp-table "RowErrors".
+  Parameters:  <none>
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    EMPTY TEMP-TABLE RowErrors.
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+
+&ANALYZE-SUSPEND _UIB-CODE-BLOCK _PROCEDURE piLimparTtRegistro Include 
+PROCEDURE piLimparTtRegistro PRIVATE :
+/*------------------------------------------------------------------------------
+  Purpose:     Limpar a temp-table "ttRegistro".
+  Parameters:  <none>
+  Notes:       <none>
+------------------------------------------------------------------------------*/
+    EMPTY TEMP-TABLE ttRegistro.
+
+    RETURN "OK":U.
+
+END PROCEDURE.
+
+/* _UIB-CODE-BLOCK-END */
+&ANALYZE-RESUME
+

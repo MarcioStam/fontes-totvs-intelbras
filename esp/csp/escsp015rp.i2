@@ -1,0 +1,17 @@
+for first tt-operacao
+    where tt-operacao.cod-estabel = tt-digita.cod-estabel
+      and tt-operacao.it-codigo   = operacao.it-codigo
+      and tt-operacao.gm-codigo   = c-gm-codigo: end.
+
+if not avail tt-operacao
+then do:
+     create tt-operacao.
+     assign tt-operacao.cod-estabel = tt-digita.cod-estabel
+            tt-operacao.it-codigo   = operacao.it-codigo   
+            tt-operacao.gm-codigo   = c-gm-codigo.
+end. /* if not avail tt-operacao */
+
+assign tt-operacao.tempo      = tt-operacao.tempo      + de-tempo-maquin
+       tt-operacao.quantidade = tt-operacao.quantidade + 1.
+find current tt-operacao no-error.
+

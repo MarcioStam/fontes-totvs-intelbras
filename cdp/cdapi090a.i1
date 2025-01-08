@@ -1,0 +1,1295 @@
+/*                                                                                      */
+/*     Include: cdp/cdapi090a.i1                                                        */
+/*     Funá∆o.: Include de integraá∆o com Samsung Visibiliy parte da API de Integraá∆o  */
+/*              Geral - cdp/cdapi090.p                                                  */
+/*                                                                                      */
+        
+IF  lSCI THEN SCI: DO:
+
+    /**    
+    {utp/ut-liter.i "Integraá∆o_com_SCI" *}
+    RUN pi-inicializar IN h-acomp (INPUT RETURN-VALUE).
+    
+    {utp/ut-liter.i "Iniciando_integraá∆o" *}
+    RUN pi-acompanhar IN h-acomp (INPUT RETURN-VALUE).
+    **/        
+
+    ASSIGN iIntegracao = 2.
+    
+    /**** Buscar URL ****/
+    FIND FIRST tab-generica WHERE tab-generica.utilizacao = "SETSCI":U NO-LOCK NO-ERROR.
+    IF  NOT AVAILABLE tab-generica THEN
+        LEAVE SCI.
+
+    IF AVAIL tab-generica THEN DO:
+    
+        /* DPC *//* APPC *//* UPC */
+        IF  c-nom-prog-dpc-mg97  <> ""
+        AND c-nom-prog-dpc-mg97  <> ?
+        OR  c-nom-prog-appc-mg97 <> ""
+        AND c-nom-prog-appc-mg97 <> ?
+        OR  c-nom-prog-upc-mg97  <> ""
+        AND c-nom-prog-upc-mg97  <> ? THEN DO:
+        
+            RUN upcClean('beforeValidateXml').
+            RUN upcParameter('beforeValidateXml', 'integracao',  cTable + "|" + STRING(rRowid)).
+            RUN upcPoint('beforeValidateXml').
+             
+            FOR FIRST tt-epc                                           
+                WHERE tt-epc.cod-event     = "beforeValidateXml":U     
+                  AND tt-epc.cod-parameter = "integracao":U            
+                  AND tt-epc.val-parameter <> "":                      
+                ASSIGN cValue = STRING(tt-epc.val-parameter).          
+                IF cValue = "NOK" THEN LEAVE SCI.                   
+            END.
+        END.
+    END.
+    
+    ASSIGN c-nome-servico = ""
+           c-desc-msg     = "" 
+           c-status-msg   = ""
+           cKeyAux        = "". 
+           
+    CASE cTable:
+        WHEN "B-PED-VENDA" THEN ASSIGN cTable = "PED-VENDA".
+    END CASE.     
+    
+    CASE cTP:
+        /* TRACKING POINTS ********************************************************************************/
+        WHEN "TP1":U THEN DO:
+ 
+
+            FIND ped-venda NO-LOCK WHERE ROWID(ped-venda) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE ped-venda THEN DO:
+
+                {utp/ut-liter.i "Pedido_de_Venda_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                {utp/ut-liter.i "Pedido_de_Venda" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + ped-venda.nome-abrev + "|" + ped-venda.nr-pedcli + "."
+                       cKey    = TRIM(ped-venda.nome-abrev) + "|" + TRIM(ped-venda.nr-pedcli).
+            END.
+
+            /**** Montagem do XML com as constantes ****/
+            ASSIGN cDate = fnDataTp("PED-VENDA",cTP,cKey,TODAY,TIME).
+
+            CREATE tt-salesOrder-tp1.
+            ASSIGN tt-salesOrder-tp1.soNo               = TRIM(ped-venda.nome-abrev) + "|" + TRIM(ped-venda.nr-pedcli)
+                   tt-salesOrder-tp1.issueDate          = cDate
+                   tt-salesOrder-tp1.salesDivision      = fn-trata-caracteres(ped-venda.cod-unid-negoc)
+                   tt-salesOrder-tp1.totalAmount        = replace-value-dec-val(ped-venda.vl-tot-ped)
+                   tt-salesOrder-tp1.incoterm           = if  ped-venda.cidade-cif <> "" then "CIF" else "FOB"
+                   tt-salesOrder-tp1.salesChannel       = STRING(ped-venda.cod-canal-venda)
+                   tt-salesOrder-tp1.rwid               = rowid(tt-salesOrder-tp1).
+                   
+            FOR FIRST transporte NO-LOCK
+                WHERE transporte.nome-abrev = ped-venda.nome-transp:
+                ASSIGN tt-salesOrder-tp1.carrierFederalId = transporte.cgc.
+            END.
+
+            FOR FIRST estabelec
+                WHERE estabelec.cod-estabel = ped-venda.cod-estabel NO-LOCK:
+                ASSIGN tt-salesOrder-tp1.shiperFederalId = estabelec.cgc
+                       tt-salesOrder-tp1.shiperName      = fn-trata-caracteres(estabelec.nome).
+            END.
+                   
+            CASE cOperation:
+                WHEN "CREATE" THEN ASSIGN tt-salesOrder-tp1.actionType = "C" NO-ERROR.
+                WHEN "INSERT" THEN ASSIGN tt-salesOrder-tp1.actionType = "C" NO-ERROR.
+                WHEN "UPSERT" THEN ASSIGN tt-salesOrder-tp1.actionType = "U" NO-ERROR.
+                WHEN "UPDATE" THEN ASSIGN tt-salesOrder-tp1.actionType = "U" NO-ERROR.
+                WHEN "DELETE" THEN ASSIGN tt-salesOrder-tp1.actionType = "D" NO-ERROR.
+            END CASE.        
+
+            FOR FIRST emitente NO-LOCK
+                WHERE emitente.nome-abrev = ped-venda.nome-abrev:
+    
+                ASSIGN tt-salesOrder-tp1.customerName        =   fn-trata-caracteres(emitente.nome-emit)
+                       tt-salesOrder-tp1.customerCategory    =   STRING(emitente.cod-gr-cli)
+                       tt-salesOrder-tp1.customerFederalId   =   IF emitente.cgc <> "" THEN emitente.cgc ELSE STRING(emitente.cod-emitente,"99999999999")
+                       tt-salesOrder-tp1.customerState       =   fn-trata-caracteres(emitente.estado)
+                       tt-salesOrder-tp1.customerCity        =   fn-trata-caracteres(emitente.cidade)
+                       tt-salesOrder-tp1.customerAddress     =   fn-trata-caracteres(emitente.endereco) 
+                       tt-salesOrder-tp1.customerZipcod      =   emitente.cep                            NO-ERROR.
+            END.
+    
+            ASSIGN tt-salesOrder-tp1.customerDeliveryNo = ped-venda.nr-pedcli NO-ERROR.
+            
+            ASSIGN tt-salesOrder-tp1.rdd = STRING(YEAR(ped-venda.dt-entrega),"9999") + "-" + STRING(MONTH(ped-venda.dt-entrega),"99") + "-" + STRING(DAY(ped-venda.dt-entrega),"99") + "T" + 
+                                           "00:00:00".
+    
+            FOR EACH ped-item NO-LOCK
+               WHERE ped-item.nome-abrev   = ped-venda.nome-abrev
+               AND   ped-item.nr-pedcli    = ped-venda.nr-pedcli:
+                
+                IF tt-salesOrder-tp1.actionType = "U" AND ped-item.cod-sit-item >= 4 then
+                    LEAVE SCI.
+                
+                ASSIGN cDate = STRING(YEAR(ped-item.dt-entrega),"9999") + "-" + STRING(MONTH(ped-item.dt-entrega),"99") + "-" + STRING(DAY(ped-item.dt-entrega),"99") + "T" + 
+                               "00:00:00".
+
+                /**** Atribuiá∆o das TAGs ****/
+                CREATE tt-item-tp1.
+                
+                ASSIGN tt-item-tp1.itemOrder = STRING(ped-item.nr-sequencia)
+                       tt-item-tp1.sku  = fn-trata-caracteres(ped-item.it-codigo)
+                       tt-item-tp1.qty  = replace-value-dec-sci(ped-item.qt-pedida)
+                       tt-item-tp1.rdd = cDate 
+                       tt-item-tp1.rwid = rowid(tt-salesOrder-tp1) NO-ERROR.
+    
+                FOR FIRST ITEM NO-LOCK
+                    WHERE ITEM.it-codigo = ped-item.it-codigo:
+    
+                    ASSIGN tt-item-tp1.category = item.fm-cod-com NO-ERROR.     
+
+                    ASSIGN d-vol-tot = (ITEM.altura * ITEM.largura * ITEM.comprim) * ped-item.qt-pedida  
+                           d-vol-un  = (ITEM.altura * ITEM.largura * ITEM.comprim)
+                           d-tot-pes = item.peso-bruto * ped-item.qt-pedida.
+    
+                    ASSIGN tt-item-tp1.description = fn-trata-caracteres(ITEM.desc-item)      
+                           tt-item-tp1.unit        = ITEM.un                                           
+                           tt-item-tp1.volumeTotal = replace-value-dec-sci(d-vol-tot)         
+                           tt-item-tp1.weightTotal = replace-value-dec-sci(d-tot-pes)          
+                           tt-item-tp1.volumeUnit  = replace-value-dec-sci(d-vol-un)             
+                           tt-item-tp1.weightUnit  = replace-value-dec-sci(item.peso-bruto)     NO-ERROR.
+                END.
+            END.
+            
+            DATASET salesOrderGo-tp1:WRITE-XML("LONGCHAR",lcXML, TRUE,?,"",no,yes).
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<salesOrder "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</salesOrder>") + LENGTH("</salesOrder>")).
+                   
+            ASSIGN cMethod      = "sendSalesOrder":U
+                   cServiceName = "sci-document":U
+                   cService     = "sciDocument":U NO-ERROR.
+        END.
+        WHEN "TP2":U THEN DO:
+        
+            FIND FIRST ped-ent NO-LOCK WHERE ROWID(ped-ent) = rRowid NO-ERROR.
+            IF NOT AVAILABLE ped-ent THEN DO:
+
+                {utp/ut-liter.i "Entrega_do_Item_Pedido_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                {utp/ut-liter.i "Entrega_do_Item_Pedido_n∆o_cadastrado" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + ped-ent.nome-abrev           + "|" + ped-ent.nr-pedcli  + 
+                                                "|"  + STRING(ped-ent.nr-sequencia) + "|" + ped-ent.it-codigo  + 
+                                                "|"  + ped-ent.cod-refer            + "|" + STRING(ped-ent.nr-entrega) + "."
+                       cKey    = TRIM(ped-ent.nome-abrev)     + "|" + TRIM(ped-ent.nr-pedcli) + "|" + 
+                                 STRING(ped-ent.nr-sequencia) + "|" + ped-ent.it-codigo + "|" + 
+                                 ped-ent.cod-refer            + "|" + STRING(ped-ent.nr-entrega).
+            END.
+
+            /**** Montagem do XML com as constantes ****/
+            CREATE tt-deliveryOrder-tp4.
+            
+            CASE cOperation:
+                WHEN "CREATE" THEN ASSIGN tt-deliveryOrder-tp4.actionType = "C" NO-ERROR.
+                WHEN "INSERT" THEN ASSIGN tt-deliveryOrder-tp4.actionType = "C" NO-ERROR.
+                WHEN "UPSERT" THEN ASSIGN tt-deliveryOrder-tp4.actionType = "U" NO-ERROR.
+                WHEN "UPDATE" THEN ASSIGN tt-deliveryOrder-tp4.actionType = "U" NO-ERROR.
+                WHEN "DELETE" THEN ASSIGN tt-deliveryOrder-tp4.actionType = "D" NO-ERROR.
+            END CASE.        
+            
+            ASSIGN cDate = fnDataTp("PED-ENT",cTP,cKey,TODAY,TIME).    
+
+            ASSIGN tt-deliveryOrder-tp4.doNo       = TRIM(ped-ent.nome-abrev)     + "|" + TRIM(ped-ent.nr-pedcli) + "|" + 
+                                                     STRING(ped-ent.nr-sequencia) + "|" + TRIM(ped-ent.it-codigo) + "|" + 
+                                                     TRIM(ped-ent.cod-refer)      + "|" + STRING(ped-ent.nr-entrega)         
+                   tt-deliveryOrder-tp4.soNo       = TRIM(ped-ent.nome-abrev)     + "|" + TRIM(ped-ent.nr-pedcli)                                    
+                   tt-deliveryOrder-tp4.issueDate  = cDate                                                                                           
+                   tt-deliveryOrder-tp4.rdd        = STRING(YEAR(ped-ent.dt-entrega),"9999") + "-" + STRING(MONTH(ped-ent.dt-entrega),"99") + "-" + STRING(DAY(ped-ent.dt-entrega),"99") + "T" + 
+                                                     SUBSTRING(ped-ent.hr-entrega,1,2) + ":" + SUBSTRING(ped-ent.hr-entrega,3,2) + ":" + SUBSTRING(ped-ent.hr-entrega,5,2)
+                   tt-deliveryOrder-tp4.rwid       = ROWID(tt-deliveryOrder-tp4)
+                   tt-deliveryOrder-tp4.orderType  = "Vendas"
+                   tt-deliveryOrder-tp4.shippingCondition = "Normal" no-error.
+                   
+            FOR FIRST ped-venda NO-LOCK
+                WHERE ped-venda.nome-abrev = ped-ent.nome-abrev
+                AND   ped-venda.nr-pedcli  = ped-ent.nr-pedcli:
+            END.    
+                   
+            FOR FIRST estabelec
+                WHERE estabelec.cod-estabel = ped-venda.cod-estabel NO-LOCK:
+                ASSIGN tt-deliveryOrder-tp4.shiperFederalId = estabelec.cgc.
+            END.
+            
+            FOR FIRST emitente
+                WHERE emitente.cod-emitente = ped-venda.cod-emitente NO-LOCK:
+                ASSIGN tt-deliveryOrder-tp4.customerFederalId = IF emitente.cgc <> "" THEN emitente.cgc ELSE STRING(emitente.cod-emitente,"99999999999").
+            END.
+            
+            FOR FIRST transporte NO-LOCK
+                WHERE transporte.nome-abrev = ped-venda.nome-transp:
+                       
+                CASE transporte.via-transp:
+                    WHEN 1 THEN ASSIGN tt-deliveryOrder-tp4.shipType = "FTL".
+                    WHEN 2 THEN ASSIGN tt-deliveryOrder-tp4.shipType = "AIR".
+                    WHEN 3 THEN ASSIGN tt-deliveryOrder-tp4.shipType = "VESSEL".
+                    WHEN 4 THEN ASSIGN tt-deliveryOrder-tp4.shipType = "RAIL".
+                    WHEN 5 THEN ASSIGN tt-deliveryOrder-tp4.shipType = "LTL-RAIL".
+                    WHEN 6 THEN ASSIGN tt-deliveryOrder-tp4.shipType = "LTL-FERRY".
+                    WHEN 7 THEN ASSIGN tt-deliveryOrder-tp4.shipType = "LTL-AIR".
+                    OTHERWISE ASSIGN tt-deliveryOrder-tp4.shipType = "OTHERS".
+                END CASE.
+            END. 
+            
+            IF tt-deliveryOrder-tp4.shipType = "" THEN
+                ASSIGN tt-deliveryOrder-tp4.shipType = "OTHERS".    
+            
+            FOR FIRST ped-item NO-LOCK
+                WHERE ped-item.nome-abrev   = ped-ent.nome-abrev
+                AND   ped-item.nr-pedcli    = ped-ent.nr-pedcli
+                AND   ped-item.nr-sequencia = ped-ent.nr-sequencia
+                AND   ped-item.it-codigo    = ped-ent.it-codigo 
+                AND   ped-item.cod-refer    = ped-ent.cod-refer:
+                
+                FOR FIRST loc-entr NO-LOCK
+                    WHERE loc-entr.nome-abrev  = ped-item.nome-abrev
+                    AND   loc-entr.cod-entrega = ped-item.cod-entrega:
+                
+                    ASSIGN    tt-deliveryOrder-tp4.shipToName      = fn-trata-caracteres(ped-item.nome-abrev + " - " + ped-item.cod-entrega) 
+                              tt-deliveryOrder-tp4.shipToFederalId = IF loc-entr.cgc <> "" THEN TRIM(loc-entr.cgc) ELSE "00000000000" 
+                              tt-deliveryOrder-tp4.shipToState     = loc-entr.estado                          
+                              tt-deliveryOrder-tp4.shipToCity      = fn-trata-caracteres(loc-entr.cidade)      
+                              tt-deliveryOrder-tp4.shipToAddress   = fn-trata-caracteres(loc-entr.endereco) 
+                              tt-deliveryOrder-tp4.shipToZipcode   = IF loc-entr.cep <> "" THEN loc-entr.cep ELSE "0" NO-ERROR.
+                END.
+                IF NOT AVAIL loc-entr THEN
+                    FOR FIRST loc-entr NO-LOCK
+                        WHERE loc-entr.nome-abrev  = ped-venda.nome-abrev
+                        AND   loc-entr.cod-entrega = ped-venda.cod-entrega:
+                    
+                        ASSIGN    tt-deliveryOrder-tp4.shipToName      = fn-trata-caracteres(ped-item.nome-abrev + " - " + ped-item.cod-entrega) 
+                                  tt-deliveryOrder-tp4.shipToFederalId = IF loc-entr.cgc <> "" THEN TRIM(loc-entr.cgc) ELSE "00000000000" 
+                                  tt-deliveryOrder-tp4.shipToState     = loc-entr.estado                          
+                                  tt-deliveryOrder-tp4.shipToCity      = fn-trata-caracteres(loc-entr.cidade)      
+                                  tt-deliveryOrder-tp4.shipToAddress   = fn-trata-caracteres(loc-entr.endereco) 
+                                  tt-deliveryOrder-tp4.shipToZipcode   = IF loc-entr.cep <> "" THEN loc-entr.cep ELSE "0" NO-ERROR.
+                    END.
+                
+                CREATE tt-item-tp4.
+                ASSIGN tt-item-tp4.itemOrder    = STRING(ped-ent.nr-sequencia)           
+                       tt-item-tp4.itemOrderSO  = STRING(ped-ent.nr-sequencia)         
+                       tt-item-tp4.sku          = fn-trata-caracteres(ped-ent.it-codigo)       
+                       tt-item-tp4.qty          = IF ped-item.cod-sit-item = 3 THEN "0.0000" ELSE replace-value-dec-sci(ped-ent.qt-pedida)     
+                       tt-item-tp4.rwid         = ROWID(tt-deliveryOrder-tp4)    NO-ERROR.
+
+                FOR FIRST item NO-LOCK
+                    WHERE item.it-codigo = ped-ent.it-codigo:
+                        ASSIGN d-vol-tot = (ITEM.altura * ITEM.largura * ITEM.comprim) * ped-ent.qt-pedida  
+                               d-vol-un  = (ITEM.altura * ITEM.largura * ITEM.comprim)
+                               d-tot-pes = item.peso-bruto * ped-ent.qt-pedida.
+                    ASSIGN tt-item-tp4.volumeTotal  = replace-value-dec-sci(d-vol-tot)     
+                           tt-item-tp4.weightTotal  = replace-value-dec-sci(d-tot-pes) 
+                           tt-item-tp4.description  = fn-trata-caracteres(item.desc-item)  
+                           tt-item-tp4.category     = item.fm-cod-com                       
+                           tt-item-tp4.unit         = item.un.                                     
+                END.
+            END.
+
+            DATASET deliveryOrderGo-tp4:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            EMPTY TEMP-TABLE tt-deliveryOrder-tp4.
+            EMPTY TEMP-TABLE tt-item-tp4.
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<deliveryOrder "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</deliveryOrder>") + LENGTH("</deliveryOrder>")).
+    
+            ASSIGN cMethod      = "sendDeliveryOrder":U
+                   cServiceName = "sci-document":U
+                   cService     = "sciDocument":U NO-ERROR.
+        END.
+        WHEN "TP3":U THEN DO:
+
+            FIND ped-venda NO-LOCK WHERE ROWID(ped-venda) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE ped-venda THEN DO:
+                {utp/ut-liter.i "Pedido_de_Venda_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                {utp/ut-liter.i "Pedido_de_Venda" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + ped-venda.nome-abrev + "|" + ped-venda.nr-pedcli + "."
+                       cKey    = TRIM(ped-venda.nome-abrev) + "|" + TRIM(ped-venda.nr-pedcli).
+            END.
+        
+            ASSIGN cDate = fnDataTp("PED-VENDA",cTP,cKey,TODAY,TIME).        
+
+            CREATE tt-tracking.
+            ASSIGN tt-tracking.refNo          = TRIM(ped-venda.nome-abrev) + "|" + TRIM(ped-venda.nr-pedcli)
+                   tt-tracking.refType        = "1"
+                   tt-tracking.trackingCode   = "TP1010-10"
+                   tt-tracking.checkpointCode = "WH"
+                   tt-tracking.trackingDate   = cDate
+                   tt-tracking.remarks        = "".
+                   
+            DATASET trackingGo:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<tracking "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</tracking>") + LENGTH("</tracking>")).
+                   
+            ASSIGN cMethod      = "sendTrackingPoint":U
+                   cServiceName = "sci-tracking":U
+                   cService     = "sciTracking":U NO-ERROR.
+        END.
+        WHEN "TP4":U THEN DO:
+
+            FIND ped-venda NO-LOCK WHERE ROWID(ped-venda) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE ped-venda THEN DO:
+
+                {utp/ut-liter.i "Pedido_de_Venda_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                {utp/ut-liter.i "Pedido_de_Venda" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + ped-venda.nome-abrev + "|" + ped-venda.nr-pedcli + "."
+                       cKey    = TRIM(ped-venda.nome-abrev) + "|" + TRIM(ped-venda.nr-pedcli).
+            END.
+            
+            ASSIGN cDate = fnDataTp("PED-VENDA",cTP,cKey,TODAY,TIME).        
+
+            CREATE tt-tracking.
+            ASSIGN tt-tracking.refNo          = TRIM(ped-venda.nome-abrev) + "|" + TRIM(ped-venda.nr-pedcli)
+                   tt-tracking.refType        = "1"
+                   tt-tracking.trackingCode   = "TP1010-15"
+                   tt-tracking.checkpointCode = "WH"
+                   tt-tracking.trackingDate   = cDate
+                   tt-tracking.remarks        = "".
+                   
+            DATASET trackingGo:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<tracking "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</tracking>") + LENGTH("</tracking>")).
+                   
+            ASSIGN cMethod      = "sendTrackingPoint":U
+                   cServiceName = "sci-tracking":U
+                   cService     = "sciTracking":U NO-ERROR.
+
+        END.
+        WHEN "TP5":U THEN DO:
+
+            FIND embarque NO-LOCK WHERE ROWID(embarque) = rRowid NO-ERROR.
+            IF NOT AVAILABLE embarque THEN DO:
+                {utp/ut-liter.i "Embarque_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                {utp/ut-liter.i "Embarque" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + STRING(embarque.cdd-embarq) + "."
+                       cKey    = STRING(embarque.cdd-embarq).
+            END.
+
+            CREATE tt-shipment-TP5.
+            ASSIGN tt-shipment-TP5.shipmentNo = STRING(embarque.cdd-embarq).
+             
+            CASE cOperation:
+                WHEN "CREATE" THEN ASSIGN tt-shipment-TP5.actionType = "C".
+                WHEN "INSERT" THEN ASSIGN tt-shipment-TP5.actionType = "C".
+                WHEN "UPSERT" THEN ASSIGN tt-shipment-TP5.actionType = "U".
+                WHEN "UPDATE" THEN ASSIGN tt-shipment-TP5.actionType = "U".
+                WHEN "DELETE" THEN ASSIGN tt-shipment-TP5.actionType = "D".
+            END CASE.
+            
+            ASSIGN tt-shipment-TP5.issueDate  = fnDataTp("EMBARQUE",cTP,cKey,TODAY,TIME).
+            
+            FOR FIRST estabelec
+                WHERE  estabelec.cod-estabel = embarque.cod-estabel NO-LOCK:
+                ASSIGN tt-shipment-TP5.shiperFederalId = estabel.cgc.
+            END.
+                   
+            FOR FIRST transporte NO-LOCK
+                WHERE transporte.nome-abrev = embarque.nome-transp:
+    
+                ASSIGN tt-shipment-TP5.carrierName      = transporte.nome
+                       tt-shipment-TP5.carrierFederalId = IF transporte.cgc <> "" THEN transporte.cgc ELSE "00000000000"
+                       tt-shipment-TP5.carrierState     = transporte.estado
+                       tt-shipment-TP5.carrierCity      = transporte.cidade
+                       tt-shipment-TP5.carrierAddress   = transporte.endereco
+                       tt-shipment-TP5.carrierZipcode   = transporte.cep.
+                       
+                CASE transporte.via-transp:
+                    WHEN 1 THEN ASSIGN tt-shipment-TP5.shipType = "FTL".
+                    WHEN 2 THEN ASSIGN tt-shipment-TP5.shipType = "AIR".
+                    WHEN 3 THEN ASSIGN tt-shipment-TP5.shipType = "VESSEL".
+                    WHEN 4 THEN ASSIGN tt-shipment-TP5.shipType = "RAIL".
+                    WHEN 5 THEN ASSIGN tt-shipment-TP5.shipType = "LTL-RAIL".
+                    WHEN 6 THEN ASSIGN tt-shipment-TP5.shipType = "LTL-FERRY".
+                    WHEN 7 THEN ASSIGN tt-shipment-TP5.shipType = "LTL-AIR".
+                    OTHERWISE ASSIGN tt-shipment-TP5.shipType = "OTHERS".
+                END CASE.
+            END.                   
+                                
+            FIND FIRST tab-generica NO-LOCK
+                WHERE tab-generica.utilizacao = "SETSCI":U NO-ERROR.
+            
+            IF AVAIL tab-generica AND SUBSTRING(tab-generica.char-2,150,2) <> "" THEN
+                ASSIGN cDate = STRING(YEAR(embarque.dt-embarque),"9999") + "-" + STRING(MONTH(embarque.dt-embarque),"99") + "-" + STRING(DAY(embarque.dt-embarque),"99") + "T" + 
+                               SUBSTRING(tab-generica.char-2,150,2) + ":" + SUBSTRING(tab-generica.char-2,152,2) + ":" + "00". /*Hora Embarque*/
+            ELSE
+                ASSIGN cDate = STRING(YEAR(embarque.dt-embarque),"9999") + "-" + STRING(MONTH(embarque.dt-embarque),"99") + "-" + STRING(DAY(embarque.dt-embarque),"99") + "T" + 
+                               "00:00:00". /*Hora Embarque*/
+                               
+            ASSIGN tt-shipment-TP5.etd         = cDate
+                   tt-shipment-TP5.vehicleCode = embarque.placa
+                   tt-shipment-TP5.vehicleName = embarque.placa.
+                   
+            ASSIGN tt-shipment-TP5.shippingCondition = "Normal".
+            
+            FOR EACH it-pre-fat NO-LOCK
+               WHERE it-pre-fat.cdd-embarq   = embarque.cdd-embarq,
+               FIRST ITEM NO-LOCK
+               WHERE ITEM.it-codigo = it-pre-fat.it-codigo,
+               FIRST ped-venda NO-LOCK
+               WHERE ped-venda.nome-abrev = it-pre-fat.nome-abrev
+               AND   ped-venda.nr-pedcli  = it-pre-fat.nr-pedcli:               
+
+               ASSIGN d-vol-tot = (item.altura * item.largura * item.comprim) * it-pre-fat.qt-alocada
+                      d-tot-pes = item.peso-bruto * it-pre-fat.qt-alocada.
+        
+               CREATE tt-deliveryOrder-TP5.
+               ASSIGN tt-deliveryOrder-TP5.doNo        = TRIM(it-pre-fat.nome-abrev) + "|" + TRIM(it-pre-fat.nr-pedcli) + "|" + STRING(it-pre-fat.nr-sequencia) + "|" + TRIM(it-pre-fat.it-codigo) + "|" + TRIM(it-pre-fat.cod-refer) + "|" + STRING(it-pre-fat.nr-entrega)
+                      tt-deliveryOrder-TP5.accessKey   = ""
+                      tt-deliveryOrder-TP5.itemOrder   = STRING(it-pre-fat.nr-sequencia)
+                      tt-deliveryOrder-TP5.sku         = TRIM(it-pre-fat.it-codigo)
+                      tt-deliveryOrder-TP5.description = TRIM(item.desc-item)
+                      tt-deliveryOrder-TP5.qty         = replace-value-dec-qty(it-pre-fat.qt-alocada)
+                      tt-deliveryOrder-TP5.unit        = item.un
+                      tt-deliveryOrder-TP5.volumeTotal = replace-value-dec-sci(d-vol-tot)
+                      tt-deliveryOrder-TP5.weightTotal = replace-value-dec-sci(d-tot-pes).
+                      
+               FOR FIRST eq-veic
+                   WHERE eq-veic.cod-placa = embarque.placa NO-LOCK,
+                   FIRST eq-tip-veic
+                       WHERE eq-tip-veic.cod-tip-veic = eq-veic.cod-tip-veic NO-LOCK:
+                       
+                   ASSIGN tt-deliveryOrder-TP5.shipToCategory = eq-tip-veic.des-tip-veic.
+               END.
+                      
+               ASSIGN tt-deliveryOrder-TP5.shipToName = fn-trata-caracteres(ped-venda.nome-abrev + " - " + ped-venda.cod-entrega).
+                   
+               FOR FIRST loc-entr
+                   WHERE loc-entr.cod-entrega = ped-venda.cod-entrega
+                     AND loc-entr.nome-abrev  = ped-venda.nome-abrev NO-LOCK:
+                     
+                   ASSIGN tt-deliveryOrder-TP5.shipToFederalId = IF loc-entr.cgc <> "" THEN TRIM(loc-entr.cgc) ELSE "00000000000"
+                          tt-deliveryOrder-TP5.shipToState     = loc-entr.estado
+                          tt-deliveryOrder-TP5.shipToCity      = loc-entr.cidade
+                          tt-deliveryOrder-TP5.shipToAddress   = loc-entr.endereco
+                          tt-deliveryOrder-TP5.shipToZipcode   = IF loc-entr.cep <> "" THEN loc-entr.cep ELSE "0".
+               END.
+            END.
+            
+            IF NOT CAN-FIND(FIRST tt-deliveryOrder-TP5) THEN 
+                ASSIGN tt-shipment-TP5.actionType = "D".
+            
+            DATASET shipmentGo:WRITE-XML("LONGCHAR",lcXML , TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<shipment "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</shipment>") + LENGTH("</shipment>")).
+                   
+            ASSIGN cMethod      = "sendShipment":U
+                   cServiceName = "sci-document":U
+                   cService     = "sciDocument":U NO-ERROR.
+        END.
+        WHEN "TP6":U THEN DO:
+                                       
+            FIND nota-fiscal NO-LOCK WHERE ROWID(nota-fiscal) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE nota-fiscal THEN DO:
+
+                {utp/ut-liter.i "Nota_Fiscal_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                IF NOT CAN-FIND(FIRST ped-venda
+                                WHERE ped-venda.nome-abrev = nota-fiscal.nome-ab-cli
+                                AND   ped-venda.nr-pedcli  = nota-fiscal.nr-pedcli) THEN LEAVE SCI.
+
+                {utp/ut-liter.i "Nota_Fiscal" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis + "."
+                       cKey    = nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis.
+            END.
+            
+            FOR FIRST nota-fiscal NO-LOCK
+                 WHERE ROWID(nota-fiscal) = rRowid,
+                FIRST estabelec OF nota-fiscal NO-LOCK,
+                FIRST emitente  OF nota-fiscal NO-LOCK,
+                FIRST ped-venda NO-LOCK
+                        WHERE ped-venda.nome-abrev = nota-fiscal.nome-ab-cli
+                          AND ped-venda.nr-pedcli = nota-fiscal.nr-pedcli,
+                FIRST loc-entr  NO-LOCK
+                        WHERE  loc-entr.nome-abrev  = ped-venda.nome-abrev
+                          AND  loc-entr.cod-entrega = ped-venda.cod-entrega:
+                   
+                ASSIGN cDate = fnDataTp("NOTA-FISCAL",cTP,cKey,nota-fiscal.dt-emis-nota,TIME).
+               
+                CREATE tt-notafiscal-tp6.
+                ASSIGN tt-notafiscal-tp6.serie               =  TRIM(nota-fiscal.serie)                           
+                       tt-notafiscal-tp6.nNF                 =  STRING(nota-fiscal.nr-nota-fis)                   
+                       tt-notafiscal-tp6.accessKey           =  TRIM(nota-fiscal.cod-chave-aces-nf-eletro)                                                   
+                       tt-notafiscal-tp6.natOp               =  STRING(nota-fiscal.nat-operacao)                    
+                       tt-notafiscal-tp6.issueDate           =  cDate                    
+                       tt-notafiscal-tp6.shipperFederalId    =  estabelec.cgc                               
+                       tt-notafiscal-tp6.customerFederalId   =  IF emitente.cgc <> "" THEN TRIM(emitente.cgc) ELSE STRING(emitente.cod-emitente,"99999999999")                                
+                       tt-notafiscal-tp6.shipToFederalId     =  IF loc-entr.cgc <> "" THEN TRIM(loc-entr.cgc) ELSE "00000000000"                               
+                       tt-notafiscal-tp6.totalAmount         =  replace-value-dec-val(nota-fiscal.vl-tot-nota)                     
+                       tt-notafiscal-tp6.freightAmount       =  replace-value-dec-val(nota-fiscal.vl-frete)                        
+                       tt-notafiscal-tp6.additionalInfo      =  SUBSTRING(nota-fiscal.observ-nota,1,500)
+                       tt-notafiscal-tp6.rwid                =  ROWID(tt-notafiscal-tp6). 
+                       
+                CASE cOperation:
+                    WHEN "CREATE" THEN ASSIGN tt-notafiscal-tp6.actionType = "C".
+                    WHEN "INSERT" THEN ASSIGN tt-notafiscal-tp6.actionType = "C".
+                    WHEN "UPSERT" THEN ASSIGN tt-notafiscal-tp6.actionType = "U".
+                    WHEN "UPDATE" THEN ASSIGN tt-notafiscal-tp6.actionType = "U".
+                    WHEN "DELETE" THEN ASSIGN tt-notafiscal-tp6.actionType = "D".
+                END CASE.
+                       
+                FOR FIRST transporte NO-LOCK
+                    WHERE transporte.nome-abrev = nota-fiscal.nome-transp:
+                    ASSIGN tt-notafiscal-tp6.carrierFederalId = transporte.cgc.
+                END.                   
+                
+                IF tt-notafiscal-tp6.carrierFederalId = "" THEN 
+                    ASSIGN tt-notafiscal-tp6.carrierFederalId = "00000000000".
+                
+                FOR EACH it-nota-fisc  OF nota-fiscal NO-LOCK,
+                    FIRST ITEM         OF it-nota-fisc NO-LOCK,
+                    FIRST natur-oper   OF it-nota-fisc NO-LOCK,
+                    FIRST classif-fisc OF ITEM NO-LOCK:
+
+                    CREATE tt-item-tp6.
+                    ASSIGN tt-item-tp6.sku             =  TRIM(it-nota-fisc.it-codigo)
+                           tt-item-tp6.itemOrder       =  STRING(it-nota-fisc.nr-seq-ped)
+                           tt-item-tp6.description     =  TRIM(ITEM.desc-item)                 
+                           tt-item-tp6.ncm             =  STRING(classif-fisc.cod-ncm,"99999999")           
+                           tt-item-tp6.qty             =  replace-value-dec-qty(it-nota-fisc.qt-faturada[1])    
+                           tt-item-tp6.unit            =  it-nota-fisc.un-fatur[1]       
+                           tt-item-tp6.unitValue       =  replace-value-dec-val(it-nota-fisc.vl-preuni)         
+                           tt-item-tp6.itemAmount      =  replace-value-dec-val(it-nota-fisc.vl-tot-item)       
+                           tt-item-tp6.cfop            =  STRING(natur-oper.cod-cfop)            
+                           tt-item-tp6.rwid            =  ROWID(tt-notafiscal-tp6).
+                           
+                    IF CAN-FIND(FIRST embarque
+                                WHERE embarque.cdd-embarq = nota-fiscal.cdd-embarq) THEN
+                        ASSIGN tt-item-tp6.shipmentNo      =  STRING(nota-fiscal.cdd-embarq).
+
+                    FOR EACH ped-ent NO-LOCK
+                        WHERE ped-ent.nome-abrev   = it-nota-fisc.nome-ab-cli
+                          AND ped-ent.nr-pedcli    = it-nota-fisc.nr-pedcli
+                          AND ped-ent.nr-sequencia = it-nota-fisc.nr-seq-ped
+                          AND ped-ent.it-codigo    = it-nota-fisc.it-codigo
+                          AND ped-ent.cod-refer    = it-nota-fisc.cod-refer
+                          AND ped-ent.nr-entrega   = it-nota-fisc.nr-entrega:
+                        ASSIGN tt-item-tp6.doNo = TRIM(ped-ent.nome-abrev) + "|" + TRIM(ped-ent.nr-pedcli) + "|" + STRING(ped-ent.nr-sequencia) + "|" + TRIM(ped-ent.it-codigo) + "|" + TRIM(ped-ent.cod-refer) + "|" + STRING(ped-ent.nr-entrega).
+                    END.
+                END.
+            END.
+            
+            DATASET notaFiscalGo-tp6:WRITE-XML("LONGCHAR",lcXML , TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<Invoice "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</Invoice>") + LENGTH("</Invoice>")).
+                   
+            ASSIGN cMethod      = "sendInvoice":U
+                   cServiceName = "sci-document":U
+                   cService     = "sciDocument":U NO-ERROR.
+        END.
+        WHEN "TP7":U THEN DO:
+
+            FIND nota-fiscal NO-LOCK WHERE ROWID(nota-fiscal) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE nota-fiscal THEN DO:
+
+                {utp/ut-liter.i "Nota_Fiscal_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                IF NOT CAN-FIND(FIRST ped-venda
+                                WHERE ped-venda.nome-abrev = nota-fiscal.nome-ab-cli
+                                AND   ped-venda.nr-pedcli  = nota-fiscal.nr-pedcli) THEN LEAVE SCI.
+
+                {utp/ut-liter.i "Nota_Fiscal" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis + "."
+                       cKey    = nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis.
+            END.
+            
+            ASSIGN cDate = fnDataTp("NOTA-FISCAL",cTP,cKey,TODAY,TIME).
+            
+            CREATE tt-tracking.
+            ASSIGN tt-tracking.refNo          = TRIM(nota-fiscal.cod-chave-aces-nf-eletro)
+                   tt-tracking.refType        = "4"
+                   tt-tracking.trackingCode   = "TP1010-30"
+                   tt-tracking.checkpointCode = "WH"
+                   tt-tracking.trackingDate   = cDate
+                   tt-tracking.remarks        = "".
+                   
+            DATASET trackingGo:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<tracking "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</tracking>") + LENGTH("</tracking>")).
+                   
+            ASSIGN cMethod      = "sendTrackingPoint":U
+                   cServiceName = "sci-tracking":U
+                   cService     = "sciTracking":U NO-ERROR.
+        END.
+        WHEN "TP8":U THEN DO:
+           
+
+            FIND nota-fiscal NO-LOCK WHERE ROWID(nota-fiscal) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE nota-fiscal THEN DO:
+
+                {utp/ut-liter.i "Nota_Fiscal_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                IF NOT CAN-FIND(FIRST ped-venda
+                                WHERE ped-venda.nome-abrev = nota-fiscal.nome-ab-cli
+                                AND   ped-venda.nr-pedcli  = nota-fiscal.nr-pedcli) THEN LEAVE SCI.
+
+                {utp/ut-liter.i "Nota_Fiscal" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis + "."
+                       cKey    = nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis.
+            END.
+            
+            ASSIGN cDate = fnDataTp("NOTA-FISCAL",cTP,cKey,TODAY,TIME).
+            
+            CREATE tt-tracking.
+            ASSIGN tt-tracking.refNo          = TRIM(nota-fiscal.cod-chave-aces-nf-eletro)
+                   tt-tracking.refType        = "4"
+                   tt-tracking.trackingCode   = "TP1010-40"
+                   tt-tracking.checkpointCode = "WH"
+                   tt-tracking.trackingDate   = cDate
+                   tt-tracking.remarks        = "".
+                   
+            DATASET trackingGo:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<tracking "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</tracking>") + LENGTH("</tracking>")).
+                   
+            ASSIGN cOperation   = "CREATE"
+                   cMethod      = "sendTrackingPoint":U
+                   cServiceName = "sci-tracking":U
+                   cService     = "sciTracking":U NO-ERROR.           
+        END.
+        WHEN "TP9":U THEN DO:
+
+            FIND nota-fiscal NO-LOCK WHERE ROWID(nota-fiscal) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE nota-fiscal THEN DO:
+
+                {utp/ut-liter.i "Nota_Fiscal_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                IF NOT CAN-FIND(FIRST ped-venda
+                                WHERE ped-venda.nome-abrev = nota-fiscal.nome-ab-cli
+                                AND   ped-venda.nr-pedcli  = nota-fiscal.nr-pedcli) THEN LEAVE SCI.
+
+                {utp/ut-liter.i "Nota_Fiscal" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis + "."
+                       cKey    = nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis.
+            END.
+            
+            ASSIGN cDate = fnDataTp("NOTA-FISCAL",cTP,cKey,TODAY,TIME).
+            
+            CREATE tt-tracking.
+            ASSIGN tt-tracking.refNo          = TRIM(nota-fiscal.cod-chave-aces-nf-eletro)
+                   tt-tracking.refType        = "4"
+                   tt-tracking.trackingCode   = "TP2020-50"
+                   tt-tracking.checkpointCode = "WH"
+                   tt-tracking.trackingDate   = cDate
+                   tt-tracking.remarks        = "".
+                   
+            DATASET trackingGo:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<tracking "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</tracking>") + LENGTH("</tracking>")).
+                   
+            ASSIGN cMethod      = "sendTrackingPoint":U
+                   cServiceName = "sci-tracking":U
+                   cService     = "sciTracking":U NO-ERROR.        
+                   
+        END.
+        WHEN "TP10":U THEN DO:
+
+            FIND nota-fiscal NO-LOCK WHERE ROWID(nota-fiscal) = rRowid NO-ERROR.
+            IF  NOT AVAILABLE nota-fiscal THEN DO:
+
+                {utp/ut-liter.i "Nota_Fiscal_n∆o_cadastrado" *}
+                ASSIGN trad-1 = RETURN-VALUE + "!".
+                {utp/ut-liter.i "N∆o_enviado" *}
+                ASSIGN trad-2 = RETURN-VALUE + ".".
+                {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                ASSIGN trad-3 = RETURN-VALUE + ".".
+                
+                ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                       c-desc-msg     = trad-1
+                       c-status-msg   = trad-2
+                       cKey           = trad-3.
+
+                RUN pi-cria-msg (INPUT c-nome-servico,
+                                 INPUT c-desc-msg,
+                                 INPUT c-status-msg,
+                                 INPUT cKey).
+                LEAVE SCI.
+            END.
+            ELSE DO:
+                IF NOT CAN-FIND(FIRST ped-venda
+                                WHERE ped-venda.nome-abrev = nota-fiscal.nome-ab-cli
+                                AND   ped-venda.nr-pedcli  = nota-fiscal.nr-pedcli) THEN LEAVE SCI.
+
+                {utp/ut-liter.i "Nota_Fiscal" *}
+                ASSIGN cKeyAux = RETURN-VALUE + ": " + nota-fiscal.cod-estabel + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis + "."
+                       cKey    = TRIM(nota-fiscal.cod-estabel) + "|" + nota-fiscal.serie + "|" + nota-fiscal.nr-nota-fis.
+            END.
+            
+            ASSIGN cDate = STRING(YEAR(nota-fiscal.dt-entr-cli),"9999") + "-" + STRING(MONTH(nota-fiscal.dt-entr-cli),"99") + "-" + STRING(DAY(nota-fiscal.dt-entr-cli),"99") + "T" + 
+                           nota-fiscal.hr-entr-cli + ":" + "00". 
+                           
+            CREATE tt-tracking.
+            ASSIGN tt-tracking.refNo          = TRIM(nota-fiscal.cod-estabel) + "|" + TRIM(nota-fiscal.serie) + "|" + TRIM(nota-fiscal.nr-nota-fis)
+                   tt-tracking.refType        = "5"
+                   tt-tracking.trackingCode   = "TP4040-90 "
+                   tt-tracking.checkpointCode = "CUSTOMER"
+                   tt-tracking.trackingDate   = cDate
+                   tt-tracking.remarks        = "".
+                   
+            DATASET trackingGo:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<tracking "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</tracking>") + LENGTH("</tracking>")).
+                   
+            ASSIGN cMethod      = "sendTrackingPoint":U
+                   cServiceName = "sci-tracking":U
+                   cService     = "sciTracking":U NO-ERROR.
+        END.
+        WHEN "OC1":U THEN DO:
+            
+            IF cTable = "IT-PRE-FAT" THEN DO:    
+                           
+               FIND it-pre-fat NO-LOCK WHERE ROWID(it-pre-fat) = rRowid NO-ERROR.
+               IF  NOT AVAILABLE it-pre-fat THEN DO:
+               
+                   {utp/ut-liter.i "Item_PrÇ_Faturamento_n∆o_cadastrado" *}
+                   ASSIGN trad-1 = RETURN-VALUE + "!".
+                   {utp/ut-liter.i "N∆o_enviado" *}
+                   ASSIGN trad-2 = RETURN-VALUE + ".".
+                   {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                   ASSIGN trad-3 = RETURN-VALUE + ".".
+                   
+                   ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                          c-desc-msg     = trad-1
+                          c-status-msg   = trad-2
+                          cKey           = trad-3.
+               
+                   RUN pi-cria-msg (INPUT c-nome-servico,
+                                    INPUT c-desc-msg,
+                                    INPUT c-status-msg,
+                                    INPUT cKey).
+                   LEAVE SCI.
+               END.
+               ELSE DO:         
+               
+                   {utp/ut-liter.i "Item_PrÇ_Faturamento" *}
+                   ASSIGN cKeyAux = RETURN-VALUE + ": " + STRING(it-pre-fat.cdd-embarq)   + "|" 
+                                                        + STRING(it-pre-fat.nr-resumo)    + "|"
+                                                        + it-pre-fat.nome-abrev           + "|"
+                                                        + it-pre-fat.nr-pedcli            + "|"
+                                                        + STRING(it-pre-fat.nr-sequencia) + "|"
+                                                        + it-pre-fat.it-codigo            + "|"
+                                                        + it-pre-fat.cod-refer            + "|"
+                                                        + STRING(it-pre-fat.nr-entrega)   + "|"
+                                                        + STRING(it-pre-fat.nr-embarque)  + "."
+                          cKey    = STRING(it-pre-fat.cdd-embarq)   + "|" + 
+                                    STRING(it-pre-fat.nr-resumo)    + "|" + 
+                                    it-pre-fat.nome-abrev           + "|" +
+                                    it-pre-fat.nr-pedcli            + "|" +
+                                    STRING(it-pre-fat.nr-sequencia) + "|" +
+                                    it-pre-fat.it-codigo            + "|" +
+                                    it-pre-fat.cod-refer            + "|" +
+                                    STRING(it-pre-fat.nr-entrega)   + "|" +
+                                    STRING(it-pre-fat.nr-embarque)
+                          cRefNo  = TRIM(it-pre-fat.nome-abrev)     + "|" +            
+                                    TRIM(it-pre-fat.nr-pedcli)      + "|" + 
+                                    STRING(it-pre-fat.nr-sequencia) + "|" + 
+                                    TRIM(it-pre-fat.it-codigo)      + "|" + 
+                                    TRIM(it-pre-fat.cod-refer)      + "|" + 
+                                    STRING(it-pre-fat.nr-entrega)
+                                    .
+                                    
+               END.
+            END.
+            ELSE DO:
+            
+               FIND ped-ent NO-LOCK WHERE ROWID(ped-ent) = rRowid NO-ERROR.
+               IF  NOT AVAILABLE ped-ent THEN DO:
+               
+                   {utp/ut-liter.i "Entregas_do_Item_Pedido" *}
+                   ASSIGN trad-1 = RETURN-VALUE + "!".
+                   {utp/ut-liter.i "N∆o_enviado" *}
+                   ASSIGN trad-2 = RETURN-VALUE + ".".
+                   {utp/ut-liter.i "Chave_n∆o_identificada" *}
+                   ASSIGN trad-3 = RETURN-VALUE + ".".
+                   
+                   ASSIGN c-nome-servico = "sci-document":U /* Informar SCI */
+                          c-desc-msg     = trad-1
+                          c-status-msg   = trad-2
+                          cKey           = trad-3.
+               
+                   RUN pi-cria-msg (INPUT c-nome-servico,
+                                    INPUT c-desc-msg,
+                                    INPUT c-status-msg,
+                                    INPUT cKey).
+                   LEAVE SCI.
+               END.
+               ELSE DO:         
+               
+                   {utp/ut-liter.i "Entregas_do_Item_Pedido" *}
+                   ASSIGN cKeyAux = RETURN-VALUE + ": " + ped-ent.nome-abrev           + "|"
+                                                        + ped-ent.nr-pedcli            + "|"
+                                                        + STRING(ped-ent.nr-sequencia) + "|"
+                                                        + ped-ent.it-codigo            + "|"
+                                                        + ped-ent.cod-refer            + "|"
+                                                        + STRING(ped-ent.nr-entrega)   + "."
+                          cKey    = ped-ent.nome-abrev              + "|" +
+                                    ped-ent.nr-pedcli            + "|" +
+                                    STRING(ped-ent.nr-sequencia) + "|" +
+                                    ped-ent.it-codigo            + "|" +
+                                    ped-ent.cod-refer            + "|" +
+                                    STRING(ped-ent.nr-entrega)
+                          cRefNo  = TRIM(ped-ent.nome-abrev)     + "|" + 
+                                    TRIM(ped-ent.nr-pedcli)      + "|" + 
+                                    STRING(ped-ent.nr-sequencia) + "|" + 
+                                    TRIM(ped-ent.it-codigo)      + "|" + 
+                                    TRIM(ped-ent.cod-refer)      + "|" + 
+                                    STRING(ped-ent.nr-entrega)           
+                                    .
+                                    
+               END. 
+            END.   
+            
+            ASSIGN cDate = STRING(YEAR(TODAY),"9999":U) + "-" + STRING(MONTH(TODAY),"99":U) + "-" + STRING(DAY(TODAY),"99":U) + "T" + STRING(TIME,'HH:MM:SS':U). 
+            
+            CREATE tt-occurrence.
+            ASSIGN tt-occurrence.refNo                 = cRefNo
+                   tt-occurrence.refType               = "2"                   
+                   tt-occurrence.occurrenceCode        = "1001"             
+                   tt-occurrence.occurrenceDate        = cDate    
+                   tt-occurrence.occurrenceConsequence = "0"                                               
+                   tt-occurrence.remarks               = "".   
+                   
+            DATASET occurrenceGo:WRITE-XML("LONGCHAR",lcXML, TRUE, "UTF-8").
+            
+            ASSIGN lcXML = SUBSTRING(lcXML,INDEX(lcXML,"<occurrence "))
+                   lcXML = SUBSTRING(lcXML,1,INDEX(lcXML,"</occurrence>") + LENGTH("</occurrence>")).
+                   
+            ASSIGN cMethod      = "sendOccurrence":U
+                   cServiceName = "sci-tracking":U
+                   cService     = "sciTracking":U NO-ERROR.
+        END.
+        
+        /* TRACKING POINTS ********************************************************************************/
+        OTHERWISE
+            LEAVE SCI.
+
+    END CASE.
+
+    ASSIGN cErrorStamp = "INTSCI":U.
+    
+    IF AVAIL tab-generica AND SUBSTRING(tab-generica.char-2,103,1) /* Debug */ = "Y":U THEN DO:
+    
+        ASSIGN cTime     = STRING(TIME, "HH:MM:SS":U)
+               cDateTime = STRING(YEAR(TODAY),"9999":U) + STRING(MONTH(TODAY),"99":U) + STRING(DAY(TODAY),"99":U) + REPLACE(cTime,":","").
+        
+        /* Inicio -- Projeto Internacional */
+        DEFINE VARIABLE c-lbl-liter-tabela-sci AS CHARACTER NO-UNDO.   
+        {utp/ut-liter.i "TABELA" *}
+        ASSIGN c-lbl-liter-tabela-sci = TRIM(RETURN-VALUE).
+        
+        DEFINE VARIABLE c-lbl-liter-evento-sci AS CHARACTER NO-UNDO.
+        {utp/ut-liter.i "EVENTO" *}
+        ASSIGN c-lbl-liter-evento-sci = TRIM(RETURN-VALUE).
+    
+        DEFINE VARIABLE c-lbl-liter-tp-sci AS CHARACTER NO-UNDO.
+        {utp/ut-liter.i "TP" *}
+        ASSIGN c-lbl-liter-tp-sci = TRIM(RETURN-VALUE).
+        
+        DEFINE VARIABLE c-lbl-liter-xml-sci AS CHARACTER NO-UNDO.   
+        {utp/ut-liter.i "XML" *}
+        ASSIGN c-lbl-liter-xml-sci = TRIM(RETURN-VALUE).
+        
+        OUTPUT TO VALUE(SESSION:TEMP-DIRECTORY + cServiceName + cDateTime + STRING(REPLACE(cKey,"|","-")) + ".txt") CONVERT TARGET "utf-8".
+        
+        PUT UNFORMATTED c-lbl-liter-tabela-sci + ": " + cTable      SKIP.
+        PUT UNFORMATTED c-lbl-liter-tp-sci     + ": " + cTP         SKIP.
+        PUT UNFORMATTED c-lbl-liter-evento-sci + ": " + cOperation  SKIP.
+        PUT UNFORMATTED c-lbl-liter-xml-sci    + ": "               SKIP.
+        EXPORT lcXML.                         .
+    
+        OUTPUT CLOSE.
+    END.
+
+    IF  SUBSTRING(tab-generica.char-2,101,1) = "Y":U THEN DO:
+        {utp/ut-liter.i "Integraá∆o_temporariamente_suspensa" *}
+        ASSIGN trad-1 = RETURN-VALUE + ".".
+        
+        RUN registerIntegrationError IN THIS-PROCEDURE (trad-1,trad-1) NO-ERROR.
+        LEAVE SCI.
+    END.
+
+    /**** Conectar WS ****/
+    IF  NOT VALID-HANDLE(hWebService) OR NOT hWebService:CONNECTED() THEN
+        RUN connectWS IN THIS-PROCEDURE (INPUT TRIM(SUBSTRING(tab-generica.char-2,1,100)) + cServiceName).
+        
+    IF hWebService:CONNECTED() THEN DO:
+        RUN VALUE(cService) SET hWSPort ON hWebService NO-ERROR.
+        
+        IF  ERROR-STATUS:ERROR THEN DO:
+            {utp/ut-liter.i "Erro_na_execuá∆o_do_WS" *}
+            ASSIGN trad-1 = RETURN-VALUE + ".".
+            
+            RUN registerIntegrationError IN THIS-PROCEDURE (trad-1,"(":U + STRING(ERROR-STATUS:GET-NUMBER(1)) + ") ":U + TRIM(SUBSTRING(ERROR-STATUS:GET-MESSAGE(1),1,80))) NO-ERROR.
+            
+            LEAVE SCI.
+        END.
+        
+        /* DPC *//* APPC *//* UPC */
+        IF  c-nom-prog-dpc-mg97  <> ""
+        AND c-nom-prog-dpc-mg97  <> ?
+        OR  c-nom-prog-appc-mg97 <> ""
+        AND c-nom-prog-appc-mg97 <> ?
+        OR  c-nom-prog-upc-mg97  <> ""
+        AND c-nom-prog-upc-mg97  <> ? THEN DO:
+            
+            RUN upcClean('afterGetXml').
+            RUN upcParameter('afterGetXml', 'xml', lcXML).
+            RUN upcPoint('afterGetXml').
+
+            FOR FIRST tt-epc
+                WHERE tt-epc.cod-event     = "afterGetXml":U
+                  AND tt-epc.cod-parameter = "xml":U 
+                  AND tt-epc.val-parameter <> "":
+                ASSIGN lcXML = STRING(tt-epc.val-parameter).
+            END.
+        END.
+        
+        RUN VALUE(cMethod) IN hWSPort (INPUT lcXML, OUTPUT lcXMLReturn) NO-ERROR.
+        
+        IF  ERROR-STATUS:ERROR THEN DO:
+            {utp/ut-liter.i "Erro_na_integraá∆o_de_dados" *}
+            ASSIGN trad-1 = RETURN-VALUE.
+
+            RUN registerIntegrationError IN THIS-PROCEDURE (trad-1,"(":U + STRING(ERROR-STATUS:GET-NUMBER(1)) + ") ":U + TRIM(SUBSTRING(ERROR-STATUS:GET-MESSAGE(1),1,80))) NO-ERROR.
+            
+            /**** email Erro Integraá∆o ****/
+            IF CAN-FIND(FIRST tab-generica
+                        WHERE tab-generica.utilizacao = "SETSCI":U
+                          AND SUBSTRING(tab-generica.char-2,102,1) = "Y":U) THEN DO:
+                
+                ASSIGN lAvisoEmail   = NO
+                       cEmailAviso   = "":U
+                       cMsgErroEmail = "":U NO-ERROR.
+                
+                FIND FIRST tab-generica NO-LOCK WHERE tab-generica.utilizacao = "EMAILSCI":U NO-ERROR.
+                IF AVAILABLE tab-generica AND TRIM(tab-generica.char-2) <> "":U THEN DO:
+                    IF NOT lBatchMode THEN DO:
+                        {utp/ut-liter.i "Integraá∆o_Datasul_e_SCI" *}
+                        ASSIGN trad-1 = RETURN-VALUE.
+                        {utp/ut-liter.i "Erro_na_integraá∆o_de_dados" *}
+                        ASSIGN trad-2 = RETURN-VALUE.
+        
+                        RUN sendMail IN THIS-PROCEDURE (INPUT  SUBSTRING(tab-generica.char-2,1,100),
+                                                        INPUT  SUBSTRING(tab-generica.char-2,101,100),
+                                                        INPUT  trad-1,
+                                                        INPUT  trad-2,
+                                                        OUTPUT lAvisoEmail,
+                                                        OUTPUT cEmailAviso,
+                                                        OUTPUT cMsgErroEmail) NO-ERROR.
+                    END.
+               END.
+               ELSE DO:
+                   {utp/ut-liter.i "N∆o_informado" *}
+                   ASSIGN cEmailAviso = RETURN-VALUE + ".".
+               END.
+            END.
+            /***** Fim email integraá∆o *****/
+
+            LEAVE SCI.
+        END.
+        ELSE DO:
+            /*  Realiza a leitura do XML de retorno do SCI. Verificar mÇtodos: Characters e StartElement */
+            EMPTY TEMP-TABLE ttRetorno.
+            CREATE SAX-READER hReader.
+            hReader:SET-INPUT-SOURCE("LONGCHAR",lcXMLReturn).
+            hReader:SAX-PARSE().
+            DELETE OBJECT hReader.
+            ASSIGN hReader = ?.
+            
+            FIND FIRST ttRetorno NO-LOCK NO-ERROR.
+            IF AVAIL ttRetorno AND ttRetorno.messageCode = "1" THEN DO:
+                {utp/ut-liter.i "Enviado_com_sucesso._Protocolo:" *}
+                ASSIGN trad-1  = RETURN-VALUE + " " + ttRetorno.protocolNo
+                       cErroWS = "OK":U.
+
+                RUN registerIntegrationError IN THIS-PROCEDURE (trad-1,cErroWS) NO-ERROR.
+            END.
+            ELSE DO:
+                {utp/ut-liter.i "Inconsistància_dos_dados._Protocolo:" *}
+                ASSIGN trad-1 = RETURN-VALUE + " " + ttRetorno.protocolNo.
+                
+                ASSIGN cErroWS = IF AVAIL ttRetorno THEN ttRetorno.mensagem 
+                                                    ELSE SUBSTRING(STRING(lcXMLReturn),(INDEX(STRING(lcXMLReturn),"<message>") + 9),(INDEX(STRING(lcXMLReturn),"</message>") - INDEX(STRING(lcXMLReturn),"<message>"))).
+
+                RUN registerIntegrationError IN THIS-PROCEDURE (trad-1,cErroWS) NO-ERROR.
+                /**** email Erro Inconsistencia ****/
+                IF CAN-FIND(FIRST tab-generica
+                            WHERE tab-generica.utilizacao = "SETSCI":U
+                              AND SUBSTRING(tab-generica.char-2,102,1) = "Y":U) THEN DO:
+                    
+                    ASSIGN lAvisoEmail   = NO
+                           cEmailAviso   = "":U
+                           cMsgErroEmail = "":U NO-ERROR.
+                    
+                    FIND FIRST tab-generica NO-LOCK WHERE tab-generica.utilizacao = "EMAILSCI":U NO-ERROR.
+                    IF AVAILABLE tab-generica AND TRIM(tab-generica.char-2) <> "":U THEN DO:
+                        IF NOT lBatchMode THEN DO:
+                            {utp/ut-liter.i "Integraá∆o_Datasul_e_SCI" *}
+                            ASSIGN trad-1 = RETURN-VALUE.
+                            {utp/ut-liter.i "Inconsistància_dos_dados._Protocolo:" *}
+                            ASSIGN trad-2 = RETURN-VALUE + " " + ttRetorno.protocolNo.
+                            {utp/ut-liter.i "Erro_WebService:" *}
+                            ASSIGN trad-3 = RETURN-VALUE + " " + cErroWS.
+        
+                            RUN sendMail IN THIS-PROCEDURE (INPUT  SUBSTRING(tab-generica.char-2,1,100),
+                                                            INPUT  SUBSTRING(tab-generica.char-2,101,100),
+                                                            INPUT  trad-1,
+                                                            INPUT  trad-2 + " " + CHR(10) + CHR(10) + ~
+                                                                   trad-3,
+                                                            OUTPUT lAvisoEmail,
+                                                            OUTPUT cEmailAviso,
+                                                            OUTPUT cMsgErroEmail) NO-ERROR.
+                        END.
+                   END.
+                   ELSE DO:
+                       {utp/ut-liter.i "N∆o_informado" *}
+                       ASSIGN cEmailAviso = RETURN-VALUE + ".".
+                   END.
+                END.
+                /***** Fim email inconsistencia *****/
+
+                LEAVE SCI.
+            END.
+
+            {utp/ut-liter.i "Enviado_com_sucesso" *}
+            ASSIGN c-desc-msg   = RETURN-VALUE + ".".
+            {utp/ut-liter.i "Enviado" *}
+            ASSIGN c-status-msg = RETURN-VALUE + ".".
+
+            RUN pi-cria-msg (INPUT cServiceName,                       
+                             INPUT c-desc-msg,         
+                             INPUT c-status-msg,
+                             INPUT cKey).
+
+        END. /* ELSE DO: */
+
+        RUN disconnectWS IN THIS-PROCEDURE.
+      
+        LEAVE SCI.
+
+    END.
+    ELSE DO:
+        ASSIGN cErroWS       = STRING(ERROR-STATUS:GET-NUMBER(1)) + "|":U + TRIM(SUBSTRING(ERROR-STATUS:GET-MESSAGE(1),1,100))
+               lAvisoEmail   = NO
+               cEmailAviso   = "":U
+               cMsgErroEmail = "":U NO-ERROR.
+
+        {utp/ut-liter.i "Indisponibilidade_do_WS" *}
+        ASSIGN trad-1 = RETURN-VALUE + ".".
+
+        RUN registerIntegrationError IN THIS-PROCEDURE (trad-1,trad-1) NO-ERROR.
+        
+        IF CAN-FIND(FIRST tab-generica
+                    WHERE tab-generica.utilizacao = "SETSCI":U
+                      AND SUBSTRING(tab-generica.char-2,102,1) = "Y":U) THEN DO:
+            
+            ASSIGN cUrl = TRIM(SUBSTRING(tab-generica.char-2,1,100)).
+            
+            FIND FIRST tab-generica NO-LOCK WHERE tab-generica.utilizacao = "EMAILSCI":U NO-ERROR.
+
+            IF AVAILABLE tab-generica AND TRIM(tab-generica.char-2) <> "":U THEN DO:
+                IF NOT lBatchMode THEN DO:
+                    {utp/ut-liter.i "Integraá∆o_Datasul_e_SCI" *}
+                    ASSIGN trad-1 = RETURN-VALUE.
+                    {utp/ut-liter.i "Houve_falha_na_conex∆o_do_Datasul_com_o_Web_Service_Samsung" *}
+                    ASSIGN trad-2 = RETURN-VALUE.
+                    {utp/ut-liter.i "Usu†rio_Datasul" *}
+                    ASSIGN trad-3 = RETURN-VALUE.
+
+                    RUN sendMail IN THIS-PROCEDURE (INPUT  SUBSTRING(tab-generica.char-2,1,100),
+                                                    INPUT  SUBSTRING(tab-generica.char-2,101,100),
+                                                    INPUT  trad-1,
+                                                    INPUT  trad-2 + " " + CHR(10) + CHR(10) + ~
+                                                           "URL: ":U + cUrl + cServiceName + "?wsdl":U + CHR(10) + ~
+                                                           trad-3 + ": " + c-seg-usuario,
+                                                    OUTPUT lAvisoEmail,
+                                                    OUTPUT cEmailAviso,
+                                                    OUTPUT cMsgErroEmail) NO-ERROR.
+                END.
+           END.
+           ELSE DO:
+               {utp/ut-liter.i "N∆o_informado" *}
+               ASSIGN cEmailAviso = RETURN-VALUE + ".".
+           END.
+        END.
+        ELSE DO:
+            {utp/ut-liter.i "N∆o_configurado" *}
+            ASSIGN cEmailAviso = RETURN-VALUE + ".".
+        END.
+        
+        RUN registerConnectionError IN THIS-PROCEDURE (INPUT cErroWS, 
+                                                       INPUT lAvisoEmail, 
+                                                       INPUT cEmailAviso,
+                                                       INPUT cMsgErroEmail,
+                                                       INPUT iIntegracao) /* 0 - GFE - 1 - NEOLOG - 2 - SCI */ NO-ERROR.        
+        RUN disconnectWS IN THIS-PROCEDURE.
+
+        LEAVE SCI. 
+    END.
+
+    RETURN "OK":U.
+END.
+/* SCI ****************************************************************************************/

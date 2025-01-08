@@ -1,0 +1,68 @@
+procedure pi-procedimento-11:
+    form int-item-uni-estab.cod-estabel      format "x(5)"      column-label "Estab"
+         int-item-uni-estab.it-codigo        format "x(16)"     column-label "Item"
+         int-item-uni-estab.num-dias-cob-mp  format ">>>>>>>>9" column-label "Cobertura MP"
+         int-item-uni-estab.num-dias-alvo-mp format ">>>>>>>>9" column-label "Alvo MP"
+         int-item-uni-estab.num-dias-min     format ">>>>>>>>9" column-label "Dias Cobertura"
+         int-item-uni-estab.num-dias-alvo    format ">>>>>>>>9" column-label "Dias Alvo"
+         item-uni-estab.char-1               format "x(30)"     column-label "Situa‡Æo"
+         with width 132 down no-box stream-io frame f-11.
+
+    assign i-cont         = 0
+           i-aux          = 0
+           c-arquivo      = tt-param.diretorio + "itens-obsoletos-aps.txt"
+           c-titulo-relat = "Itens obsoletos com dias de cobertura".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "Itens obsol c/ dias cobert...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each estabelec fields(cod-estabel) no-lock:
+        do i-aux = 0 to 2:
+            for each item-uni-estab fields(cod-obsoleto char-1) use-index item-uni-estab-ressup no-lock
+               where item-uni-estab.cod-estabel  = estabelec.cod-estabel
+                 and item-uni-estab.demanda      = i-aux
+                 and item-uni-estab.cod-obsoleto > 1,
+               first int-item-uni-estab no-lock
+               where int-item-uni-estab.it-codigo   = item-uni-estab.it-codigo
+                 and int-item-uni-estab.cod-estabel = item-uni-estab.cod-estabel:
+                assign i-cont = i-cont + 1.
+                
+                if  i-cont mod 10 = 0
+                and valid-handle(h-acomp)
+                then run pi-acompanhar in h-acomp (input i-cont).
+
+                if  int-item-uni-estab.num-dias-cob-mp  <= 0
+                and int-item-uni-estab.num-dias-alvo-mp <= 0
+                and int-item-uni-estab.num-dias-min     <= 0
+                and int-item-uni-estab.num-dias-alvo    <= 0
+                then next.
+
+                disp stream st-relat
+                     int-item-uni-estab.cod-estabel
+                     int-item-uni-estab.it-codigo
+                     int-item-uni-estab.num-dias-cob-mp
+                     int-item-uni-estab.num-dias-alvo-mp
+                     int-item-uni-estab.num-dias-min
+                     int-item-uni-estab.num-dias-alvo
+                     c-obsol[item-uni-estab.cod-obsoleto] @ item-uni-estab.char-1
+                     with frame f-11.
+                down stream st-relat with frame f-11.
+            end. /* for each item-uni-estab */
+        end. /* do i-aux = 0 to 2 */
+    end. /* for each estabelec */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-11 */

@@ -1,0 +1,49 @@
+/****************************************************************************
+** CD0620.I2 - Determina se ser  utilizada a natureza ou                   **
+**             se utilizar  o CFOP, dependenda da data de inicio do        **
+**             Ajuste Sinief 07                                            **
+** OBS: A include CD0620.I1 ‚ pr‚-requisito para utiliza‡Æo desta.         **
+**  {1} - Indica se dever  pegar a natureza ou o CFOP do documento fiscal  **
+**        ou da natureza de operacao. Seguem os valores poss¡veis:         **
+**        "doc-fiscal"..: Para pegar a informa‡Æo do documento; ou         **
+**        "natur-oper"..: Para pegar a informa‡Æo da natureza de opera‡Æo. **
+**  {2} - Data do documento ou da nota fiscal que dever  ser comparada a   **
+**        data de in¡cio do Ajste Sinief. Desta forma, a l¢gica abaixo ir  **
+**        identificar se pega o CFOP novo ou a pr¢pria natureza de         **
+**        opera‡Æo                                                         **
+**  {3} - Formato CFOP utilizado a partir de 01/01/2003. Caso seja passado **
+**        "" (brancos), assumir  o formato do exemplo abaixo:              **
+**        Ex: "9.999XXXXX".                                                **
+**  {4} - Formato da natureza de opera‡Æo utilizado antes de 01/01/2003.   **
+**        Caso seja passado "" (brancos), assumir  o formato do exemplo    **
+**        abaixo:                                                          **
+**        Ex: "X(6)".                                                      **
+****************************************************************************/
+
+&if defined(bf_dis_formato_CFOP) &then
+    (if "{1}" = "doc-fiscal"
+     then if {2} >= da-dt-cfop 
+          then string(doc-fiscal.cod-cfop, 
+                      if {3} = "" then "9.999XXXXX" else {3})
+          else string(doc-fiscal.nat-operacao, 
+                      if {4} = "" then "X(6)" else {4})
+     else if {2} >= da-dt-cfop 
+          then string(natur-oper.cod-cfop, 
+                      if {3} = "" then "9.999XXXXX" else {3})
+          else string(natur-oper.nat-operacao, 
+                      if {4} = "" then "X(6)" else {4}))
+&else
+    (if "{1}" = "doc-fiscal"
+     then if {2} >= da-dt-cfop 
+          then string(substr(doc-fiscal.char-1,1,10), 
+                      if {3} = "" then "9.999XXXXX" else {3})
+          else string(doc-fiscal.nat-operacao, 
+                      if {4} = "" then "X(6)" else {4})
+     else if {2} >= da-dt-cfop 
+          then string(natur-oper.cod-cfop, 
+                      if {3} = "" then "9.999XXXXX" else {3})
+          else string(natur-oper.nat-operacao, 
+                      if {4} = "" then "X(6)" else {4}))
+&endif
+
+/* CD0620.I2 */

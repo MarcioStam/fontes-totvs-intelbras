@@ -1,0 +1,36 @@
+/*** Procedure para verificar configura‡Æo do EMS2
+     Objetivo: Componentiza‡Æo do aplicativo de manufatura ***/
+
+PROCEDURE VerificarConfiguracaoMAN:
+
+def output parameter p-adm as logical initial yes.
+def output parameter p-dis as logical initial yes.
+def output parameter p-mnt as logical initial yes.
+def output parameter p-mrp as logical initial yes.
+
+if not available param-global then
+    find last param-global.
+
+if param-global.modulo-ch and
+   param-global.int-1 = 2 then do:
+
+  if  not connected("mgdis") or 
+      not connected("movdis") then 
+      assign p-dis = no.
+
+  if not connected("mgmnt") or 
+     not connected("movmnt") then 
+      assign p-mnt = no. 
+
+  if not connected("mgmrp") or 
+     ldbname("mgmrp") <> "mgmrp" then 
+      assign p-mrp = no. 
+
+  if not connected("movadm") or 
+         ldbname("movadm") <> "movadm" then 
+      assign p-adm = no.
+
+end.  
+
+
+END PROCEDURE.  

@@ -1,0 +1,71 @@
+/*****************************************************************************************
+** eswso0010.i1 - busca desconto do cliente 
+****************************************************************************************/    
+    
+    
+    DEF BUFFER b-item FOR ITEM.
+    DEF INPUT PARAM i-cliente   AS INTEGER.
+    DEF INPUT PARAM c-tabela    AS CHAR   .
+    DEF INPUT PARAM c-item      AS CHAR   .
+    DEF OUTPUT PARAM de-fator    AS DECIMAL.
+
+    ASSIGN de-fator = 0.
+    
+    FIND FIRST ITEM WHERE ITEM.it-codigo = c-item NO-LOCK NO-ERROR.
+
+    FIND FIRST int-emitente-desc NO-LOCK
+        WHERE int-emitente-desc.cod-emitente = i-cliente
+          AND int-emitente-desc.nr-tabpre    = c-tabela
+          AND int-emitente-desc.dt-ini-val  <= TODAY
+          AND int-emitente-desc.it-codigo    = c-item NO-ERROR.
+    IF AVAIL int-emitente-desc THEN DO:
+       RUN pi-gerar-dados-extrato(" Fator cadastrado no item: " + STRING(c-item) ).
+       ASSIGN de-fator = int-emitente-desc.fator.
+    END.
+
+    IF de-fator = 0 THEN DO:
+       FIND FIRST int-emitente-desc NO-LOCK
+            WHERE int-emitente-desc.cod-emitente = i-cliente
+              AND int-emitente-desc.nr-tabpre    = c-tabela
+              AND int-emitente-desc.dt-ini-val  <= TODAY
+              AND int-emitente-desc.segmento     = SUBSTR(ITEM.fm-cod-com,1,4) NO-ERROR.
+       IF AVAIL int-emitente-desc THEN DO:
+          RUN pi-gerar-dados-extrato(" Fator cadastrado no segmento " + string(SUBSTR(ITEM.fm-cod-com,1,4))).
+          ASSIGN de-fator = int-emitente-desc.fator.
+       END.
+    END.
+
+    IF de-fator = 0 THEN DO:
+          FIND FIRST int-emitente-desc NO-LOCK
+               WHERE int-emitente-desc.cod-emitente = i-cliente
+                 AND int-emitente-desc.nr-tabpre    = c-tabela
+                 AND int-emitente-desc.dt-ini-val  <= TODAY
+                 AND int-emitente-desc.cod-unid     = SUBSTR(ITEM.fm-cod-com,1,2) NO-ERROR.
+          IF AVAIL int-emitente-desc THEN DO:
+             RUN pi-gerar-dados-extrato(" Fator cadastrado na unidade " + string(SUBSTR(ITEM.fm-cod-com,1,2))).
+             ASSIGN de-fator = int-emitente-desc.fator.
+          END.
+    END.
+
+    IF de-fator = 0 THEN DO:
+       FIND FIRST int-emitente-desc NO-LOCK
+            WHERE int-emitente-desc.cod-emitente = i-cliente
+              AND int-emitente-desc.nr-tabpre    = c-tabela
+              AND int-emitente-desc.dt-ini-val  <= TODAY
+              AND int-emitente-desc.it-codigo    = '*'
+              AND int-emitente-desc.segmento     = '*' 
+              AND int-emitente-desc.cod-unid     = '*'  NO-ERROR.
+       IF NOT AVAIL int-emitente-desc THEN 
+           FIND FIRST int-emitente-desc NO-LOCK
+                WHERE int-emitente-desc.cod-emitente = i-cliente
+                  AND int-emitente-desc.nr-tabpre    = c-tabela
+                  AND int-emitente-desc.dt-ini-val  <= TODAY
+                  AND int-emitente-desc.it-codigo    = ''
+                  AND int-emitente-desc.segmento     = '' 
+                  AND int-emitente-desc.cod-unid     = ''  NO-ERROR.
+       IF AVAIL int-emitente-desc THEN DO:
+          RUN pi-gerar-dados-extrato(" Fator cadastrado GENERICO" ).
+          ASSIGN de-fator = int-emitente-desc.fator.
+       END.
+    END.
+   

@@ -1,0 +1,45 @@
+            if session:remote then
+            output to value(session:temp-directory + "checa-leitura") append.
+            else do:
+            
+                /*output to \\intel200\erp$\emscar\especificos\checa-leitura append.*/
+                
+                
+                EMPTY TEMP-TABLE tt-prog-ponto.
+                
+                RUN esp/es0018p.p (INPUT "SPOOL-WIN":U,
+                                   INPUT 1,
+                                   INPUT 0,
+                                   INPUT "":U,
+                                   OUTPUT TABLE tt-prog-ponto).
+                
+                FOR FIRST tt-prog-ponto:
+                
+                    ASSIGN c-dir-saida = replace(tt-prog-ponto.conteudo, "/", "~\").
+                
+                    IF SUBSTRING(c-dir-saida, LENGTH(c-dir-saida), 1) <> "~\" THEN
+                        ASSIGN c-dir-saida = c-dir-saida + "~\".
+                
+                END.
+                
+                output to value(c-dir-saida + "erp$~\emscar~\especificos~\checa-leitura") append.
+
+            end.
+            
+            put c-codigo 
+                " "
+                c-deposito
+                " "
+                c-etiqueta
+                " "
+                today
+                " "
+                string(time,"HH:MM:SS") 
+                " "
+                i-quantidade 
+                skip.
+                
+            
+            output close.
+
+

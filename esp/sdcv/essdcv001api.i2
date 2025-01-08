@@ -1,0 +1,43 @@
+def new global shared var v_cod_empres_usuar
+    as character
+    format "x(3)":U
+    label "Empresa"
+    column-label "Empresa"
+    no-undo.
+
+/*
+DEFINE TEMP-TABLE tt_log_erro NO-UNDO 
+    FIELD ttv_num_cod_erro  as integer format ">>>>,>>9" label "N£mero" column-label "N£mero"
+    FIELD ttv_des_msg_ajuda as character format "x(40)" label "Mensagem Ajuda" column-label "Mensagem Ajuda"
+    FIELD ttv_des_msg_erro  as character format "x(60)" label "Mensagem Erro" column-label "Inconsistˆncia".
+*/    
+
+DEFINE TEMP-TABLE tt-plano-aux NO-UNDO
+    FIELD cod_plano_cta_ctbl LIKE plano_cta_ctbl.cod_plano_cta_ctbl
+    FIELD cod_cta_ctbl       LIKE cta_ctbl.cod_cta_ctbl
+    FIELD cod_unid_negoc     LIKE emscad.ccusto_unid_negoc.cod_unid_negoc
+    FIELD cod_ccusto         LIKE emscad.ccusto_unid_negoc.cod_ccusto
+    FIELD cod_estab          LIKE cc_uni_estab.cod_estab
+    INDEX ch-id IS UNIQUE cod_plano_cta_ctbl cod_cta_ctbl cod_unid_negoc cod_ccusto cod_estab.
+/*
+DEFINE VARIABLE h_api_cta_ctbl       AS   HANDLE                            NO-UNDO.
+DEFINE VARIABLE h_api_ccusto         AS   HANDLE                            NO-UNDO.
+*/
+
+DEFINE VARIABLE p_cod_plano_cta_ctbl LIKE plano_cta_ctbl.cod_plano_cta_ctbl NO-UNDO.
+DEFINE VARIABLE p_cod_plano_ccusto   LIKE plano_ccusto.cod_plano_ccusto     NO-UNDO.
+
+IF NOT VALID-HANDLE(h_api_cta_ctbl) THEN RUN prgint/utb/utb743za.py PERSISTENT SET h_api_cta_ctbl.
+IF NOT VALID-HANDLE(h_api_ccusto)   THEN RUN prgint/utb/utb742za.py PERSISTENT SET h_api_ccusto.
+
+IF valid-handle(h_api_ccusto) THEN RUN pi_busca_plano_ccusto_empresa IN h_api_ccusto (INPUT  "" /*v_cod_empres_usuar*/ ,
+                                                                                      INPUT  TODAY,
+                                                                                      OUTPUT p_cod_plano_ccusto,
+                                                                                      OUTPUT TABLE tt_log_erro).
+
+IF valid-handle(h_api_cta_ctbl) THEN RUN pi_busca_plano_cta_ctbl_empresa IN h_api_cta_ctbl (INPUT  "" /*v_cod_empres_usuar*/ ,
+                                                                                            INPUT  TODAY,
+                                                                                            OUTPUT p_cod_plano_cta_ctbl,
+                                                                                            OUTPUT TABLE tt_log_erro).
+
+

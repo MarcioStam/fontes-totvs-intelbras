@@ -1,0 +1,39 @@
+procedure pi-procedimento-07:
+    if not temp-table tt-ops:has-records
+    then run pi-ordens.
+
+    assign i-cont          = 0
+           c-arquivo       = tt-param.diretorio + "ordens-sem-reserva.txt"
+           c-titulo-relat  = "Ordens de Produ‡Æo sem Reservas".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "OPs sem Reservas...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+    
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each tt-ops use-index id2
+       where tt-ops.sem-reserva:
+        disp stream st-relat
+             tt-ops.it-codigo
+             tt-ops.desc-item
+             tt-ops.nr-ord-produ
+             tt-ops.qt-ordem
+             tt-ops.cod-estabel
+             tt-ops.estado
+             with frame f-06-07-20.
+        down stream st-relat with frame f-06-07-20.
+    end. /* for each tt-ops */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-07 */

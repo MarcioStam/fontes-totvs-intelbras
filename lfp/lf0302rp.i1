@@ -1,0 +1,4 @@
+ASSIGN c-arquivo-excel-1 = SESSION:TEMP-DIRECTORY + "{1}.csv".
+
+OUTPUT STREAM s-excel-1 TO VALUE(c-arquivo-excel-1) convert target 'iso8859-1'.
+

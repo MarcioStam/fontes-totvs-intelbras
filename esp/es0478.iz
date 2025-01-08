@@ -1,0 +1,101 @@
+/* include para impressao de etiquetas de AE em impressoras Zebra 
+   utilizada em 21/12/2005 */ 
+   
+disp "^XA"                                  skip
+     "^FO30,36^A0N,40,40^FD"  +
+     substring(item.it-codigo,1,6) + "-" +
+     substring(item.it-codigo,7,1) + 
+     "^FS"  format "x(70)" skip
+
+     "^FO270,36^A0N,40,40^FD" + 
+     ae-item.localizacao + "^FS"
+     format "x(70)" skip
+
+     "^FO70,85^A0N,25,25^FDAE^FS"  skip
+     
+     "^FO95,85^A0N,25,25^FD" +
+     string(ae-item.nr-ae,"9999999") + "^FS"
+     format "x(70)"             skip
+
+     "^FO255,85^A0N,25,25^FDSEQ^FS"       skip
+
+     "^FO290,85^A0N,25,25^FD" string(ae-item.sequencia,"999") "^FS" skip
+ 
+     "^FO367,85^A0N,25,25^FD" string(ae-item.data,"99/99/99") "^FS" skip           
+     "^FO60,115^A0N,25,25^FDROT^FS"              skip
+
+     "^FO105,115^A0N,25,25^FD" +                
+     string(ae-item.roteiro,">>>>>9") + "^FS" 
+     format "x(70)"                            skip
+
+     "^FO255,115^A0N,25,25^FD" + string(time,"HH:MM") + " " + c-seg-usuario + (IF ae-item.nf <> 0 THEN "   NF: " + STRING(ae-item.nf,"9999999") ELSE "") + "^FS" 
+             format "x(70)" skip
+
+     "^FO30,150^A0N,25,25^FD" 
+     item.desc-item format "x(36)"
+     "^FS" skip
+
+     "^FO280,195^A0N,60,40^FD" +
+     string(ae-item.quantidade,">>>,>>9") + "^FS"  
+     format "x(70)"         skip
+
+     "^FO500,10" skip
+
+     "^FO50,250^BAN,50,Y,N,N^BY2^FD" +
+     c-linha + "^FS" format "x(70)" skip     
+     "^XZ" with no-labels.                     
+
+/*************************************
+/* include para impressao de etiquetas de AE em impressoras Zebra 
+   utilizada no emscar */
+
+disp "^XA"                                  skip
+     "^FO20,15^A0N,60,22^FD"  +
+     substring(item.it-codigo,1,6) + "-" +
+     substring(item.it-codigo,7,1) + 
+     "^FS"  format "x(70)" skip
+
+     "^FO260,15^A0N,60,22^FD" + 
+     ae-item.localizacao + "^FS"
+     format "x(70)" skip
+
+     "^FO25,80^A0N,19,15^FDAE^FS"  skip
+     
+     "^FO65,80^A0N,19,15^FD" +
+     string(ae-item.nr-ae,"9999999") + "^FS"
+     format "x(70)"             skip
+
+     "^FO200,80^A0N,19,15^FDSEQ^FS"       skip
+
+     "^FO235,80^A0N,19,15^FD" string(ae-item.sequencia,"999") "^FS" skip
+ 
+     "^FO312,80^A0N,19,15^FD" ae-item.data format "99/99/99" "^FS" skip           
+     "^FO25,100^A0N,19,15^FDR^FS"                  skip
+
+     "^FO50,100^A0N,19,15^FD" +                
+     string(ae-item.roteiro,">>>>>9") + "^FS" 
+     format "x(70)"                                 skip
+
+     "^FO200,100^A0N,19,15^FD" + userid("mgadm") + "^FS" 
+             format "x(70)" skip
+
+
+     "^FO20,140^A0N,20,12^FD" 
+     item.descricao-1 + item.descricao-2 format "x(36)"
+     "^FS" skip
+
+     "^FO230,180^A0N,60,25^FD" +
+     string(ae-item.quantidade,">>>,>>9") + "^FS"  
+     format "x(70)"         skip
+
+     "^FO500,10" skip
+
+
+     "^FO25,230^BAN,50,Y,N,N^BY2^FD" +
+     c-linha  + "^FS" format "x(70)" skip     
+     "^XZ" with no-labels.
+*****************************************/
+
+                
+                
+                

@@ -1,0 +1,112 @@
+Define {1} Temp-Table tt-reporte-serial-wms
+    /* Info de Tela - Referente a Login */
+    Field cod-usuario      As Character  Format 'x(14)':U                    Label 'Usuario' 
+    Field cod-coletor      As Character  Format 'x(14)':U                    Label 'Coletor' 
+    Field cod-equipamento  As Character  Format 'x(14)':U                    Label 'Equipamento' 
+    /* Info de Tela - Referente a Tarefa*/                                 
+    Field num-serial       As Decimal    Format '>>>>>>>>>>>>>>':U           Label 'Ultimo Serial'
+    FIELD nr-linha         AS INT
+    Field des-endereco     As Character  Format 'x(18)':U                    Label 'Endereco'
+    Field des-item         As Character  Format 'x(18)':U                    Label 'Endereco'
+    Field cod-item         As Character  Format 'x(16)':U                    Label 'Item'            
+    Field num-box-lido     As Decimal    Format '>>>>>9':U                   Label 'Box Lido'
+    FIELD nr-ord-prod      AS INT        FORMAT ">>>,>>>,>>9"
+    /* Referente a tarefa */
+    FIELD cod-depos        AS CHARACTER  FORMAT 'x(03)':U                    LABEL 'Depos'
+    FIELD cod-depos-sai    AS CHARACTER  FORMAT 'x(03)':U                    LABEL 'Depos Saida'
+    Field cod-estabel      LIKE estabelec.cod-estabel                        Label 'Estabel' 
+    Field cod-localiz      As Character  Format 'x(20)':U                    Label 'Local' 
+    Field cod-local-sai    As Character  Format 'x(05)':U                    Label 'Local Saida'
+    Field dep-refugo                As Character    Format 'x(03)'                      Label 'Depos.Ref'
+    Field loc-refugo                As Character    Format 'x(10)'                      Label 'Local.Ref'
+
+    Field id-docto         As Decimal    Format '>>>>>>>>>9':U               Label 'Documento' 
+    FIELD ind-tipo-movto   AS INTEGER    FORMAT '>9':U                       LABEL 'Tipo Movto'
+    Field id-movto         As Decimal    Format '>>>>>>>>>9':U               Label 'Movimento' 
+    Field num-seq-item     As Integer    Format '>>>>9':U                    Label 'Sequencia Item'
+    Field num-box          As Integer    Format '>>>>>9':U                   Label 'Box'           
+    Field tipo-equipamento As Integer    Format '>9':U                       Label 'Tipo Equipamento' 
+    Field qtd-saldo        As Decimal    Format '>>>>>>>9.9999':U            Label 'Qtd Saldo' 
+    Field horario-inicio   As Integer    Format '>>>>>>9':U                  Label 'Hora Inicial da Tarefa'
+    FIELD nr-ord-produ     AS INTEGER    FORMAT '>>>,>>>,>>9':U              LABEL 'Ordem Produ‡Æo'
+    Field qt-reporte       As Decimal    Format '>>>>>9.9999':U Decimals 4  Label 'Qtd.Reportada'
+    Field lote-serie       As Character  Format 'x(40)'                      Label 'Lote/Serie'
+    Field cod-refer        As Character  Format 'x(10)'                      Label 'Referencia'
+    Field dt-vali-lote     As Date       Format '99/99/9999'                 Label 'Dt.Val.Lote'
+    Field un               As Character  Format 'x(03)'                      Label 'Un'
+    /*inicio altera‡äes projeto - 107*/
+    Field ct-codigo        As Character  Format 'x(20)'                      Label 'Conta'
+    Field sc-codigo        As Character  Format 'x(20)'                      Label 'Centro de Custo'
+    Field cod-cta-unif     As Character  Format 'x(20)'                      Label 'Conta Aplicacao'
+    Field cod-ccusto-unif  As Character  Format 'x(20)'                      Label 'Centro de Custo Aplicacao'
+    Field ct-refugo        As Character  Format 'x(20)'                      Label 'Conta Refugo'
+    Field sc-refugo        As Character  Format 'x(20)'                      Label 'Centro de Custo Refugo'
+    /*fim altera‡äes projeto - 107*/
+    Field nro-docto        As Character  Format 'x(16)'                      Label 'Nr.Docto'
+    Field serie-docto      As Character  Format 'x(05)'                      Label 'Serie'
+    Field op-codigo        As Integer    Format '>>9'                        Label 'Operacao'
+    Field cod-roteiro      As Character  Format 'x(08)'                      Label 'Roteiro'
+    Field it-oper          As Character  Format 'x(16)'                      Label 'Item Operacao'
+    Field pto-controle              As Integer      Format '>>9'                        Label 'Pto.Contr'
+    Field sequencia                 As Integer      Format '>>9'                        Label 'Seq.Imp'
+    Field baixa-reservas            As Integer      Format '>>9'        Initial 1       Label 'Baixa Reservas'
+    Field time-out                  As Integer      Format '>>9'        Initial 30      Label 'Time-Out'
+    Field tentativas                As Integer      Format '>>9'        Initial 10      Label 'Tentativas'
+    Field procura-saldos            As Logical      Format 'Sim/N’o'    Initial yes     Label 'Procura Saldos'
+    Field carrega-reservas          As Logical      Format 'Sim/N’o'    Initial yes     Label 'Carrega Reservas'
+    Field requis-automatica         As Logical      Format 'Sim/N’o'                    Label 'Req.Automatica'
+    Field prog-seg                  As Character    Format 'x(12)'                      Label 'Prog.Chamador'
+    Field finaliza-ordem            As Logical      Format 'Sim/N’o'    Initial no      Label 'Finaliza Ordem'
+    Field finaliza-oper             As Logical      Format 'Sim/N’o'    Initial no      Label 'Finaliza Opera»’o'
+    Field reserva                   As Logical      Format 'Sim/N’o'    Initial yes     Label 'Reservas'
+    Field nro-ord-seq               As Integer      Format '>>9'                        Label 'Seq.Ordem'
+    Field linha                     As Integer      Format '>>9'                        Label 'Linha'
+    Field cod-versao-integracao     As Integer      Format '>>9'                        Label 'Vers’o Integra»’o'
+    Field estado                    As Character    Format 'x(02)'                      Label 'Estado Ordem'
+    FIELD loc-sai-unica             AS LOGICAL      INITIAL NO                                                                                                                                                 
+    Field qt-refugo                 As Decimal      Format '>>>>>>9.9999':U Decimals 4   Label 'Quant.Refugo'
+    Field qt-estorno                As Decimal      Format '>>>>>>9.9999':U Decimals 4   Label 'Quant.Estorno'
+    Field qt-est-aprov              As Decimal      Format '>>>>>>9.9999':U Decimals 4   Label 'Quant.Est.Apro'
+    Field qt-est-refugo             As Decimal      Format '>>>>>>9.9999':U Decimals 4   Label 'Quant.Est.Ref'
+    Field qt-apr-cond               As Decimal      Format '>>>>>>9.9999':U Decimals 4   Label 'Quant.Apr.Cond'
+    
+    /* Campos extras padräes do Data Collection */                         
+    Field dat-atualizacao  As Date       Format '99/99/9999'                Label 'Atualizacao'
+    Field dat-transacao    As Date       Format '99/99/9999'                Label 'Transacao'
+    Field data             As Date       Format '99/99/9999'                Label 'Data Fabrica‡Æo'
+    field cod-lote         as character  Format 'x(40)'                     label 'Nr. S‚rie / Lote'
+    Field cod-livre-1      As Character  Format 'x(40)':U                   Label 'Cod Livre 1'
+    Field cod-livre-2      As Character  Format 'x(40)':U                   Label 'Cod Livre 2'
+    Field cod-livre-3      As Character  Format 'x(40)':U                   Label 'Cod Livre 3'
+    Field cod-livre-4      As Character  Format 'x(40)':U                   Label 'Cod Livre 4'
+    Field cod-livre-5      As Character  Format 'x(40)':U                   Label 'Cod Livre 5'
+    Field num-livre-1      As Integer    Format '>>>>>>>9':U                Label 'Num Livre 1'
+    Field num-livre-2      As Integer    Format '>>>>>>>9':U                Label 'Num Livre 2'     
+    Field num-livre-3      As Integer    Format '>>>>>>>9':U                Label 'Num Livre 3'
+    Field num-livre-4      As Integer    Format '>>>>>>>9':U                Label 'Num Livre 4'
+    Field num-livre-5      As Integer    Format '>>>>>>>9':U                Label 'Num Livre 5'
+    Field dec-livre-1      As Decimal    Format '>>>>>>9.9999':U Decimals 4 Label 'Dec Livre 1'
+    Field dec-livre-2      As Decimal    Format '>>>>>>9.9999':U Decimals 4 Label 'Dec Livre 2'
+    Field dec-livre-3      As Decimal    Format '>>>>>>9.9999':U Decimals 4 Label 'Dec Livre 3'
+    Field dec-livre-4      As Decimal    Format '>>>>>>9.9999':U Decimals 4 Label 'Dec Livre 4'
+    Field dec-livre-5      As Decimal    Format '>>>>>>9.9999':U Decimals 4 Label 'Dec Livre 5'
+    Field log-livre-1      As Logical    Format 'Sim/NÆo'                   Label 'Log Livre 1'
+    Field log-livre-2      As Logical    Format 'Sim/NÆo'                   Label 'Log Livre 2'
+    Field log-livre-3      As Logical    Format 'Sim/NÆo'                   Label 'Log Livre 3'
+    Field log-livre-4      As Logical    Format 'Sim/NÆo'                   Label 'Log Livre 4'
+    Field log-livre-5      As Logical    Format 'Sim/NÆo'                   Label 'Log Livre 5'
+    Field dat-livre-1      As Date       Format '99/99/9999'                Label 'DataLivre 1'
+    Field dat-livre-2      As Date       Format '99/99/9999'                Label 'DataLivre 2'
+    Field dat-livre-3      As Date       Format '99/99/9999'                Label 'DataLivre 3'
+    Field dat-livre-4      As Date       Format '99/99/9999'                Label 'DataLivre 4'
+    Field dat-livre-5      As Date       Format '99/99/9999'                Label 'DataLivre 5'
+    FIELD opcao            AS INTEGER    FORMAT '9':U                       LABEL 'Processo'
+    index ID  is primary num-serial.
+
+
+
+
+
+
+
+

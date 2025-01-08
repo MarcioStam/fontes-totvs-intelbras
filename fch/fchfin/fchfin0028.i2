@@ -1,0 +1,11 @@
+DEFINE TEMP-TABLE {1} NO-UNDO 
+  FIELD economicPurposeCode AS character
+  FIELD initialCompanyCode AS character
+  FIELD finalCompanyCode AS character
+  FIELD initialCheckingAcctCode AS character
+  FIELD finalCheckingAcctCode AS character
+  FIELD initialDate AS date
+  FIELD finalDate AS date
+  FIELD detailInquire AS logical
+
+.

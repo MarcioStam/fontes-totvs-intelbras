@@ -1,0 +1,104 @@
+/*----------------------------------------------------------------------------------------------------------------------*/         
+/*  Inclusde esp/esb/esesb003-movtos.i2 - Define a procedure para criaá∆o do registro filho da conta corrente,          */
+/*                                        contendo o saldo                                                              */
+/*                                        no momento da criaá∆o da conta.                                               */
+/*                                        De acordo com o TRIMESTRE DA APURAÄ«O, o c¢digo de transaá∆o FIXO poder†      */
+/*                                        assumir os seguintes valores:                                                 */                                     
+/*                                                                                                                      */
+/*                                10 - Movimento de saldo na criaá∆o/c†lculo da conta corrente para o trimestre 1       */
+/*                                20 - Movimento de saldo na criaá∆o/c†lculo da conta corrente para o trimestre 2       */
+/*                                30 - Movimento de saldo na criaá∆o/c†lculo da conta corrente para o trimestre 3       */
+/*                                40 - Movimento de saldo na criaá∆o/c†lculo da conta corrente para o trimestre 4       */
+/*                                                                                                                      */
+/*                                O objetivo desta movimentaá∆o, Ç poder efetuar eventuais rec†lculos do benef°cio      */
+/*                                e esse saldo poder† ser utilizado como base incial para resconstruá∆o do c†lculo      */
+/*                                do programa esesb005rp.p, para reconstruá∆o de saldo                                  */
+/*                                                                                                                      */
+/*  Roger Marcelino Bruhn - 01/07/2014                                                                                  */
+/*----------------------------------------------------------------------------------------------------------------------*/         
+DEF BUFFER b-saldo-inicial FOR int-cc-benef-movto.
+
+PROCEDURE pi-cria-transacao-saldo-inicial:
+    DEF INPUT PARAM p-canal          AS INT     NO-UNDO.
+    DEF INPUT PARAM p-tipo-beneficio AS INTEGER NO-UNDO.
+    DEF INPUT PARAM p-unidade        AS CHAR    NO-UNDO.
+    DEF INPUT PARAM p-periodo-ini    AS DATE    NO-UNDO.
+    DEF INPUT PARAM p-periodo-fim    AS DATE    NO-UNDO.
+    DEF INPUT PARAM p-usuario        AS CHAR    NO-UNDO.
+    DEF INPUT PARAM p-saldo          AS DEC     NO-UNDO.
+    
+    DEF VAR i-transacao   AS INTEGER                 NO-UNDO.
+    DEF VAR c-trimestre   AS CHAR    FORMAT "X(20)"  NO-UNDO.
+    DEF VAR i-sequencia   AS INTEGER                 NO-UNDO.
+    DEF VAR c-recalculado AS CHAR    FORMAT "X(100)" NO-UNDO. 
+
+    CASE  MONTH(p-periodo-fim):
+        WHEN 3 THEN ASSIGN  i-transacao = 10
+                            c-trimestre = "Primeiro Trimestre: ".
+        WHEN 6 THEN ASSIGN  i-transacao = 20
+                            c-trimestre = "Segundo Trimestre: ".
+        WHEN 9 THEN ASSIGN  i-transacao = 30
+                            c-trimestre = "Terceiro Trimestre: ".
+        WHEN 4 THEN ASSIGN  i-transacao = 40
+                            c-trimestre = "Quarto Trimestre: ".
+    END.
+
+    DO TRANS ON ERROR UNDO, RETURN "NOK":
+    
+        /* VERIFICA SE Jµ EXISTE UM REGISTRO DE SALDO INICIAL PARA TRIMESTRE */
+        FOR LAST b-saldo-inicial FIELDS(sequencia) EXCLUSIVE-LOCK
+            WHERE b-saldo-inicial.tp-movto       = 2
+              AND b-saldo-inicial.canal          = p-canal
+              AND b-saldo-inicial.tipo-beneficio = p-tipo-beneficio
+              AND b-saldo-inicial.unid-neg       = p-unidade
+              AND b-saldo-inicial.dt-periodo-ini = p-periodo-ini
+              AND b-saldo-inicial.dt-periodo-fim = p-periodo-fim
+              AND b-saldo-inicial.transacao      = i-transacao:
+        END.
+    
+        IF  NOT AVAIL b-saldo-inicial THEN DO:
+        
+            /* BUSCAR A ÈLTIMA SEQU“NCIA PARA CRIAÄ«O DA NOVA CONTA*/
+            FOR LAST b-saldo-inicial FIELDS(sequencia) NO-LOCK
+                WHERE b-saldo-inicial.tp-movto       = 2
+                  AND b-saldo-inicial.canal          = p-canal          
+                  AND b-saldo-inicial.tipo-beneficio = p-tipo-beneficio 
+                  AND b-saldo-inicial.unid-neg       = p-unidade        
+                  AND b-saldo-inicial.dt-periodo-ini = p-periodo-ini    
+                  AND b-saldo-inicial.dt-periodo-fim = p-periodo-fim:    
+                  ASSIGN i-sequencia = int-cc-benef-movto.sequencia.
+            END.
+        
+            CREATE b-saldo-inicial.
+            ASSIGN b-saldo-inicial.tp-movto          = 2       
+                   b-saldo-inicial.canal             = p-canal         
+                   b-saldo-inicial.tipo-beneficio    = p-tipo-beneficio  
+                   b-saldo-inicial.unid-neg          = p-unidade      
+                   b-saldo-inicial.dt-periodo-ini    = p-periodo-ini 
+                   b-saldo-inicial.dt-periodo-fim    = p-periodo-fim
+                   b-saldo-inicial.sequencia         = i-sequencia + 10
+                   b-saldo-inicial.transacao         = i-transacao. /* Saldo na ocasi∆o da apuraá∆o */
+        END.
+    
+        IF  b-saldo-inicial.hist-automatico <> "" THEN 
+            c-recalculado = "Rec†lculo de saldo de " + string(b-saldo-inicial.vl-movto, ">>>,>>>,>>9.99") + " para " + TRIM (STRING(p-saldo, ">>>,>>>,>>9.99")) + ". Em: " + STRING(TODAY, "99/99/9999") + 
+                             " as " + STRING(TIME, "HH:MM:SS") + " por " + p-usuario + CHR(10).
+        ELSE
+            c-recalculado = "Primeira geraá∆o de saldo para o trimestre: " + trim(STRING(p-saldo, ">>>,>>>,>>9.99")) + CHR(10).
+     
+        ASSIGN b-saldo-inicial.dt-movto          = TODAY
+               b-saldo-inicial.hr-movto          = STRING(TIME, "HH:MM:SS")
+               b-saldo-inicial.id-operacao       = 1 /*a maior*/
+               b-saldo-inicial.hist-automatico   = b-saldo-inicial.hist-automatico + c-recalculado 
+               b-saldo-inicial.hist-usuario      = ""
+               b-saldo-inicial.usuario           = p-usuario
+               b-saldo-inicial.vl-saldo-anterior = 0
+               b-saldo-inicial.vl-movto          = p-saldo.
+    
+        FIND CURRENT b-saldo-inicial NO-LOCK.
+        RELEASE b-saldo-inicial NO-ERROR.
+    END.
+
+    RETURN "OK".
+
+END.

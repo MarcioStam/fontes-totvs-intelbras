@@ -1,0 +1,32 @@
+/*****************************************************************************
+**
+**   cpapi020.i - Defini‡Æo da tt-balanceia
+**
+******************************************************************************/
+
+def temp-table tt-balanceia
+    field nr-ord-produ          as int   /* Num. Ordem de Produ‡Æo                      */
+    field it-codigo             as char  /* Cod. Item controlado por PPM / Concentra‡Æo */
+    field quant-requis          as dec   /* Quantidade no fator da reserva              */
+    field quant-movto           as dec   /* Quantidade no fator do lote                 */
+    field quant-veiculo         as dec   /* Quantidade requisitada para o veiculo       */
+    FIELD de-perc-alteracao     AS DEC   /* Campo de uso interno na rotina de Manuten‡Æo da Aloca‡Æo - cpapi013.i15 */
+    field cod-versao-integracao as int
+    index codigo nr-ord-produ it-codigo.
+
+/*Implementado no projeto 346 - Controle de Potˆncia
+  O sistema passa a permitir mais de um ve¡culo em uma mesma ordem. Essa temp-table ir  retornar a diferen‡a que dever  ser acrescida
+  a quantidade de cada ve¡culo da ordem para que o mesmo fique balanceado, de acordo com o percentual de distribui‡Æo registrado na reserva*/
+DEF TEMP-TABLE tt-veiculos NO-UNDO
+    FIELD nr-ord-produ  AS INT                           /*Chave da Reserva*/
+    FIELD item-pai      LIKE reservas.item-pai           /*Chave da Reserva*/
+    FIELD cod-roteiro   LIKE reservas.cod-roteiro        /*Chave da Reserva*/
+    FIELD op-codigo     LIKE reservas.op-codigo          /*Chave da Reserva*/
+    FIELD it-codigo     LIKE reservas.it-codigo          /*Chave da Reserva*/
+    FIELD cod-refer     LIKE reservas.cod-refer          /*Chave da Reserva*/
+    FIELD perc-distrib  AS DEC DECIMALS 4                /*Percentual de Distribui‡Æo do ve¡culo na reserva*/
+    FIELD soma-perc     AS DEC DECIMALS 4                /*Soma dos percentuais dos ve¡culos da ordem*/
+    FIELD quant-veiculo LIKE tt-balanceia.quant-veiculo  /*Quantidade balanceada para o Ve¡culo*/
+    FIELD rw-reservas   AS ROWID                         /*Rowid da tabela Reservas*/
+    INDEX id IS PRIMARY UNIQUE nr-ord-produ item-pai cod-roteiro op-codigo it-codigo cod-refer
+    INDEX id-rowid rw-reservas.

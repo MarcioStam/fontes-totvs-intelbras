@@ -1,0 +1,8 @@
+{esp/esb/esesb000.i}.
+
+DEFINE TEMP-TABLE msg0037 NO-UNDO XML-NODE-NAME 'MSG0037'
+   FIELD idm                    AS INT XML-NODE-TYPE 'hidden'
+   FIELD CodigoFamiliaComercial AS CHARACTER FORMAT "x(100)".
+   
+DEFINE TEMP-TABLE msg0037r NO-UNDO XML-NODE-NAME 'MSG0037R1'
+   FIELD idm AS INT XML-NODE-TYPE 'hidden'.

@@ -1,0 +1,59 @@
+DEFINE TEMP-TABLE tt-param NO-UNDO                            
+    FIELD destino                     AS INTEGER              
+    FIELD arquivo                     AS CHAR FORMAT "x(35)"
+    FIELD usuario                     AS CHAR FORMAT "x(12)"
+    FIELD data-exec                   AS DATE
+    FIELD hora-exec                   AS INTEGER
+    FIELD classifica                  AS INTEGER
+    FIELD desc-classifica             AS CHAR FORMAT "x(40)"
+    FIELD modelo-rtf                  AS CHAR FORMAT "x(35)"
+    FIELD l-habilitaRtf               AS LOG
+    FIELD ind-execucao                AS INT
+    FIELD dt-emiss-pedido-ini         AS DATE
+    FIELD dt-emiss-pedido-fim         AS DATE
+    FIELD i-nr-pedido-ini             AS INT
+    FIELD i-nr-pedido-fim             AS INT
+    FIELD dt-emiss-nota-ini           AS DATE
+    FIELD dt-emiss-nota-fim           AS DATE
+    FIELD c-cod-estabel-ini           AS CHAR
+    FIELD c-cod-estabel-fim           AS CHAR
+    FIELD c-serie-ini                 AS CHAR
+    FIELD c-serie-fim                 AS CHAR
+    FIELD c-nr-nota-fis-ini           AS CHAR
+    FIELD c-nr-nota-fis-fim           AS CHAR
+    FIELD c-cod-emitente-ini          AS INT
+    FIELD c-cod-emitente-fim          AS INT
+    FIELD log-pais                    AS LOG
+    FIELD log-indice                  AS LOG
+    FIELD log-origem                  AS LOG
+    FIELD log-rota                    AS LOG
+    FIELD log-pedido                  AS LOG
+    FIELD log-produto                 AS LOG
+    FIELD log-uf                      AS LOG
+    FIELD log-familia                 AS LOG
+    FIELD log-mensagem                AS LOG
+    FIELD log-segmento                AS LOG
+    FIELD log-nota-fiscal             AS LOG
+    FIELD log-portador                AS LOG
+    FIELD log-transportadora          AS LOG
+    FIELD log-unidade-medida          AS LOG
+    FIELD log-municipio               AS LOG
+    FIELD log-estabelecimento         AS LOG
+    FIELD log-canal-venda             AS LOG
+    FIELD log-sub-familia             AS LOG
+    FIELD log-natureza-operacao       AS LOG
+    FIELD log-unidade-negocio         AS LOG
+    FIELD log-tabela-financiamento    AS LOG
+    FIELD log-condicao-pagamento      AS LOG
+    FIELD log-familia-material        AS LOG
+    FIELD log-grupo-estoque           AS LOG
+    FIELD log-receita-padrao          AS LOG
+    FIELD log-familia-comercial       AS LOG
+    FIELD log-representante           AS LOG
+    FIELD log-solicitacao             AS LOG
+    FIELD log-saldo-cc                AS LOG
+    FIELD fi-canal                    AS INT
+    FIELD log-categoria               AS LOG
+    FIELD log-local-entrega           AS LOG
+    FIELD log-relacionamento-b2b      AS LOG
+    FIELD log-tabela-preco            AS LOG.

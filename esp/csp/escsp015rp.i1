@@ -1,0 +1,44 @@
+put stream st-export unformatted
+    c-cod-estabel                                         at 1
+    c-gm-cod-aux                                          at 6
+    c-descricao                                           at 16
+    c-cc-codigo                                           at 66
+    "1"                                                   at 81
+    "O"                                                   at 91
+    "S"                                                   at 92
+    fill("0",15)                                          at 93
+    fill("0",15)                                          at 108
+    fill("0",15)                                          at 123
+    fill("0",15)                                          at 138
+    fill("0",15)                                          at 153
+    fill("0",15)                                          at 168
+    fill("0",15)                                          at 183
+    fill("0",15)                                          at 198
+    fill("0",15)                                          at 213
+    fill("0",15)                                          at 228
+    fill("0",15)                                          at 243
+    string(date(month(today),1,year(today)),"99/99/9999") at 258
+    string(today,"99/99/9999")                            at 268
+    string(1,"999999999999999")                           at 278
+    c-qt-ctrab                                            at 293
+    "MAQ"                                                 at 308
+    "N"                                                   at 311
+    "MIN"                                                 at 312
+    "N"                                                   at 315
+    "0"                                                   at 316
+    "N"                                                   at 317
+    c-desativa                                            at 318
+    fill("0",15)                                          at 319
+    skip.
+
+disp c-arquivo
+     c-cod-estabel @ tt-estab-gm-cc.cod-estabel
+     c-gm-cod-aux  @ tt-estab-gm-cc.gm-codigo
+     c-descricao   @ tt-grup-maquina.descricao
+     c-cc-codigo   @ tt-estab-gm-cc.cc-codigo
+     i-qt-ctrab    @ tt-grup-maquina.qt-ctrab
+     c-desativa
+     c-extensao
+     with frame f-pos.
+down with frame f-pos.
+

@@ -1,0 +1,5 @@
+DEF INPUT PARAMETER h-coluna AS HANDLE NO-UNDO.
+DEF INPUT PARAMETER h-coluna1 AS HANDLE NO-UNDO.
+
+ASSIGN h-coluna:FORMAT = "Sim/NÆo"
+       h-coluna1:FORMAT = "Sim/NÆo".

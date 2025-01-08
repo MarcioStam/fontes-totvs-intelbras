@@ -1,0 +1,71 @@
+/**************************************
+** gtnf001.i1
+**
+***************************************************************/
+
+    FOR EACH ide.        DELETE ide.         END.
+    for each nfref.      delete NFref.       end.
+    for each ObsCont.    delete ObsCont.     end.
+    for each ObsFisco.   delete ObsFisco.    end.
+    for each ProcRef.    delete ProcRef.     end.
+    for each exporta.    delete exporta.     end.
+    for each imposto.    delete imposto.     end.
+    for each ICMS00.     delete ICMS00.      end.
+    for each ICMS10.     delete ICMS10.      end.
+    for each ICMS20.     delete ICMS20.      end.
+    for each ICMS30.     delete ICMS30.      end.
+    for each ICMS40.     delete ICMS40.      end.
+    for each ICMS51.     delete ICMS51.      end.
+    for each ICMS60.     delete ICMS60.      end.
+    for each ICMS70.     delete ICMS70.      end.
+    for each ICMS90.     delete ICMS90.      end.
+    FOR EACH ICMSTot.    DELETE ICMSTot.     END.
+    FOR EACH ICMS.       DELETE ICMS.        END.
+    FOR EACH IPI .       DELETE IPI.         END.
+    FOR EACH PIS.        DELETE PIS.         END.
+    for each PISAliq.    delete PISAliq.     end.
+    for each PISNT.      delete PISNT.       end.
+    for each PISOutr.    delete PISOutr.     end.
+    for each PISST.      delete PISST.       end.
+    FOR EACH COFINS.     DELETE COFINS.      END.
+    for each COFINSAliq. delete COFINSAliq.  end.
+    for each COFINSNT.   delete COFINSNT.    end.
+    for each COFINSOutr. delete COFINSOutr.  end.
+    for each COFINSQtde. delete COFINSQtde.  end.
+    for each COFINSST.   delete COFINSST.    end.
+    for each ISSQN.      delete ISSQN.         end.
+    for each ISSQNtot.   delete ISSQNtot.    end.
+    for each II.         delete II.          end.
+    for each med.        delete med.         end.
+    for each compra.     delete compra.      end.
+    FOR EACH emit.       DELETE emit.        END.
+    FOR EACH enderEmit.  DELETE enderEmit.   END.
+    FOR EACH dest.       DELETE dest.        END.
+    FOR EACH enderDest.  DELETE enderDest.   END.
+    for each entrega.    delete entrega.     end.
+    FOR EACH det.        DELETE det.         END.
+    for each di.         delete di.          end.
+    for each adi.        delete adi.         end.
+    FOR EACH prod.       DELETE prod.        END.
+    FOR EACH cEnq.       DELETE cEnq.        END.
+    FOR EACH Transp.     DELETE Transp.      END. 
+    FOR EACH total.     DELETE total.      END. 
+    FOR EACH transporta. DELETE transporta.  END.
+    for each retTransp.  delete retTransp.   end.
+    for each veicTransp. delete veicTransp.  end.
+    for each veic.       delete veic.        end.
+    for each reboque.    delete reboque.     end.
+    for each lacres.     delete lacres.      end.
+    for each veicProd.   delete veicProd.    end.
+    for each dup.        delete dup.         end.
+    FOR EACH cobr.       DELETE cobr.        END.
+    for each fat.        delete fat.         end.
+    for each ttMsgFISCO.   delete ttMsgFISCO.    end.
+    for each ttMsgCONTR.   delete ttMsgCONTR.    end.
+    for each infAdic.    delete infAdic.     end.
+    for each vol.        delete vol.         end.
+    for each comb.       delete comb.        end.
+    for each retirada.   delete retirada.    end.
+    for each arma.       delete arma.        end.
+    for each retTrib.    delete retTrib.     end.
+    for each refNF.      delete refNF.       end.

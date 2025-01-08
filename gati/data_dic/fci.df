@@ -1,0 +1,17 @@
+DELETE FIELD "fci-numero" OF "gt-it-docum-est" 
+
+ADD FIELD "fci-numero" OF "gt-it-docum-est" AS CHAR 
+  DESCRIPTION "Numero da FCI"
+  FORMAT "x(40)"
+  INITIAL ""
+  LABEL "Nro. FCI"
+  POSITION 64
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Nro. FCI"
+  ORDER 640
+
+.
+PSC
+cpstream=ibm850
+.

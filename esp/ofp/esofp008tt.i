@@ -1,0 +1,10 @@
+define temp-table tt-param-aux no-undo
+    FIELD estabel-ini       AS CHAR
+    FIELD estabel-fim       AS CHAR
+    FIELD serie-ini         AS CHAR
+    FIELD serie-fim         AS CHAR
+    FIELD nota-ini          AS CHAR
+    FIELD nota-fim          AS CHAR
+    FIELD dt-emis-nota-ini  AS DATE
+    FIELD dt-emis-nota-fim  AS DATE
+    field data-venc         AS DATE.

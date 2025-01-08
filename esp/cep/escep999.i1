@@ -1,0 +1,21 @@
+/**********************************************************
+**
+**    CEP/CE0304.I1 - TESTA LINE-COUNTER
+**
+**********************************************************/
+
+if  line-counter > 62 then do:
+    page.
+    view frame f-cabec.
+    view frame f-rodape.
+    display grup-estoq.ge-codigo
+            grup-estoq.descricao
+            c-traco-1 
+            with stream-io frame f-grupo-estoq.
+    display item.it-codigo
+            item.un
+            item.desc-item
+            with stream-io frame f-item.
+end.
+
+/* fim do include */

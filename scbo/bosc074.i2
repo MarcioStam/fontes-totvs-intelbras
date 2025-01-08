@@ -1,0 +1,28 @@
+/*****************************************************************************
+* Programa: BOSC074.I2                                                       *
+* Data....: 17.03.2005 11:02 - Miranda                                       *
+* Autor...: CINGO - Desenvolvimento de Sistemas Sob Encomenda                *
+* Objetivo: Logica Procedure 'getTableEmbalagem' do programa BOSC074         *
+*****************************************************************************/
+
+IF  AVAIL wm-item-embalagem-etiq THEN DO:
+    CREATE tt-embalagem.
+    ASSIGN tt-embalagem.codItem          = p-cod-item
+           tt-embalagem.codembalagem     = wm-item-embalagem-etiq.cod-embal
+           tt-embalagem.cod-emb-pai      = wm-item-embalagem-local.cod-embalagem
+           tt-embalagem.logPai           = {2}
+           tt-embalagem.QtdEmbalagem     = 1
+           tt-embalagem.QtdItemEmbalagem = {1}
+           tt-embalagem.ControlaEtiqueta = wm-item-embalagem-etiq.log-controla-et.
+
+    &IF "{&bf_mat_versao_ems}":U < "2.062":U &THEN
+        ASSIGN tt-embalagem.CodLayoutItem = INTEGER(wm-item-etiq.cod-layout)
+               tt-embalagem.CodBarrasItem = wm-item-etiq.cod-barras.
+    &ELSE
+        ASSIGN tt-embalagem.CodLayoutItem = integer(wm-item.cod-layout)
+               tt-embalagem.CodBarrasItem = wm-item.cod-barras.
+    &ENDIF
+
+    ASSIGN tt-embalagem.CodLayoutEmbalagem = INTEGER(wm-item-embalagem-etiq.cod-layout)
+           tt-embalagem.CodBarrasEmbalagem = wm-item-embalagem-etiq.cod-barras.
+END.

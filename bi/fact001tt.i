@@ -1,0 +1,43 @@
+define temp-table tt-param no-undo
+   field usuario     as character
+   field senha       as character
+   field dt-inicial  as date
+   field dt-final    as date.
+
+define temp-table ttFactFaturamento no-undo
+   field CD_Estabelecimento   like nota-fiscal.cod-estabel
+   field CD_Serie             like nota-fiscal.serie
+   field CD_Nota_Fiscal       like nota-fiscal.nr-nota-fis
+   field CD_Sequencia         like it-nota-fisc.nr-seq-fat
+   field CD_Item              like it-nota-fisc.it-codigo
+   field CD_Unidade_Negocio   like unid-neg-fat.cod_unid_negoc
+   field CD_Emitente          like nota-fiscal.cod-emitente
+   field CD_Representante     like nota-fiscal.cod-rep
+   field CD_Representante_2   like ped-repre.nome-ab-rep
+   field CD_Natureza_Operacao like it-nota-fisc.nat-operacao
+   field CD_Pais              like nota-fiscal.pais
+   field CD_Estado            like nota-fiscal.estado
+   field CD_Cidade            like nota-fiscal.cidade
+   field CD_Transportadora    like transporte.cod-transp
+   field CD_Frete             as character
+   field CD_Atendente         like ped-venda.tp-pedido
+   field CD_Cancelada         as integer
+   field CD_Unidade_Comercial as integer
+   field CD_Modal             as integer
+   field CD_Canal             as integer
+   field CD_Pedido_Cliente    as CHAR
+   field DT_Emissao           like nota-fiscal.dt-emis-nota
+   field DT_Saida             like nota-fiscal.dt-saida
+   field DT_Prevista          as date
+   field DT_Entrega           as date
+   field DT_Implant_Ped       as date
+   field NM_Quantidade        as decimal
+   field NM_Vl_Unitario       as decimal
+   field NM_Vl_Liquido        as decimal
+   field NM_Vl_Total          as decimal
+   field NM_Vl_Taxa_Cambial   as decimal
+   field NM_Vl_Acordo         as decimal
+   field NM_Vl_Frete_Prev     as decimal
+   field NM_Vl_Frete_Real     as decimal
+   field NM_Vl_Desconto_MaisVerde    as decimal
+   index idx_pri is primary unique CD_Estabelecimento CD_Serie CD_Nota_Fiscal CD_Sequencia CD_Item CD_Unidade_Negocio.

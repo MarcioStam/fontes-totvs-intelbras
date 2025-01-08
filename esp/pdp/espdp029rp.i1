@@ -1,0 +1,102 @@
+for each ped-venda no-lock
+    where (if  tt-param.l-cancelados then 
+               ped-venda.cod-sit-ped = 6
+           else
+                if  tt-param.l-itens-cancelados then
+                    (ped-venda.cod-sit-ped = 1 or ped-venda.cod-sit-ped = 2 or ped-venda.cod-sit-ped = 5 or ped-venda.cod-sit-ped = 6)
+                else
+                    (ped-venda.cod-sit-ped = 1 or ped-venda.cod-sit-ped = 2 or ped-venda.cod-sit-ped = 5)        
+           )
+        ,
+    first natur-oper no-lock
+       where natur-oper.nat-operacao = ped-venda.nat-operacao
+         and natur-oper.atual-estat,
+    first emitente no-lock
+       where emitente.nome-abrev = ped-venda.nome-abrev,
+    FIRST atendente NO-LOCK
+           WHERE atendente.cd-oper                        = int(ped-venda.tp-pedido)
+             AND atendente.ind-considera-acesso-restrito  = YES,
+    each ped-item no-lock
+       where (ped-item.nome-abrev   = ped-venda.nome-abrev
+         and  ped-item.nr-pedcli    = ped-venda.nr-pedcli 
+         and  ped-item.ind-componen = 1 
+         and  ped-item.dt-entrega  <= dt-final + 1)
+         and  (if  tt-param.l-cancelados then 
+                   (ped-item.cod-sit-item = 1 or ped-item.cod-sit-item = 2 or  ped-item.cod-sit-item = 5 or ped-item.cod-sit-item = 6)
+               else 
+                    if  not tt-param.l-itens-cancelados then
+                       (ped-item.cod-sit-item = 1 or ped-item.cod-sit-item = 2 or  ped-item.cod-sit-item = 5)
+                    else
+                        ped-item.cod-sit-item = 6
+               )         
+   , first item no-lock
+       where item.it-codigo = ped-item.it-codigo
+        break {1}
+              by ped-venda.nr-pedido:
+              
+     /** Ignora or‡amentos **/
+    if  ped-venda.cod-priori = 44 then
+        next.
+  
+    IF  ped-venda.cod-sit-aval = 4 THEN  /* pedidos reprovados que deverao ser considerados no acesso restrito */
+        IF  ped-venda.quem-aprovou  <> "Sistema" THEN NEXT. /* Reprovados pelo sistema e que estejam dentro do mes ou mes inferior */
+        ELSE
+            IF ped-item.dt-entrega > dt-final THEN NEXT.
+  
+    find cotacao no-lock
+       where cotacao.mo-codigo   = ped-venda.mo-codigo
+         and cotacao.ano-periodo = string(year(today), "9999") + string(month(today), "99") no-error.
+    if available (cotacao) and (cotacao.cotacao[day(today)] <> 0) then
+       assign d-cotacao = cotacao.cotacao[day(today)].
+    else
+       assign d-cotacao = 1.
+  
+    ASSIGN i-grpcanais = 0.
+    FIND FIRST int-ped-venda2
+        WHERE int-ped-venda2.cod-estabel = ped-venda.cod-estabel
+          AND int-ped-venda2.nr-pedido   = ped-venda.nr-pedido  NO-LOCK NO-ERROR.
+    IF AVAIL int-ped-venda2 AND int-ped-venda2.int-1 <> 0 THEN
+        ASSIGN i-grpcanais = int-ped-venda2.int-1.
+    ELSE DO:
+        FIND FIRST grupo-canais-clientes
+            WHERE grupo-canais-clientes.cod-gr-cli = emitente.cod-gr-cli NO-LOCK NO-ERROR.
+        IF AVAIL grupo-canais-clientes THEN
+            ASSIGN i-grpcanais = grupo-canais-clientes.cod-gr-canais.
+    END.
+  
+    IF i-grpcanais = 0 THEN NEXT.
+
+    ASSIGN c-obs        = ped-venda.observacoes
+           c-cond-espec = ped-venda.cond-espec
+           c-obs        = REPLACE(c-obs, CHR(10), " ")
+           c-obs        = REPLACE(c-obs,CHR(13),"")
+           c-obs        = REPLACE(c-obs,CHR(9),"")
+           c-cond-espec = REPLACE(c-cond-espec, CHR(10), " ")
+           c-obs        = REPLACE(c-obs, ";", ",")
+           c-cond-espec = REPLACE(c-cond-espec, ";", ",").
+                
+    FIND FIRST estabelec NO-LOCK
+         WHERE estabelec.cod-estabel = ped-venda.cod-estabel
+         NO-ERROR.
+    FIND FIRST loc-entr NO-LOCK
+       WHERE loc-entr.nome-abrev  = ped-venda.nome-abrev
+         AND loc-entr.cod-entrega = ped-venda.cod-entrega NO-ERROR.
+    FIND FIRST repres NO-LOCK
+       WHERE repres.nome-abrev = ped-venda.no-ab-reppri NO-ERROR.
+    ASSIGN c-considera-acesso-restrito = "Sim".   
+    
+    IF AVAIL repres THEN DO:
+        IF repres.cod-rep < tt-param.i-rep-ini
+        OR repres.cod-rep > tt-param.i-rep-fim THEN NEXT.
+    END.
+    
+    FIND FIRST mgesp.int-ped-item-pci
+         WHERE mgesp.int-ped-item-pci.nome-abrev   = ped-item.nome-abrev
+           AND mgesp.int-ped-item-pci.nr-pedcli    = ped-item.nr-pedcli
+           AND mgesp.int-ped-item-pci.nr-sequencia = ped-item.nr-sequencia
+           AND mgesp.int-ped-item-pci.it-codigo    = ped-item.it-codigo
+           AND mgesp.int-ped-item-pci.cod-refer    = ped-item.cod-refer NO-LOCK NO-ERROR.
+               
+    RUN pi-imprime. 
+    
+END.

@@ -1,0 +1,74 @@
+/************************************************************
+    variaveis de trabalho para bc9020
+************************************************************/
+
+Define {1} Shared Temp-table ttwm-docto-itens No-undo Like wm-docto-itens.
+
+Define {1} Shared Temp-table ttwm-box No-undo Like wm-box
+    Field RowNum As Integer Init 1
+    Field r-Rowid AS Rowid. 
+
+Define {1} Shared TEMP-TABLE ttWm-box-movto          LIKE wm-box-movto
+        Field val-prioridade    As Integer
+        field r-rowid           as rowid
+        Index idx-prioridade val-prioridade Descending
+        index idx-movto      id-movto ascending.
+
+Define {1} Shared TEMP-TABLE tt-leitura
+           FIELD id-docto              LIKE wm-docto-itens.id-docto
+           FIELD num-seq-item          LIKE wm-docto-itens.num-seq-item
+           FIELD ind-tipo-movto        LIKE wm-box-movto.ind-tipo-movto
+           FIELD id-movto              LIKE wm-box-movto.id-movto           
+           FIELD id-box-lido           LIKE wm-box-movto.id-box 
+           FIELD cod-item-lido         LIKE wm-docto-itens.cod-item
+           FIELD qtd-item-lido         LIKE wm-docto-itens.qtd-item
+           FIELD cod-embalagem-lido    LIKE wm-box-movto.cod-embalagem
+           FIELD qti-embalagem-lido    LIKE wm-box-movto.qti-embalagem
+           FIELD qtd-item-picking      LIKE wm-box-movto.qtd-item-picking.
+                    
+Define {1} Shared Temp-table tt-box-movto       Like wm-box-movto.
+
+Define Temp-table RowErrors No-undo 
+    Field ErrorSequence    As Integer 
+    Field ErrorNumber      As Integer 
+    Field ErrorDescription As Character 
+    Field ErrorParameters  As Character 
+    Field ErrorType        As Character 
+    Field ErrorHelp        As Character 
+    Field ErrorSubType     As Character.
+
+DEFINE TEMP-TABLE ttwm-box-saldo-etiqueta NO-UNDO LIKE wm-box-saldo-etiqueta
+    FIELD RowNum AS INTEGER INIT 1
+    FIELD r-Rowid AS ROWID.
+
+/************************************************************/
+
+/***************************** Variaveis de trabalho *************************************/              
+Define {1} Shared Variable vLogValidaMovto         As Logical              Init Yes No-undo.
+Define {1} Shared Variable vCodOpcao               As Character            Init ''  No-undo.
+Define {1} Shared Variable vCodTipoEquip           As Character            Init ''  No-undo.
+Define {1} Shared Variable vCodEmbalagem           As Character            Init ''  No-undo.
+Define {1} Shared Variable vCodItem                As Character            Init ''  No-undo.
+Define {1} Shared Variable vNumCont                As Integer              Init 0   No-undo.
+Define {1} Shared Variable vNumBoxMovto            As Integer              Init 0   No-undo.
+Define {1} Shared Variable vNumSeq                 As Integer              Init 0   No-undo.
+Define {1} Shared Variable wgBOSC030               As Widget-handle                 No-undo.
+Define {1} Shared Variable vLogIniciado            As Logical              Init No  No-undo.
+Define {1} Shared Variable wgBOSC032               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC038               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC039               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC044               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC074               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC092               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC093               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC096               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgbosc098               As Widget-handle                 No-undo.       
+Define {1} Shared Variable wgBOSC079               As Widget-handle                 No-undo.
+Define {1} Shared Variable wgBOSC135               As Widget-handle                 No-undo.       
+Define {1} Shared Variable vLogOk                  As Logical              Init No  No-undo.
+Define {1} Shared Variable vLogAtivo               As Logical              Init No  No-undo.
+Define {1} Shared Variable vLogProcesso            As Logical              Init No  No-undo.
+Define {1} Shared Variable v-cod-estabel           As Character                     No-undo.
+Define {1} Shared Variable v-cod-local             As Character                     No-undo.
+Define {1} shared variable v-des-endereco-entrada  as character                     no-undo.
+

@@ -1,0 +1,4 @@
+DEFINE TEMP-TABLE tt-xml NO-UNDO
+   FIELD elementName  AS CHARACTER
+   FIELD elementValue AS CHARACTER
+   FIELD elementNS    AS CHARACTER.

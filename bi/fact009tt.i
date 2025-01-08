@@ -1,0 +1,19 @@
+define temp-table tt-param no-undo
+   field usuario     as character
+   field senha       as character
+   field dt-inicial  as date
+   field dt-final    as date.
+
+define temp-table ttFactTelefonia no-undo
+   field CD_Estabelecimento like telefonia.cod-estabel
+   field CD_Fornecedor      like telefonia.fornecedor
+   field CD_Fatura          like telefonia.nr-fatura
+   field CD_Servico         like telefonia.servico
+   field CD_Plano           like telefonia.plano
+   field CD_Equipamento     like telefonia.equipamento
+   field CD_Numero          like telefonia.numero
+   field DT_Periodo         as date                   
+   field DT_Ligacao         like telefonia.data          
+   field HR_Ligacao         like telefonia.hora
+   field NM_Valor           like telefonia.valor
+   field NM_Duracao         as int.

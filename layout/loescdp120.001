@@ -1,0 +1,19 @@
+Layout Version: 1.00.00.001
++------------------------------------------------------------------------------------------------------------------------+
+|                           Lay-out do Arquivo de Importacao de Extensoes de Bens Patrimoniais                           |
+|------------------------------------------------------------------------------------------------------------------------|
+|                                                       Formato: csv                                                     |
+|                                             Numero de colunas: 8                                                       |
+|                                         Caractere delimitador: ;                                                       |
+|------------------------------------------------------------------------------------------------------------------------|
+| Ordem |                   Descricao                       | Coluna  | Formato     | Conteudo  | Decimais | Obrigatorio |
+|-------+---------------------------------------------------+---------+-------------+-----------+----------+-------------|
+|    1  | Conta Patrimonial                                 |     1   |    x(18)    | Caractere |          |     Sim     |
+|    2  | Bem Patrimonial                                   |     2   |  >>>>>>>>9  | Inteiro   |          |     Sim     |
+|    3  | Sequencia Bem                                     |     3   |    >>>>9    | Inteiro   |          |     Sim     |
+|    4  | Horas Manutencao                                  |     4   | >>>>,>>9.99 | Decimal   |     2    |     Sim     |
+|    5  | Potencia kW                                       |     5   | >>>>,>>9.99 | Decimal   |     2    |     Sim     |
+|    6  | Molde                                             |     6   |   Sim/Nao   | Logico    |          |     Sim     |  
+|    7  | Equipamento                                       |     7   |    x(10)    | Caractere |          |     Sim     | 
+|    8  | Grupo Maquina                                     |     8   |    x(9)     | Caractere |          |     Nao     | 
++------------------------------------------------------------------------------------------------------------------------+

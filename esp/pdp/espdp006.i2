@@ -1,0 +1,37 @@
+PROCEDURE pi-valida-bloqueio-fat:
+    DEFINE INPUT  PARAM p-cod-estabel AS CHAR.
+    DEFINE OUTPUT PARAM p-mensagem    AS CHAR.
+    
+    FIND FIRST bloqueio-fat NO-LOCK NO-ERROR.
+
+    IF AVAIL bloqueio-fat THEN DO:
+        ASSIGN da-data       = DATETIME(bloqueio-fat.dt-bloq-espdp006)
+               da-data-atual = DATETIME(TODAY, MTIME).  
+
+        IF da-data-atual > da-data THEN DO:
+            IF  LOOKUP(v_cod_usuar_corren,bloqueio-fat.usua-espdp006)                                 = 0 
+            AND LOOKUP(p-cod-estabel,bloqueio-fat.estab-espdp006) = 0 THEN DO:
+    
+                ASSIGN p-mensagem = "Bloqueado para Faturamento a partir de " + string(da-data) + " Horas ".
+                RETURN "NOK".
+            END.
+        END.
+    END. /* IF AVAIL bloqueio-fat THEN DO: */
+    
+    FIND FIRST estabelec NO-LOCK
+         WHERE estabelec.cod-estabel = p-cod-estabel NO-ERROR.
+
+    FIND FIRST ser-estab NO-LOCK 
+         WHERE ser-estab.serie       = estabelec.serie      
+           AND ser-estab.cod-estabel = estabelec.cod-estabel NO-ERROR.
+
+    IF  AVAIL ser-estab 
+    AND ser-estab.dt-ult-fat < TODAY THEN DO:
+        FIND CURRENT ser-estab EXCLUSIVE-LOCK.
+        ASSIGN ser-estab.dt-ult-fat = TODAY.
+        FIND CURRENT ser-estab NO-LOCK NO-ERROR.
+        RELEASE ser-estab.
+    END.
+
+    RETURN "OK".
+END PROCEDURE.

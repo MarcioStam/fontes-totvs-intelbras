@@ -1,0 +1,17 @@
+Layout Version: 2.12.00.001
++--------------------------------------------------------------------------+
+|       Lay-out do Arquivo de Eliminacao de Gr Maq no Patrimonio UEP       |
+|--------------------------------------------------------------------------|
+|                                     Formato: csv                         |
+|                           Numero de colunas: 4                           |
+|                       Caractere delimitador: ;                           |
+|--------------------------------------------------------------------------|
+|      *** Observacao: Aplicar quebra ah ultima linha do arquivo ***       |
+|--------------------------------------------------------------------------|
+| Ordem |     Descricao     | Coluna |  Formato  | Conteudo  | Obrigatorio |
+|-------+-------------------+--------+-----------+-----------+-------------|
+|   1   | Grupo Maquina     |   1    |   x(9)    | Caractere |     Sim     | 
+|   2   | Bem Patrimonial   |   2    | >>>>>>>>9 | Inteiro   |     Sim     |
+|   3   | Sequencia Bem     |   3    |   >>>>9   | Inteiro   |     Sim     |
+|   4   | Conta Patrimonial |   4    |   x(18)   | Caractere |     Sim     |
++--------------------------------------------------------------------------+

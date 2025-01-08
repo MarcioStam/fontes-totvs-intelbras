@@ -1,0 +1,167 @@
+PROCEDURE piTestaLocalMont:
+   def input  param c-segmento as char    no-undo.
+   def output param l-erro     as logical no-undo.
+  
+   def var i-cont  as integer no-undo.
+   def var i-asc   as integer no-undo.
+   def var i-cont2 as integer no-undo.
+   
+   def var c-carac      as char no-undo.
+   def var c-str        as char no-undo.
+   def var c-str2       as char no-undo.
+   def var c-str-antes  as char no-undo.
+   def var c-str-depois as char no-undo.
+   def var c-str-x      as char no-undo.
+   
+   def var l-parentesis  as logical no-undo.
+   def var l-alfa-antes  as logical no-undo.
+   def var l-alfa-depois as logical no-undo.
+   
+   assign l-erro = no.
+   do i-cont = 1 to length(trim(c-segmento)):
+      assign i-asc = asc(caps(substring(trim(c-segmento),i-cont,1))).
+      if i-asc < 48
+      or (i-asc < 65 and i-asc > 57)
+      or (i-asc > 90) then do:
+         if  i-asc <> 45 and i-asc <> 44 and i-asc <> 40 
+         and i-asc <> 41 and i-asc <> 59 then do: 
+            l-erro = yes.
+            leave.
+         end.
+      end.
+   end.
+   assign c-str = "()-,;"
+          c-str2 = "()-,".
+   if l-erro = no then do:
+      do i-cont = 1 to length(trim(c-segmento)):
+         assign c-carac = caps(substring(c-segmento,i-cont,1))
+                c-str-antes = ""
+                c-str-depois = ""
+                c-str-x = "".
+          
+         /**** se fecha parenteses sem ter aberto ***/
+         if c-carac = ")" and l-parentesis = no then do:
+            assign l-erro = yes.
+            leave.
+         end.
+
+         /**** se abre parenteses com outro ja aberto ***/
+         if c-carac = "(" and l-parentesis = yes then do:
+            assign l-erro = yes.
+            leave.
+         end.
+
+         /**** se o primeiro caractere eh um caractere de controle ***/
+         if index(c-str, c-carac) > 0 and i-cont = 1 then do:
+            assign l-erro = yes.
+            leave.
+         end.
+         
+         /**** se fecha parentesis logo apos um caractere de controle ***/
+         if c-carac = ")" and l-parentesis = yes then do:
+            if index(c-str, substring(c-segmento,(i-cont - 1), 1)) > 0 then do:
+               assign l-erro = yes.
+               leave.
+            end.
+         end.
+         
+         /**** se parentesis esta aberto e no final nao eh fechado ***/
+         if  l-parentesis = yes 
+         and i-cont = length(trim(c-segmento))
+         and c-carac <> ")" then do:
+             assign l-erro = yes.
+             leave.
+         end.
+         
+         /**** se abre parentesis e logo em seguida eh carac de controle ***/
+         if  c-carac = "(" 
+         and index(c-str, substring(c-segmento,i-cont + 1,1)) > 0 
+         and i-cont < length(trim(c-segmento)) then do:
+             assign l-erro = yes.
+             leave.
+         end.
+         
+         /**** se o ultimo caractere eh um dos caracteres de controle ***/
+         if  (c-carac = "," or c-carac = ";" or c-carac = "-")
+         and i-cont = length(trim(c-segmento)) then do:
+              assign l-erro = yes.
+              leave.
+         end.
+            
+         /**** se caractere de controle segue outro caractere de controle ***/
+         if  index(c-str2, c-carac) > 0 
+         and index(c-str,substring(trim(c-segmento),(i-cont - 1),1)) > 0 
+         then do:
+             assign l-erro = yes.
+             leave.
+         end.
+         
+         /**** se "," e "-" sao utilizados sem parenteses aberto ***/
+         /*if (c-carac = "," or c-carac = "-") and l-parentesis = no then do:*/
+         if c-carac = "," and l-parentesis = no then do:
+            assign l-erro = yes.
+            leave.
+         end.
+
+         /**** se "-" eh utilizado e carac a fente e atraz nao sao alfanum ***/
+         if l-parentesis and
+            c-carac = "-" then do:
+             assign l-alfa-antes = no
+                    l-alfa-depois = no.
+             do i-cont2 = i-cont + 1 to length(trim(c-segmento)):
+                if substring(c-segmento, i-cont2, 1) <> ")" 
+                and substring(c-segmento, i-cont2, 1) <> "," then do:
+                    if  asc(caps(substring(c-segmento, i-cont2, 1))) >= 65 
+                    and asc(caps(substring(c-segmento, i-cont2, 1))) <= 90 
+                    then do:
+                        assign l-alfa-depois = yes.
+                    end.
+                    assign c-str-depois = c-str-depois 
+                                        + substring(c-segmento, i-cont2, 1).
+                end.                        
+                else do:
+                    leave.
+                end.
+             end.
+             if l-erro = no then do:
+                do i-cont2 = i-cont - 1 to 1 by -1:                         
+                   if  substring(c-segmento, i-cont2, 1) <> "(" 
+                   and substring(c-segmento, i-cont2, 1) <> "," then do:
+                      if  asc(caps(substring(c-segmento, i-cont2, 1))) >= 65 
+                      and asc(caps(substring(c-segmento, i-cont2, 1))) <= 90 
+                      then do:
+                          assign l-alfa-antes = yes.
+                      end.
+                      assign c-str-antes = substring(c-segmento, i-cont2, 1)
+                                         + c-str-x
+                             c-str-x     = c-str-antes.
+                   end.
+                   else do:
+                      leave.
+                   end.
+                end.
+             end.
+             if l-alfa-antes <> l-alfa-depois then do:
+                assign l-erro = yes.
+                leave.
+             end.
+             if (l-alfa-antes = yes and length(c-str-antes) > 1)
+             or (l-alfa-depois = yes and length(c-str-depois) > 1) then do:
+                assign l-erro = yes.
+                leave.
+             end.
+             if l-alfa-antes = no and l-alfa-depois = no then do:
+                if int(c-str-antes) > int(c-str-depois) then do:
+                   assign l-erro = yes.
+                   leave.
+                end.
+             end.   
+         end.
+          
+         if c-carac = "(" then
+            assign l-parentesis = yes.
+         if c-carac = ")" and l-parentesis = yes then
+            assign l-parentesis = no.
+      end.   
+   end.
+END PROCEDURE.

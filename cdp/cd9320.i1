@@ -1,0 +1,183 @@
+/*******************************************************************************
+**
+**  CD9320.I1 - Atualizacao da Inspecao do Fornecedor
+**
+*******************************************************************************/
+&IF '{&bf_lote_avancado_liberado}' = 'yes' &THEN
+/*Declarar as variaveis no programa que chama a include
+DEF VAR severa-normal-lote        AS INT NO-UNDO.
+DEF VAR severa-normal-rejeitado   AS INT NO-UNDO.
+DEF VAR normal-severa-lote        AS INT NO-UNDO.
+DEF VAR normal-severa-rejeitado   AS INT NO-UNDO.
+DEF VAR normal-atenuada-lote      AS INT NO-UNDO.
+DEF VAR normal-atenuada-rejeitado AS INT NO-UNDO.
+DEF VAR atenuada-normal-lote      AS INT NO-UNDO.
+DEF VAR atenuada-normal-rejeitado AS INT NO-UNDO.*/
+
+IF CAN-FIND(FIRST funcao 
+			WHERE funcao.cd-funcao = "lote-avancado" 
+			AND   funcao.ativo     = true NO-LOCK) THEN DO:
+	FIND fda-param-inspec-fornec WHERE fda-param-inspec-fornec.cdn-emit = {1}.cod-emitente NO-LOCK NO-ERROR.
+	IF AVAIL fda-param-inspec-fornec THEN DO:
+		ASSIGN atenuada-normal-lote      = fda-param-inspec-fornec.cdn-comut-aten-lote
+			   atenuada-normal-rejeitado = fda-param-inspec-fornec.cdn-comut-aten-rejtdo
+			   normal-atenuada-lote      = fda-param-inspec-fornec.cdn-comut-normal-aten-lote
+			   normal-atenuada-rejeitado = fda-param-inspec-fornec.cdn-comut-normal-aten-rej
+			   normal-severa-lote        = fda-param-inspec-fornec.cdn-comut-inspec-lote
+			   normal-severa-rejeitado   = fda-param-inspec-fornec.cdn-comut-inspec-rej
+			   severa-normal-lote        = fda-param-inspec-fornec.cdn-comut-sev-normal-lote
+			   severa-normal-rejeitado   = fda-param-inspec-fornec.cdn-comut-sev-normal-rejtdo.
+	END.
+	ELSE DO:
+		FIND emitente WHERE emitente.cod-emitente = {1}.cod-emitente NO-LOCK NO-ERROR.
+		FIND fda-param-inspec WHERE fda-param-inspec.cdn-grp-emit = emitente.cod-gr-forn NO-LOCK NO-ERROR.
+		IF AVAIL fda-param-inspec THEN DO:
+			ASSIGN atenuada-normal-lote      = fda-param-inspec.cdn-comut-aten-lote
+				   atenuada-normal-rejeitado = fda-param-inspec.cdn-comut-aten-rejtdo
+				   normal-atenuada-lote      = fda-param-inspec.cdn-comut-normal-aten-lote
+				   normal-atenuada-rejeitado = fda-param-inspec.cdn-comut-normal-aten-rej
+				   normal-severa-lote        = fda-param-inspec.cdn-comut-inspec-lote
+				   normal-severa-rejeitado   = fda-param-inspec.cdn-comut-inspec-rej
+				   severa-normal-lote        = fda-param-inspec.cdn-comut-sev-normal-lote
+				   severa-normal-rejeitado   = fda-param-inspec.cdn-comut-sev-normal-rejtdo.
+		END.
+		ELSE DO:
+			ASSIGN atenuada-normal-lote      = param-cq.com-an-lote
+				   atenuada-normal-rejeitado = param-cq.com-an-reje
+				   normal-atenuada-lote      = param-cq.com-na-lote
+				   normal-atenuada-rejeitado = param-cq.com-na-reje
+				   normal-severa-lote        = param-cq.com-ns-lote
+				   normal-severa-rejeitado   = param-cq.com-ns-reje
+				   severa-normal-lote        = param-cq.com-sn-lote
+				   severa-normal-rejeitado   = param-cq.com-sn-reje.
+		END.
+	END.
+END.
+ELSE DO:
+	ASSIGN atenuada-normal-lote      = param-cq.com-an-lote
+		   atenuada-normal-rejeitado = param-cq.com-an-reje
+		   normal-atenuada-lote      = param-cq.com-na-lote
+		   normal-atenuada-rejeitado = param-cq.com-na-reje
+		   normal-severa-lote        = param-cq.com-ns-lote
+		   normal-severa-rejeitado   = param-cq.com-ns-reje
+		   severa-normal-lote        = param-cq.com-sn-lote
+		   severa-normal-rejeitado   = param-cq.com-sn-reje.
+END.
+
+if avail {1} then do:
+   do i-var-aux = 2 to 30:
+       assign {1}.aval-insp[i-var-aux - 1] =
+                          {1}.aval-insp[i-var-aux].
+   end.
+   assign {1}.aval-insp[30] = i-insp.
+   if {1}.tp-inspecao < 4 then do:
+       i-var-aux-tot = 0.
+       if  {1}.tp-inspecao = 1 
+       and severa-normal-lote <> 0 then do:
+           if {1}.aval-insp[31 - severa-normal-lote] <> 5 then do:
+               do i-var-aux = 31 - severa-normal-lote to 30:
+                   if {1}.aval-insp[i-var-aux] = 2 or
+                      {1}.aval-insp[i-var-aux] = 3 then
+                       assign i-var-aux-tot = i-var-aux-tot + 1.
+               end.
+               if i-var-aux-tot <= severa-normal-rejeitado then
+                   assign {1}.tp-inspecao = 2.
+           end.
+       end.
+       else if  {1}.tp-inspecao = 2 
+            and normal-severa-lote   <> 0
+            and normal-atenuada-lote   <> 0 then do:
+                if {1}.aval-insp[31 - normal-severa-lote] <> 5 then do:
+                    do i-var-aux = 31 - normal-severa-lote to 30:
+                        if {1}.aval-insp[i-var-aux] = 2 or
+                           {1}.aval-insp[i-var-aux] = 3 then
+                            assign i-var-aux-tot = i-var-aux-tot + 1.
+                    end.
+                    if i-var-aux-tot >= normal-severa-rejeitado then
+                        assign {1}.tp-inspecao = 1.
+                end.
+                assign i-var-aux-tot = 0.
+                if {1}.aval-insp[31 - normal-atenuada-lote] <> 5 then do:
+                    do i-var-aux = 31 - normal-atenuada-lote to 30:
+                        if {1}.aval-insp[i-var-aux] = 2 or
+                           {1}.aval-insp[i-var-aux] = 3 then
+                            assign i-var-aux-tot = i-var-aux-tot + 1.
+                    end.
+                    if i-var-aux-tot <= normal-atenuada-rejeitado then
+                       assign {1}.tp-inspecao = 3.
+                end.
+            end.
+       else if  atenuada-normal-lote <> 0 then do:
+                if {1}.aval-insp[31 - atenuada-normal-lote] <> 5 then do:
+                    do i-var-aux = 31 - atenuada-normal-lote to 30:
+                        if {1}.aval-insp[i-var-aux] = 2 or
+                           {1}.aval-insp[i-var-aux] = 3 then
+                            assign i-var-aux-tot = i-var-aux-tot + 1.
+                    end.
+                    if i-var-aux-tot >= atenuada-normal-rejeitado then
+                        assign {1}.tp-inspecao = 2.
+                end.
+            end.               
+   end.
+end.
+&ELSE
+if avail {1} then do:
+   do i-var-aux = 2 to 30:
+       assign {1}.aval-insp[i-var-aux - 1] =
+                          {1}.aval-insp[i-var-aux].
+   end.
+   assign {1}.aval-insp[30] = i-insp.
+   if {1}.tp-inspecao < 4 then do:
+       i-var-aux-tot = 0.
+       if  {1}.tp-inspecao = 1 
+       and param-cq.com-sn-lote <> 0 then do:
+           if {1}.aval-insp[31 - param-cq.com-sn-lote] <> 5 then do:
+               do i-var-aux = 31 - param-cq.com-sn-lote to 30:
+                   if {1}.aval-insp[i-var-aux] = 2 or
+                      {1}.aval-insp[i-var-aux] = 3 then
+                       assign i-var-aux-tot = i-var-aux-tot + 1.
+               end.
+               if i-var-aux-tot <= param-cq.com-sn-reje then
+                   assign {1}.tp-inspecao = 2.
+           end.
+       end.
+       else if  {1}.tp-inspecao = 2 
+            and param-cq.com-ns-lote   <> 0
+            and param-cq.com-na-lote   <> 0 then do:
+                if {1}.aval-insp[31 - param-cq.com-ns-lote] <> 5 then do:
+                    do i-var-aux = 31 - param-cq.com-ns-lote to 30:
+                        if {1}.aval-insp[i-var-aux] = 2 or
+                           {1}.aval-insp[i-var-aux] = 3 then
+                            assign i-var-aux-tot = i-var-aux-tot + 1.
+                    end.
+                    if i-var-aux-tot >= param-cq.com-ns-reje then
+                        assign {1}.tp-inspecao = 1.
+                end.
+                assign i-var-aux-tot = 0.
+                if {1}.aval-insp[31 - param-cq.com-na-lote] <> 5 then do:
+                    do i-var-aux = 31 - param-cq.com-na-lote to 30:
+                        if {1}.aval-insp[i-var-aux] = 2 or
+                           {1}.aval-insp[i-var-aux] = 3 then
+                            assign i-var-aux-tot = i-var-aux-tot + 1.
+                    end.
+                    if i-var-aux-tot <= param-cq.com-na-reje then
+                       assign {1}.tp-inspecao = 3.
+                end.
+            end.
+       else if  param-cq.com-an-lote <> 0 then do:
+                if {1}.aval-insp[31 - param-cq.com-an-lote] <> 5 then do:
+                    do i-var-aux = 31 - param-cq.com-an-lote to 30:
+                        if {1}.aval-insp[i-var-aux] = 2 or
+                           {1}.aval-insp[i-var-aux] = 3 then
+                            assign i-var-aux-tot = i-var-aux-tot + 1.
+                    end.
+                    if i-var-aux-tot >= param-cq.com-an-reje then
+                        assign {1}.tp-inspecao = 2.
+                end.
+            end.               
+   end.
+end.
+&ENDIF
+
+/* CD9320.I1 */
+

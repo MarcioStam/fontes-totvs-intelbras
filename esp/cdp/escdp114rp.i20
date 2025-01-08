@@ -1,0 +1,39 @@
+procedure pi-procedimento-20:
+    if not temp-table tt-ops:has-records
+    then run pi-ordens.
+
+    assign i-cont          = 0
+           c-arquivo       = tt-param.diretorio + "ordens-sem-estrutura-ativa.txt"
+           c-titulo-relat  = "OPs de semiacabados sem relacto com estrutura ativa".
+
+    if valid-handle(h-acomp)
+    then do:
+         run pi-seta-titulo in h-acomp (input "OPs sem estrutura ativ...").
+         run pi-acompanhar  in h-acomp (input 0).
+    end.
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+    
+    view stream st-relat frame f-cabec-132.
+    view stream st-relat frame f-rodape-132.
+
+    for each tt-ops use-index id3
+       where tt-ops.sem-estrutura:
+        disp stream st-relat
+             tt-ops.it-codigo
+             tt-ops.desc-item
+             tt-ops.nr-ord-produ
+             tt-ops.qt-ordem
+             tt-ops.cod-estabel
+             tt-ops.estado
+             with frame f-06-07-20.
+        down stream st-relat with frame f-06-07-20.
+    end. /* for each tt-ops */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-20 */

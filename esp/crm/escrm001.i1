@@ -1,0 +1,78 @@
+DEFINE TEMP-TABLE tt-versao-integr NO-UNDO
+    FIELD cod-versao-integracao AS INTEGER FORMAT "999":U
+    FIELD ind-origem-msg        AS INTEGER FORMAT "99":U.
+
+DEFINE TEMP-TABLE tt-erros-geral NO-UNDO
+    FIELD identif-msg        AS CHARACTER FORMAT "x(60)":U
+    FIELD num-sequencia-erro AS INTEGER   FORMAT "999":U
+    FIELD cod-erro           AS INTEGER   FORMAT "99999":U
+    FIELD des-erro           AS CHARACTER FORMAT "x(60)":U
+    FIELD cod-maq-origem     AS INTEGER   FORMAT "999":U
+    FIELD num-processo       AS INTEGER   FORMAT "999999999":U.
+
+DEFINE TEMP-TABLE tt-cliente-valid NO-UNDO LIKE emitente
+    FIELD cod-maq-origem AS INTEGER   FORMAT "9999":U
+    FIELD num-processo   AS INTEGER   FORMAT ">>>>>>>>9":U INITIAL 0
+    FIELD num-sequencia  AS INTEGER   FORMAT ">>>>>9":U    INITIAL 0
+    FIELD ind-tipo-movto AS INTEGER   FORMAT "99":U        INITIAL 1
+    INDEX ch-codigo IS PRIMARY
+        cod-maq-origem
+        num-processo
+        num-sequencia.
+
+/*DEFINE TEMP-TABLE tt-loc-entr-valid NO-UNDO
+    FIELD nome-abrev     AS CHARACTER FORMAT "x(12)":U
+    FIELD cod-entrega    AS CHARACTER FORMAT "x(12)":U
+    FIELD endereco       AS CHARACTER FORMAT "x(40)":U
+    FIELD bairro         AS CHARACTER FORMAT "x(30)":U
+    FIELD cidade         AS CHARACTER FORMAT "x(25)":U
+    FIELD estado         AS CHARACTER FORMAT "x(04)":U
+    FIELD cep            AS CHARACTER FORMAT "x(12)":U
+    FIELD caixa-postal   AS CHARACTER FORMAT "x(10)":U
+    FIELD pais           AS CHARACTER FORMAT "x(20)":U
+    FIELD cgc            AS CHARACTER FORMAT "x(18)":U
+    FIELD ins-estadual   AS CHARACTER FORMAT "x(19)":U
+    FIELD obs-entrega    AS CHARACTER FORMAT "x(2000)":U
+    FIELD cod-tip-ent    AS INTEGER   FORMAT ">>9":U
+    FIELD zip-code       AS CHARACTER FORMAT "x(12)":U
+    FIELD e-mail         AS CHARACTER FORMAT "x(40)":U
+    FIELD cod-tax        AS INTEGER   FORMAT ">>9":U
+    FIELD char-1         AS CHARACTER FORMAT "x(100)":U
+    FIELD char-2         AS CHARACTER FORMAT "x(100)":U
+    FIELD dec-1          AS DECIMAL
+    FIELD dec-2          AS DECIMAL
+    FIELD int-1          AS INTEGER
+    FIELD int-2          AS INTEGER
+    FIELD log-1          AS LOGICAL
+    FIELD log-2          AS LOGICAL
+    FIELD data-1         AS DATE      FORMAT "99/99/9999":U
+    FIELD data-2         AS DATE      FORMAT "99/99/9999":U
+    FIELD cod-emite-entr AS INTEGER   FORMAT ">>>>>>>>9":U
+    FIELD check-sum      AS CHARACTER FORMAT "x(20)":U
+    FIELD cod-maq-origem AS INTEGER
+    FIELD num-processo   AS INTEGER   FORMAT "999999999":U
+    FIELD num-sequencia  AS INTEGER   FORMAT "999999":U
+    FIELD ind-tipo-movto AS INTEGER   FORMAT "99":U
+    INDEX ch-codigo IS PRIMARY
+        cod-maq-origem
+        num-processo
+        num-sequencia.*/
+        
+def temp-table tt-loc-entr-valid like loc-entr
+    field cod-maq-origem   as   integer format "9999"
+    field num-processo     as   integer format ">>>>>>>>9" initial 0
+    field num-sequencia    as   integer format ">>>>>9"    initial 0
+    field ind-tipo-movto   as   integer format "99"        initial 1
+    INDEX ch-codigo IS PRIMARY  cod-maq-origem
+                                num-processo
+                                num-sequencia.  
+
+DEFINE TEMP-TABLE tt-dist-emit-valid NO-UNDO LIKE dist-emitente
+    FIELD cod-maq-origem AS INTEGER   FORMAT "9999":U
+    FIELD num-processo   AS INTEGER   FORMAT ">>>>>>>>9":U INITIAL 0
+    FIELD num-sequencia  AS INTEGER   FORMAT ">>>>>9":U    INITIAL 0
+    FIELD ind-tipo-movto AS INTEGER   FORMAT "99":U        INITIAL 1
+    INDEX ch-codigo IS PRIMARY
+        cod-maq-origem
+        num-processo
+        num-sequencia.

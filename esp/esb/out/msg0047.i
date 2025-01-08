@@ -1,0 +1,8 @@
+{esp/esb/esesb000.i}.
+
+DEFINE TEMP-TABLE msg0047 NO-UNDO XML-NODE-NAME 'MSG0047'
+    FIELD idm                 AS INT XML-NODE-TYPE 'hidden'
+    FIELD ChaveIntegracao     AS CHARACTER.
+    
+DEFINE TEMP-TABLE msg0047r NO-UNDO XML-NODE-NAME 'MSG0047R1'
+   FIELD idm AS INT XML-NODE-TYPE 'hidden'.

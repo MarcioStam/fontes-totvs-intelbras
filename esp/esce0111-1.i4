@@ -1,0 +1,43 @@
+
+/*****************************************************************************
+**
+**      ESCE/CE0111.I4 - Atualiza Cod-Refer:
+**                      Ped-item, Ped-ent, Ped-saldo.
+**
+*****************************************************************************/
+hide message no-pause.
+
+if param-global.modulo-pd then do:
+
+   hide message no-pause.
+   
+   for each ped-item use-index contrato exclusive-lock
+      where ped-item.it-codigo = item.it-codigo:
+      
+       assign ped-item.cod-refer = {1}.
+   end.
+   
+   for each ped-ent use-index it-codigo exclusive-lock
+      where ped-ent.it-codigo = item.it-codigo:
+      
+       assign ped-ent.cod-refer = {1}.
+   end.
+
+   for each ped-saldo use-index ch-item exclusive-lock
+      where ped-saldo.it-codigo = item.it-codigo:
+      
+       assign ped-saldo.cod-refer = {1}
+              ped-saldo.lote      = tt-param.lote.
+   end.
+end.
+
+FOR EACH preco-item EXCLUSIVE-LOCK
+   WHERE preco-item.it-codigo = ITEM.it-codigo:
+   
+    ASSIGN preco-item.cod-refer = {1}.
+END.
+
+hide message no-pause.
+
+/* FIM */
+

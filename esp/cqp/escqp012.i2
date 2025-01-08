@@ -1,0 +1,333 @@
+/******************************************************************************
+**
+**  CQ0203.I2 - Defini‡äes de vari veis e frames padräes
+**
+*******************************************************************************/
+{include/tt-edit.i}
+define temp-table tt-param
+    field destino            as integer
+    field arquivo            as char
+    field usuario            as char
+    field data-exec          as date
+    field hora-exec          as integer
+    field classifica         as integer
+    field c-estab-ini        like ficha-cq.cod-estabel
+    field c-estab-fim        like ficha-cq.cod-estabel
+    field c-depos-ini        like ficha-cq.cod-depos
+    field c-depos-fim        like ficha-cq.cod-depos
+    field c-item-ini         like ficha-cq.it-codigo
+    field c-item-fim         like ficha-cq.it-codigo
+    field c-cod-emitente-ini like ficha-cq.cod-emitente
+    field c-cod-emitente-fim like ficha-cq.cod-emitente
+    field c-local-ini        like ficha-cq.cod-localiz
+    field c-local-fim        like ficha-cq.cod-localiz
+    field c-lote-ini         like ficha-cq.lote
+    field c-lote-fim         like ficha-cq.lote
+    field i-ficha-ini        like ficha-cq.nr-ficha
+    field i-ficha-fim        like ficha-cq.nr-ficha
+    field c-serie-ini        like ficha-cq.serie-docto
+    field c-serie-fim        like ficha-cq.serie-docto
+    field c-docto-ini        like ficha-cq.nro-docto
+    field c-docto-fim        like ficha-cq.nro-docto
+    field l-ja-impresso      as logical
+    field l-um-por-pag       as logical
+    field l-observacao       AS logical
+    FIELD l-narrativa-item   AS LOGICAL
+    FIELD l-narrativa-comp   AS LOGICAL
+    field c-classe           as char
+    field c-destino          as char.
+
+def temp-table tt-result
+    field it-codigo   like it-comp-exame.it-codigo
+    field cod-exame   like comp-exame.cod-exame
+    field cod-comp    like comp-exame.cod-comp
+    field descricao   like comp-exame.descricao
+    field nr-tabela   like comp-exame.nr-tabela
+    field unidade     like comp-exame.unidade
+    field tipo-result like comp-exame.tipo-result
+    field result-min  like comp-exame.result-min
+    field result-max  like comp-exame.result-max
+    field nr-decimais like comp-exame.nr-decimais
+    field log-1       like comp-exame.log-1
+    field narrativa   like comp-exame.narrativa
+    field local-cq    like comp-exame.local-cq
+    field compl-res   like comp-exame.compl-res
+    field inst-equip  like comp-exame.inst-equip
+    field refer-tec   like comp-exame.refer-tec
+    field metodo      like comp-exame.metodo
+    index componente is primary cod-exame 
+                                cod-comp ascending.
+
+def temp-table tt-raw-digita
+   field raw-digita as raw.
+
+def var h-acomp  as handle no-undo.
+
+{include/i-rpvar.i}
+
+{include/i-rpcab.i}
+
+run utp/ut-acomp.p persistent set h-acomp.
+run pi-inicializar in h-acomp (input "Roteiro de Inspe‡Æo").
+
+find first param-estoq  no-lock no-error.
+find first param-global no-lock no-error.
+if  avail param-global then
+    assign c-empresa = grupo.
+
+assign c-programa = "CQ/0203"
+       c-versao   = "1.00"
+       c-revisao  = "000".
+
+{utp/ut-liter.i Controle_da_Qualidade * r}
+assign c-sistema = trim(return-value).
+{utp/ut-liter.i Roteiro_de_Inspe‡Æo * r}
+assign c-titulo-relat = trim(return-value).
+
+/* Defini‡Æo de Vari veis p/ Tradu‡Æo de Literais */
+def var c-header1     as char format "x(14)".
+def var c-header2     as char format "x(13)".
+def var c-descricao   as char format "x(35)".
+def var c-titulo      as char format "x(40)".
+def var c-comp        as char format "x(12)".
+def var c-aux         as char format "x(03)" init "999".
+def var c-dec         as char format "x(4)".
+def var c-formato     as char format "x(14)".
+def var c-local       as char format "x(11)".
+def var c-res-min     as char format "x(12)".
+def var c-res-max     as char format "x(12)".
+def var c-resultado   as char format "x(10)".
+def var c-comp-res    as char format "x(15)".
+def var c-local-cq    as char format "x(9)".
+def var c-equipamento as char format "x(12)".
+def var c-ref-tec     as char format "x(10)".
+def var i-tp-insp     as int  format "9".
+def var i-cont        as int  format "99".
+def var i-aux         as int  format "9".
+def var i-x           as int  format "9".
+def var c-laudo       as char.
+def var c-faixa       as char.
+def var c-a           as char.
+def var c-tabela      as char.
+def var c-metodo      as char.
+def var c-format      as char.
+def var c-awb         as char.
+def var i-cod-comp    as integer no-undo.
+DEFINE VARIABLE c-nat-operacao LIKE ficha-cq.nat-operacao  NO-UNDO.
+
+/* Defini‡Æo de Vari veis p/ P gina de Parƒmetros */
+def var l-param       like param-global.exp-cep no-undo.
+def var c-lb-ja       as char no-undo.
+def var c-lb-pag      as char no-undo.
+def var c-lb-est      as char no-undo.
+def var c-lb-dep      as char no-undo.
+def var c-lb-item     as char no-undo.
+def var c-lb-emitente as char no-undo.
+def var c-lb-loc      as char no-undo.
+def var c-lb-lote     as char no-undo.
+def var c-lb-ficha    as char no-undo.
+def var c-lb-ser      as char no-undo.
+def var c-lb-doc      as char no-undo.
+def var c-lb-dest     as char no-undo.
+def var c-lb-usuar    as char no-undo.
+def var c-lb-sel      as char no-undo.
+def var c-lb-cla      as char no-undo.
+def var c-lb-par      as char no-undo.
+def var c-lb-imp      as char no-undo.
+def var c-lb-obs      as char no-undo.
+def var c-lb-nar-item as char no-undo.
+def var c-lb-nar-comp as char no-undo.
+def var cTextoSkipLote  as char format "X(25)" no-undo.
+
+{utp/ut-liter.i "Sim/NÆo"}
+assign c-format = trim(return-value).
+
+form header
+    skip(1)
+    /*fill("-",58) format "x(58)"*/
+    /*c-header1
+    fill("-",58) format "x(58)"*/
+    skip (1)
+    with stream-io no-box no-label width 132 frame f-traco.
+
+form header
+    skip(1)
+    fill("-",58) format "x(58)"
+    c-header2
+    fill("-",59) format "x(59)"
+    skip(1)
+    with stream-io no-box no-label width 132 frame f-traco1.
+
+form ficha-cq.nr-ficha     colon 19
+     cTextoSkipLote        at 38 no-label
+     ficha-cq.cod-localiz  colon 91
+     ficha-cq.cod-estabel  colon 19 "-"
+     estabelec.nome        no-label
+     ficha-cq.lote         colon 91
+     ficha-cq.cod-depos    colon 19 "-"
+     c-nat-operacao        colon 91
+     deposito.nome         no-label
+     docum-est.dt-emissao  colon 19
+     with stream-io no-box side-label width 132 frame f-ficha.
+/* Inicio -- Projeto Internacional -- ut-trfrrp.p adicionado */
+RUN utp/ut-trfrrp.p (INPUT FRAME f-ficha:HANDLE).
+
+     
+{utp/ut-liter.i Roteiro_Inspe‡Æo}
+assign ficha-cq.nr-ficha:label in frame f-ficha = return-value.
+{utp/ut-liter.i Localiza‡Æo}
+assign ficha-cq.cod-localiz:label in frame f-ficha = return-value.
+{utp/ut-liter.i Estabelecimento}
+assign ficha-cq.cod-estabel:label in frame f-ficha = return-value.
+{utp/ut-liter.i Lote/S‚rie}
+assign ficha-cq.lote:label in frame f-ficha = return-value.
+{utp/ut-liter.i Dep¢sito}
+assign ficha-cq.cod-depos:label in frame f-ficha = return-value.
+{utp/ut-liter.i Data_EmissÆo}
+assign docum-est.dt-emissao:label in frame f-ficha = return-value.
+
+form exam-ficha.cod-exame    colon 8  "-"
+     exame.descricao         no-label
+     exam-ficha.responsavel  colon 61
+     exam-ficha.nr-aceita    colon 91
+     exam-ficha.nr-rejeita   colon 113 skip
+     exam-ficha.tam-amostra  colon 61 
+     exame.frequencia        colon 91
+     exame.rejeita-lote      colon 113 skip(1)
+     with stream-io no-box side-label width 132 frame f-exame.
+/* Inicio -- Projeto Internacional -- ut-trfrrp.p adicionado */
+RUN utp/ut-trfrrp.p (INPUT FRAME f-exame:HANDLE).
+
+
+form exam-ficha.laudo colon 61
+with stream-io no-box side-label width 132 frame f-laudo-exame.
+/* Inicio -- Projeto Internacional -- ut-trfrrp.p adicionado */
+RUN utp/ut-trfrrp.p (INPUT FRAME f-laudo-exame:HANDLE).
+
+
+{utp/ut-liter.i Exame}
+assign exam-ficha.cod-exame:label in frame f-exame = return-value.
+{utp/ut-liter.i Respons vel}
+assign exam-ficha.responsavel:label in frame f-exame = return-value.
+{utp/ut-liter.i Num_Aceita‡Æo}
+assign exam-ficha.nr-aceita:label in frame f-exame = return-value.
+{utp/ut-liter.i Rejei‡Æo}
+assign exam-ficha.nr-rejeita:label in frame f-exame = return-value.
+{utp/ut-liter.i Tam_Amostra}
+assign exam-ficha.tam-amostra:label in frame f-exame = return-value.
+{utp/ut-liter.i Frequˆncia}
+assign exame.frequencia:label in frame f-exame = return-value.
+{utp/ut-liter.i Rejeita_Lote}
+assign exame.rejeita-lote:label in frame f-exame = return-value.
+{utp/ut-liter.i Laudo}
+assign exam-ficha.laudo:label in frame f-laudo-exame = return-value.
+
+assign exame.rejeita-lote:format in frame f-exame = c-format
+       exame.rejeita-lote:format in frame f-exame = c-format. 
+
+/*form ficha-cq.cod-emitente    colon 19 "-"
+ *      emitente.nome-emit       no-label
+ *      ordem-compra.num-pedido  colon 91
+ *      ficha-cq.nro-docto       colon 19
+ *      ficha-cq.nr-ordem        colon 91
+ *      ficha-cq.serie-docto     colon 19
+ *      ficha-cq.parcela         colon 91
+ *      item.it-codigo           colon 19 "-" 
+ *      ficha-cq.qt-original     colon 91 skip
+ *      c-descricao              at 43 no-label  "-"
+ *      item.un                  no-label
+ *      with stream-io no-box side-label width 132 frame f-comp-fic1.*/
+
+
+ form ficha-cq.cod-emitente      colon 19 "-"
+     emitente.nome-emit          no-label
+     c-awb                       colon 19
+     ordem-compra.num-pedido     colon 91
+     ficha-cq.nro-docto          colon 19
+     ficha-cq.nr-ordem           colon 91
+     ficha-cq.serie-docto        colon 19
+     ficha-cq.parcela            colon 91
+     item.it-codigo              colon 19 "-" 
+     c-descricao                 at 43 no-label format "x(35)" "-" 
+     item.un                     no-label
+     ficha-cq.qt-original        colon 91              skip
+     with stream-io no-box side-label width 132 frame f-comp-fic1.
+ /* Inicio -- Projeto Internacional -- ut-trfrrp.p adicionado */
+ RUN utp/ut-trfrrp.p (INPUT FRAME f-comp-fic1:HANDLE).
+ 
+     
+{utp/ut-liter.i Emitente}
+assign ficha-cq.cod-emitente:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i Pedido}
+assign ordem-compra.num-pedido:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i Documento}
+assign ficha-cq.nro-docto:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i Ordem}
+assign ficha-cq.nr-ordem:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i S‚rie}
+assign ficha-cq.serie-docto:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i Parcela}
+assign ficha-cq.parcela:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i Item}
+assign item.it-codigo:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i Qtde_CQ}
+assign ficha-cq.qt-original:label in frame f-comp-fic1 = return-value.
+{utp/ut-liter.i AWB}
+assign c-awb:label in frame f-comp-fic1 = return-value.
+
+form ficha-cq.cod-emitente       colon 22 "-"
+     emitente.nome-emit          no-label
+     c-awb                       colon 22
+     ficha-cq.nr-ord-prod        colon 94
+     ficha-cq.nro-docto          colon 22
+     oper-ord.cod-roteiro        colon 94
+     ficha-cq.serie-docto        colon 22
+     oper-ord.op-codigo          colon 94
+     item.it-codigo              colon 22 "-"
+     c-descricao                 no-label "-"
+     item.un                     no-label
+     ficha-cq.qt-original        colon 94
+     with stream-io no-box side-label width 132 frame f-comp-fic2.
+/* Inicio -- Projeto Internacional -- ut-trfrrp.p adicionado */
+RUN utp/ut-trfrrp.p (INPUT FRAME f-comp-fic2:HANDLE).
+
+     
+{utp/ut-liter.i Emitente}
+assign ficha-cq.cod-emitente:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i Ordem_Produ‡Æo}
+assign ficha-cq.nr-ord-prod:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i Documento}
+assign ficha-cq.nro-docto:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i Roteiro}
+assign oper-ord.cod-roteiro:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i S‚rie}
+assign ficha-cq.serie-docto:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i Opera‡Æo}
+assign oper-ord.op-codigo:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i Item}
+assign item.it-codigo:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i Qtde_CQ}
+assign ficha-cq.qt-original:label in frame f-comp-fic2 = return-value.
+{utp/ut-liter.i AWB}
+assign c-awb:label in frame f-comp-fic2 = return-value.
+
+form tt-editor.conteudo  colon 22
+    with stream-io no-box no-label width 132 frame f-narrativa-1.
+
+form tt-editor.conteudo  
+    with stream-io no-box no-label width 132 frame f-narrativa-2.     
+
+form header
+     fill("-",132) format "x(132)" skip(1)
+     with stream-io no-box no-label width 132 frame f-132.
+
+{utp/ut-liter.i Relat¢rio_Roteiro_de_Inspe‡Æo * R}
+assign c-titulo = return-value.
+
+{utp/ut-liter.i EXAMES_DO_ITEM mcq R}
+assign c-header1 = return-value.
+
+{utp/ut-liter.i EXAME_DO_ITEM mcq R}
+assign c-header2 = return-value.
+
+/* Fim da Include */

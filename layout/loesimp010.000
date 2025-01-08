@@ -1,0 +1,27 @@
++----------------------------------------------------------------------------+
+|       Layout do Arquivo de Importar Informa‡Æo do Modal de Embarques       |
+|----------------------------------------------------------------------------|
+|           Nome do Arquivo: A ser informado                                 |
+|                   Formato: Arquivo CSV (separado por ponto e v¡rgula)      |
+|----------------------------------------------------------------------------|
+|**Obs.: A primeira linha do arquivo ficou reservada para t¡tulos da coluna**|
+|----------------------------------------------------------------------------|
+|     Coluna    |  Descri‡Æo                                                 |
+|---------------+------------------------------------------------------------|
+|       01      |  Estabelecimento                                           |
+|       02      |  Embaque                                                   |
+|       03      |  Via Transporte (Rodovi rio, Aerovi rio, Mar¡timo, Ferro-  |
+|               |  vi rio, Rodoferrovi rio, Rodofluvial, Rodoaerovi rio ou   |
+|               |  Outros)                                                   |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
+|               |                                                            |
++----------------------------------------------------------------------------+

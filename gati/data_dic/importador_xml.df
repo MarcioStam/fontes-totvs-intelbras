@@ -1,0 +1,3329 @@
+ADD TABLE "gati-xml"
+  AREA "Schema Area"
+  DUMP-NAME "gati-xml"
+
+ADD FIELD "chave-acesso" OF "gati-xml" AS character 
+  DESCRIPTION "Chave Acesso"
+  FORMAT "x(60)"
+  INITIAL ""
+  LABEL "Chave Acesso"
+  POSITION 2
+  MAX-WIDTH 120
+  VIEW-AS ""
+  COLUMN-LABEL "Chave Acesso"
+  ORDER 480
+  MANDATORY
+
+ADD FIELD "xml" OF "gati-xml" AS clob 
+  FORMAT "x(8)"
+  INITIAL ?
+  POSITION 3
+  LOB-AREA "Schema Area"
+  LOB-BYTES 104857600
+  LOB-SIZE 100M
+  CLOB-CODEPAGE "iso8859-1"
+  CLOB-COLLATION "basic"
+  CLOB-TYPE 1
+  ORDER 490
+
+ADD FIELD "data-hora" OF "gati-xml" AS datetime 
+  DESCRIPTION "Data/Hora"
+  FORMAT "99/99/9999 HH:MM:SS.SSS"
+  INITIAL ?
+  LABEL "Data/Hora"
+  POSITION 4
+  MAX-WIDTH 8
+  VIEW-AS ""
+  COLUMN-LABEL "Data/Hora"
+  ORDER 500
+
+ADD FIELD "nsu" OF "gati-xml" AS decimal 
+  DESCRIPTION "Numero Sequencia Unico"
+  FORMAT ">>>>>>>>>>>9"
+  INITIAL "0"
+  LABEL "Numero Sequencial"
+  POSITION 5
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "NSU"
+  DECIMALS 2
+  ORDER 510
+
+ADD INDEX "ch-nsu" ON "gati-xml" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "nsu" ASCENDING 
+
+ADD INDEX "ch-data-hora" ON "gati-xml" 
+  AREA "Schema Area"
+  INDEX-FIELD "data-hora" ASCENDING 
+
+ADD TABLE "gati-log"
+  AREA "Schema Area"
+  LABEL "Log de erros"
+  DESCRIPTION "Log de erros de importacao de arquivos XML."
+  DUMP-NAME "gati-log"
+
+ADD FIELD "origem" OF "gati-log" AS character 
+  DESCRIPTION "URL Origem"
+  FORMAT "x(500)"
+  INITIAL ""
+  LABEL "URL Origem"
+  POSITION 3
+  MAX-WIDTH 1000
+  VIEW-AS ""
+  COLUMN-LABEL "URL Origem"
+  ORDER 20
+
+ADD FIELD "tag" OF "gati-log" AS character 
+  DESCRIPTION "TAG"
+  FORMAT "x(10)"
+  INITIAL ""
+  LABEL "TAG"
+  POSITION 4
+  MAX-WIDTH 20
+  VIEW-AS ""
+  COLUMN-LABEL "TAG"
+  ORDER 30
+
+ADD FIELD "chave-acesso" OF "gati-log" AS character 
+  DESCRIPTION "Chave Acesso"
+  FORMAT "x(60)"
+  INITIAL ""
+  LABEL "Chave Acesso"
+  POSITION 5
+  MAX-WIDTH 120
+  VIEW-AS ""
+  COLUMN-LABEL "Chave Acesso"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "msg" OF "gati-log" AS character 
+  DESCRIPTION "MSG Erro"
+  FORMAT "x(2000)"
+  INITIAL ""
+  LABEL "MSG Erro"
+  POSITION 6
+  MAX-WIDTH 4000
+  VIEW-AS ""
+  COLUMN-LABEL "MSG Erro"
+  ORDER 50
+
+ADD FIELD "data-hora" OF "gati-log" AS datetime 
+  DESCRIPTION "Data e Hora"
+  FORMAT "99/99/9999 HH:MM:SS.SSS"
+  INITIAL ?
+  LABEL "Data e Hora"
+  POSITION 7
+  MAX-WIDTH 8
+  VIEW-AS ""
+  COLUMN-LABEL "Data e Hora"
+  ORDER 60
+
+ADD FIELD "ep-codigo" OF "gati-log" AS integer 
+  DESCRIPTION "Empresa"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Empresa"
+  POSITION 8
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Empresa"
+  ORDER 70
+
+ADD FIELD "cod-estabel" OF "gati-log" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 9
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "nsu" OF "gati-log" AS decimal 
+  DESCRIPTION "Numero Sequencia Unico"
+  FORMAT ">>>>>>>>>>>9"
+  INITIAL "0"
+  LABEL "Numero Sequencial"
+  POSITION 10
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "NSU"
+  DECIMALS 2
+  ORDER 90
+
+ADD INDEX "ch-chave" ON "gati-log" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "chave-acesso" ASCENDING 
+
+ADD INDEX "ch-ep-estab" ON "gati-log" 
+  AREA "Schema Area"
+  INDEX-FIELD "ep-codigo" ASCENDING 
+  INDEX-FIELD "cod-estabel" ASCENDING 
+
+ADD INDEX "ch-nsu" ON "gati-log" 
+  AREA "Schema Area"
+  INDEX-FIELD "nsu" ASCENDING 
+
+ADD INDEX "ch-tag-data" ON "gati-log" 
+  AREA "Schema Area"
+  INDEX-FIELD "tag" ASCENDING 
+  INDEX-FIELD "data-hora" ASCENDING 
+
+ADD TABLE "gt-ext-it-docum-est"
+  AREA "Schema Area"
+  LABEL "Ext. gt-it-docum-est"
+  DESCRIPTION "Tabela que relaciona itens da gt-it-docum-est com os item-doc-est gerados por ela."
+  DUMP-NAME "gt-ext-i"
+
+ADD FIELD "nome-arq" OF "gt-ext-it-docum-est" AS character 
+  FORMAT "X(50)"
+  INITIAL ""
+  LABEL "Arquivo XML"
+  POSITION 2
+  MAX-WIDTH 100
+  COLUMN-LABEL "Arquivo XML"
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "serie-docto-gt" OF "gt-ext-it-docum-est" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 3
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 20
+  MANDATORY
+
+ADD FIELD "nro-docto-gt" OF "gt-ext-it-docum-est" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 4
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "N£mero Documento"
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "cod-emitente-gt" OF "gt-ext-it-docum-est" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 5
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "sequencia-gt" OF "gt-ext-it-docum-est" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 7
+  MAX-WIDTH 4
+  COLUMN-LABEL "Sequencia"
+  ORDER 60
+  MANDATORY
+
+ADD FIELD "serie-docto-pad" OF "gt-ext-it-docum-est" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 8
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 70
+  MANDATORY
+
+ADD FIELD "nro-docto-pad" OF "gt-ext-it-docum-est" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 9
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "N£mero Documento"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "cod-emitente-pad" OF "gt-ext-it-docum-est" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 10
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 90
+  MANDATORY
+
+ADD FIELD "nat-operacao-pad" OF "gt-ext-it-docum-est" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Natureza Operacao"
+  POSITION 11
+  MAX-WIDTH 12
+  COLUMN-LABEL "Natur Oper"
+  ORDER 100
+  MANDATORY
+
+ADD FIELD "sequencia-pad" OF "gt-ext-it-docum-est" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 12
+  MAX-WIDTH 4
+  COLUMN-LABEL "Sequencia"
+  ORDER 110
+  MANDATORY
+
+ADD INDEX "ch-relac" ON "gt-ext-it-docum-est" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "nome-arq" ASCENDING 
+  INDEX-FIELD "serie-docto-gt" ASCENDING 
+  INDEX-FIELD "nro-docto-gt" ASCENDING 
+  INDEX-FIELD "cod-emitente-gt" ASCENDING 
+  INDEX-FIELD "sequencia-gt" ASCENDING 
+  INDEX-FIELD "serie-docto-pad" ASCENDING 
+  INDEX-FIELD "nro-docto-pad" ASCENDING 
+  INDEX-FIELD "cod-emitente-pad" ASCENDING 
+  INDEX-FIELD "nat-operacao-pad" ASCENDING 
+  INDEX-FIELD "sequencia-pad" ASCENDING 
+
+ADD INDEX "ch-doc-pad" ON "gt-ext-it-docum-est" 
+  AREA "Schema Area"
+  INDEX-FIELD "serie-docto-pad" ASCENDING 
+  INDEX-FIELD "nro-docto-pad" ASCENDING 
+  INDEX-FIELD "cod-emitente-pad" ASCENDING 
+  INDEX-FIELD "nat-operacao-pad" ASCENDING 
+
+ADD INDEX "ch-it-gt" ON "gt-ext-it-docum-est" 
+  AREA "Schema Area"
+  INDEX-FIELD "serie-docto-gt" ASCENDING 
+  INDEX-FIELD "nro-docto-gt" ASCENDING 
+  INDEX-FIELD "cod-emitente-gt" ASCENDING 
+  INDEX-FIELD "sequencia-gt" ASCENDING 
+
+ADD INDEX "ch-it-pad" ON "gt-ext-it-docum-est" 
+  AREA "Schema Area"
+  UNIQUE
+  INDEX-FIELD "serie-docto-pad" ASCENDING 
+  INDEX-FIELD "nro-docto-pad" ASCENDING 
+  INDEX-FIELD "cod-emitente-pad" ASCENDING 
+  INDEX-FIELD "nat-operacao-pad" ASCENDING 
+  INDEX-FIELD "sequencia-pad" ASCENDING 
+
+ADD TABLE "gati-cte"
+  AREA "Schema Area"
+  DESCRIPTION "Documentos CTE"
+  DUMP-NAME "gati-cte"
+
+ADD FIELD "cod-cfop" OF "gati-cte" AS character 
+  DESCRIPTION "Codigo da CFOP"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Cod CFOP"
+  POSITION 2
+  MAX-WIDTH 32
+  COLUMN-LABEL "Cod CFOP"
+  ORDER 10
+
+ADD FIELD "cod-emitente" OF "gati-cte" AS integer 
+  DESCRIPTION "Codigo do emitente"
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cod Emit"
+  POSITION 3
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Emit"
+  ORDER 20
+
+ADD FIELD "serie-docto" OF "gati-cte" AS character 
+  DESCRIPTION "Serie do documento"
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie Docto"
+  POSITION 4
+  MAX-WIDTH 10
+  VIEW-AS ""
+  COLUMN-LABEL "Serie Docto"
+  ORDER 30
+
+ADD FIELD "nro-docto" OF "gati-cte" AS character 
+  DESCRIPTION "Numero do documento"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nro Docto"
+  POSITION 5
+  MAX-WIDTH 32
+  COLUMN-LABEL "Nro Docto"
+  ORDER 40
+
+ADD FIELD "cod-aces-comp-nfe" OF "gati-cte" AS character 
+  FORMAT "x(55)"
+  INITIAL ""
+  LABEL "Cod Acesso"
+  POSITION 6
+  MAX-WIDTH 110
+  COLUMN-LABEL "Cod Acesso"
+  ORDER 50
+
+ADD FIELD "idi-orig-trad" OF "gati-cte" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  POSITION 7
+  MAX-WIDTH 4
+  VIEW-AS ""
+  ORDER 60
+
+ADD FIELD "cod-uf" OF "gati-cte" AS character 
+  DESCRIPTION "UF"
+  FORMAT "x(4)"
+  INITIAL ""
+  LABEL "UF"
+  POSITION 8
+  MAX-WIDTH 8
+  VIEW-AS ""
+  COLUMN-LABEL "UF"
+  ORDER 70
+
+ADD FIELD "dt-emissao" OF "gati-cte" AS date 
+  DESCRIPTION "Data de emissao"
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Dt Emis"
+  POSITION 9
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Dt Emis"
+  ORDER 80
+
+ADD FIELD "tp-nf" OF "gati-cte" AS character 
+  DESCRIPTION "Tp NF"
+  FORMAT "x(8)"
+  INITIAL ""
+  LABEL "Tp NF"
+  POSITION 10
+  MAX-WIDTH 16
+  VIEW-AS ""
+  COLUMN-LABEL "Tp NF"
+  ORDER 90
+
+ADD FIELD "cdn-modalid-frete" OF "gati-cte" AS integer 
+  DESCRIPTION "Modalidade de frete"
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "Mod Frete"
+  POSITION 11
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Mod Frete"
+  ORDER 100
+
+ADD FIELD "cnpj-emit" OF "gati-cte" AS character 
+  DESCRIPTION "CNPJ do emitente"
+  FORMAT "x(19)"
+  INITIAL ""
+  LABEL "CNPJ Emit"
+  POSITION 12
+  MAX-WIDTH 38
+  VIEW-AS ""
+  COLUMN-LABEL "CNPJ Emit"
+  ORDER 110
+
+ADD FIELD "cod-lograd-emit" OF "gati-cte" AS character 
+  DESCRIPTION "Logradouro emitente"
+  FORMAT "x(60)"
+  INITIAL ""
+  LABEL "Cod Lograd Emit"
+  POSITION 13
+  MAX-WIDTH 120
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Lograd Emit"
+  ORDER 120
+
+ADD FIELD "num-end-emit" OF "gati-cte" AS character 
+  DESCRIPTION "Numero do endereco do emitente"
+  FORMAT "x(10)"
+  INITIAL ""
+  LABEL "Num Emit"
+  POSITION 14
+  MAX-WIDTH 20
+  VIEW-AS ""
+  COLUMN-LABEL "Num Emit"
+  ORDER 130
+
+ADD FIELD "cod-compl-emit" OF "gati-cte" AS character 
+  DESCRIPTION "Complemento do emitente"
+  FORMAT "x(40)"
+  INITIAL ""
+  LABEL "Cod Compl Emit"
+  POSITION 15
+  MAX-WIDTH 80
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Compl Emit"
+  ORDER 140
+
+ADD FIELD "cod-bairro-emit" OF "gati-cte" AS character 
+  DESCRIPTION "Bairro do emitente"
+  FORMAT "x(40)"
+  INITIAL ""
+  LABEL "Bairro Emit"
+  POSITION 16
+  MAX-WIDTH 80
+  VIEW-AS ""
+  COLUMN-LABEL "Bairro Emit"
+  ORDER 150
+
+ADD FIELD "cod-munpio-emit" OF "gati-cte" AS character 
+  DESCRIPTION "Municipio do emitente"
+  FORMAT "x(50)"
+  INITIAL ""
+  LABEL "Municipio Emit"
+  POSITION 17
+  MAX-WIDTH 100
+  VIEW-AS ""
+  COLUMN-LABEL "Municipio Emit"
+  ORDER 160
+
+ADD FIELD "cod-cep-emit" OF "gati-cte" AS character 
+  DESCRIPTION "CEP do emitente"
+  FORMAT "x(10)"
+  INITIAL ""
+  LABEL "CEP Emit"
+  POSITION 18
+  MAX-WIDTH 20
+  VIEW-AS ""
+  COLUMN-LABEL "CEP Emit"
+  ORDER 170
+
+ADD FIELD "cod-uf-emit" OF "gati-cte" AS character 
+  DESCRIPTION "UF do emitente"
+  FORMAT "x(4)"
+  INITIAL ""
+  LABEL "UF Emit"
+  POSITION 19
+  MAX-WIDTH 8
+  VIEW-AS ""
+  COLUMN-LABEL "UF Emit"
+  ORDER 180
+
+ADD FIELD "val-tot-mercad" OF "gati-cte" AS decimal 
+  FORMAT "->>,>>>,>>>,>>9.99999"
+  INITIAL "0"
+  LABEL "Val Tot Mercad"
+  POSITION 20
+  MAX-WIDTH 20
+  VIEW-AS ""
+  COLUMN-LABEL "Val Tot Mercad"
+  DECIMALS 5
+  ORDER 190
+
+ADD FIELD "cod-placa" OF "gati-cte" AS character 
+  DESCRIPTION "Placa"
+  FORMAT "x(12)"
+  INITIAL ""
+  LABEL "Placa"
+  POSITION 21
+  MAX-WIDTH 24
+  VIEW-AS ""
+  COLUMN-LABEL "Placa"
+  ORDER 200
+
+ADD FIELD "idi-situacao" OF "gati-cte" AS integer 
+  DESCRIPTION "Situacao"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Situacao"
+  POSITION 22
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Situacao"
+  ORDER 210
+
+ADD FIELD "cod-cnpj-dest" OF "gati-cte" AS character 
+  DESCRIPTION "CNPJ do destinat rio"
+  FORMAT "x(19)"
+  INITIAL ""
+  LABEL "CNPJ Dest"
+  POSITION 24
+  MAX-WIDTH 38
+  VIEW-AS ""
+  COLUMN-LABEL "CNPJ Dest"
+  ORDER 230
+
+ADD FIELD "cnpj-rem" OF "gati-cte" AS character 
+  FORMAT "x(19)"
+  INITIAL ""
+  LABEL "CNPJ Rem"
+  POSITION 25
+  MAX-WIDTH 38
+  VIEW-AS ""
+  COLUMN-LABEL "CNPJ Rem"
+  ORDER 240
+
+ADD FIELD "cod-livre-1" OF "gati-cte" AS character 
+  FORMAT "x(500)"
+  INITIAL ""
+  LABEL "Cod Livre 1"
+  POSITION 26
+  MAX-WIDTH 1000
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Livre 1"
+  ORDER 250
+
+ADD FIELD "cod-estabel" OF "gati-cte" AS character 
+  DESCRIPTION "Codigo do estabelecimento"
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estab"
+  POSITION 27
+  MAX-WIDTH 6
+  VIEW-AS ""
+  COLUMN-LABEL "Estab"
+  ORDER 260
+
+ADD FIELD "num-livre-1" OF "gati-cte" AS integer 
+  FORMAT "->,>>>,>>>,>>9"
+  INITIAL "0"
+  POSITION 28
+  MAX-WIDTH 4
+  VIEW-AS ""
+  ORDER 270
+
+ADD FIELD "log-importado" OF "gati-cte" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  LABEL "Importado"
+  POSITION 29
+  MAX-WIDTH 1
+  VIEW-AS ""
+  COLUMN-LABEL "Importado"
+  ORDER 280
+
+ADD FIELD "nat-operacao" OF "gati-cte" AS character 
+  DESCRIPTION "Natureza de operacao"
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Nat Oper"
+  POSITION 30
+  MAX-WIDTH 12
+  VIEW-AS ""
+  COLUMN-LABEL "Nat Oper"
+  ORDER 290
+
+ADD FIELD "observacao" OF "gati-cte" AS character 
+  DESCRIPTION "Narrativa"
+  FORMAT "x(2000)"
+  INITIAL ""
+  LABEL "Narrativa"
+  POSITION 31
+  MAX-WIDTH 4000
+  VIEW-AS ""
+  COLUMN-LABEL "Narrativa"
+  ORDER 300
+
+ADD FIELD "ep-codigo" OF "gati-cte" AS integer 
+  DESCRIPTION "Empresa"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Empresa"
+  POSITION 32
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Empresa"
+  ORDER 310
+
+ADD FIELD "cd-trib-icm" OF "gati-cte" AS integer 
+  DESCRIPTION "Codigo de Tributacao do ICMS"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Cod. Trib. ICMS"
+  POSITION 33
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cod. Trib. ICMS"
+  ORDER 320
+
+ADD FIELD "base-icm" OF "gati-cte" AS decimal 
+  DESCRIPTION "Base C lculo ICMS"
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Base C lculo ICMS"
+  POSITION 34
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Base C lculo ICMS"
+  DECIMALS 2
+  ORDER 330
+
+ADD FIELD "aliquota-icm" OF "gati-cte" AS decimal 
+  DESCRIPTION "Aliquota ICMS"
+  FORMAT ">>9.99"
+  INITIAL "0"
+  LABEL "Aliquota ICMS"
+  POSITION 35
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Aliquota ICMS"
+  DECIMALS 2
+  ORDER 340
+
+ADD FIELD "valor-icm" OF "gati-cte" AS decimal 
+  DESCRIPTION "Valor ICMS"
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor ICMS"
+  POSITION 36
+  MAX-WIDTH 17
+  COLUMN-LABEL "Valor ICMS"
+  DECIMALS 2
+  ORDER 350
+
+ADD FIELD "red-bc-icm" OF "gati-cte" AS decimal 
+  DESCRIPTION "Red. BC ICMS"
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Red. BC ICMS"
+  POSITION 37
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Red. BC ICMS"
+  DECIMALS 2
+  ORDER 360
+
+ADD FIELD "base-subs" OF "gati-cte" AS decimal 
+  DESCRIPTION "Base ICMS ST"
+  FORMAT ">>>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Base ICMS ST"
+  POSITION 38
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Base ICMS ST"
+  DECIMALS 2
+  ORDER 370
+
+ADD FIELD "vl-subs" OF "gati-cte" AS decimal 
+  DESCRIPTION "Valor ICMS ST"
+  FORMAT ">>>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor ICMS ST"
+  POSITION 39
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Valor ICMS ST"
+  DECIMALS 2
+  ORDER 380
+
+ADD INDEX "ch-unico1" ON "gati-cte" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "cod-aces-comp-nfe" ASCENDING 
+
+ADD INDEX "ch-1" ON "gati-cte" 
+  AREA "Schema Area"
+  INDEX-FIELD "cod-estabel" ASCENDING 
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "dt-emissao" ASCENDING 
+  INDEX-FIELD "cnpj-emit" ASCENDING 
+
+ADD INDEX "ch-re1001" ON "gati-cte" 
+  AREA "Schema Area"
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "serie-docto" ASCENDING 
+
+ADD TABLE "gati-rat-cte"
+  AREA "Schema Area"
+  DESCRIPTION "Rateio CT-e"
+  DUMP-NAME "gati-rat"
+
+ADD FIELD "cod-aces-comp-nfe" OF "gati-rat-cte" AS character 
+  FORMAT "x(55)"
+  INITIAL ""
+  LABEL "Cod Acesso"
+  POSITION 2
+  MAX-WIDTH 110
+  COLUMN-LABEL "Cod Acesso"
+  ORDER 50
+
+ADD FIELD "idi-orig-trad" OF "gati-rat-cte" AS integer 
+  DESCRIPTION "Orig"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Orig"
+  POSITION 3
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Orig"
+  ORDER 60
+
+ADD FIELD "serie-docto" OF "gati-rat-cte" AS character 
+  DESCRIPTION "Serie do documento"
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie Docto"
+  POSITION 4
+  MAX-WIDTH 10
+  VIEW-AS ""
+  COLUMN-LABEL "Serie Docto"
+  ORDER 70
+
+ADD FIELD "nro-docto" OF "gati-rat-cte" AS character 
+  DESCRIPTION "Numero do documento"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nro Docto"
+  POSITION 5
+  MAX-WIDTH 32
+  COLUMN-LABEL "Nro Docto"
+  ORDER 80
+
+ADD FIELD "cod-emitente" OF "gati-rat-cte" AS integer 
+  DESCRIPTION "Codigo do emitente"
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cod Emit"
+  POSITION 6
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Emit"
+  ORDER 90
+
+ADD FIELD "nf-nro" OF "gati-rat-cte" AS character 
+  DESCRIPTION "Numero do documento"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nro Docto"
+  POSITION 7
+  MAX-WIDTH 32
+  COLUMN-LABEL "Nro Docto"
+  ORDER 100
+
+ADD FIELD "nf-emitente" OF "gati-rat-cte" AS integer 
+  DESCRIPTION "Codigo do emitente"
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cod Emit"
+  POSITION 8
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Emit"
+  ORDER 110
+
+ADD FIELD "nf-serie" OF "gati-rat-cte" AS character 
+  DESCRIPTION "Serie do documento"
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie Docto"
+  POSITION 9
+  MAX-WIDTH 10
+  VIEW-AS ""
+  COLUMN-LABEL "Serie Docto"
+  ORDER 120
+
+ADD FIELD "nf-nat-oper" OF "gati-rat-cte" AS character 
+  DESCRIPTION "Natureza de operacao"
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Nat Oper"
+  POSITION 10
+  MAX-WIDTH 12
+  VIEW-AS ""
+  COLUMN-LABEL "Nat Oper"
+  ORDER 130
+
+ADD FIELD "tipo-nota" OF "gati-rat-cte" AS integer 
+  DESCRIPTION "Tipo"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Tipo"
+  POSITION 11
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Tipo"
+  ORDER 140
+
+ADD FIELD "ind-origem-nf" OF "gati-rat-cte" AS integer 
+  DESCRIPTION "Origem NF"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Origem NF"
+  POSITION 12
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Origem NF"
+  ORDER 150
+
+ADD FIELD "cnpj" OF "gati-rat-cte" AS character 
+  DESCRIPTION "CNPJ"
+  FORMAT "x(19)"
+  INITIAL ""
+  LABEL "CNPJ"
+  POSITION 13
+  MAX-WIDTH 38
+  VIEW-AS ""
+  COLUMN-LABEL "CNPJ"
+  ORDER 160
+
+ADD FIELD "nat-oper-ac" OF "gati-rat-cte" AS character 
+  DESCRIPTION "Natureza de operacao da despesa acessoria, despesa-aces"
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Nat Oper Ac"
+  POSITION 14
+  MAX-WIDTH 12
+  VIEW-AS ""
+  COLUMN-LABEL "Nat Oper Ac"
+  ORDER 170
+
+ADD INDEX "ch-pai" ON "gati-rat-cte" 
+  AREA "Schema Area"
+  PRIMARY
+  INDEX-FIELD "nf-emitente" ASCENDING 
+  INDEX-FIELD "nf-serie" ASCENDING 
+  INDEX-FIELD "nf-nat-oper" ASCENDING 
+  INDEX-FIELD "nf-nro" ASCENDING 
+
+ADD INDEX "ch-chave" ON "gati-rat-cte" 
+  AREA "Schema Area"
+  INDEX-FIELD "cod-aces-comp-nfe" ASCENDING 
+
+ADD INDEX "ch-cte" ON "gati-rat-cte" 
+  AREA "Schema Area"
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+
+ADD TABLE "gt-doc-fisico"
+  AREA "Schema Area"
+  DUMP-NAME "gt-doc-f"
+
+ADD FIELD "serie-docto" OF "gt-doc-fisico" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 2
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "nro-docto" OF "gt-doc-fisico" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 3
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "N£mero Documento"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "cod-emitente" OF "gt-doc-fisico" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 4
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 50
+  MANDATORY
+
+ADD FIELD "ds-chave" OF "gt-doc-fisico" AS character 
+  FORMAT "x(60)"
+  INITIAL ""
+  POSITION 6
+  MAX-WIDTH 120
+  ORDER 70
+
+ADD INDEX "primary" ON "gt-doc-fisico" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+
+ADD TABLE "gt-docum-est-cancel"
+  AREA "Schema Area"
+  DESCRIPTION "Recebimentos que precisam ser desatualizados"
+  DUMP-NAME "gt-docum"
+
+ADD FIELD "nro-docto" OF "gt-docum-est-cancel" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 2
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "N£mero Documento"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "cod-emitente" OF "gt-docum-est-cancel" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 3
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 50
+  MANDATORY
+
+ADD FIELD "nat-operacao" OF "gt-docum-est-cancel" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Natureza Operacao"
+  POSITION 4
+  MAX-WIDTH 12
+  COLUMN-LABEL "Natur Oper"
+  ORDER 60
+  MANDATORY
+
+ADD FIELD "serie-docto" OF "gt-docum-est-cancel" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 5
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 70
+  MANDATORY
+
+ADD FIELD "cod-estabel" OF "gt-docum-est-cancel" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 6
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 80
+
+ADD INDEX "codigo" ON "gt-docum-est-cancel" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+  INDEX-FIELD "serie-docto" ASCENDING 
+
+ADD TABLE "gt-dupli-apagar"
+  AREA "Schema Area"
+  LABEL "Duplicatas"
+  DESCRIPTION "Duplicatas"
+  DUMP-NAME "gt-dupli"
+
+ADD FIELD "nome-arq" OF "gt-dupli-apagar" AS character 
+  FORMAT "X(50)"
+  INITIAL ""
+  LABEL "Arquivo XML"
+  POSITION 2
+  MAX-WIDTH 100
+  COLUMN-LABEL "Arquivo XML"
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "parcela" OF "gt-dupli-apagar" AS character 
+  DESCRIPTION "Parcela"
+  FORMAT "x(2)"
+  INITIAL ""
+  LABEL "Parcela"
+  POSITION 3
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Parcela"
+  ORDER 20
+
+ADD FIELD "nr-duplic" OF "gt-dupli-apagar" AS character 
+  DESCRIPTION "Numero da duplicata"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nro Duplic"
+  POSITION 4
+  MAX-WIDTH 32
+  VIEW-AS ""
+  COLUMN-LABEL "Nro Duplic"
+  ORDER 30
+
+ADD FIELD "vl-a-pagar" OF "gt-dupli-apagar" AS decimal 
+  DESCRIPTION "Valor a pagar da duplicata"
+  FORMAT ">>>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Duplic"
+  POSITION 5
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Valor Duplic"
+  DECIMALS 2
+  ORDER 40
+
+ADD FIELD "dt-vencim" OF "gt-dupli-apagar" AS date 
+  DESCRIPTION "Data de vencimento da duplicata"
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Dt Vencto"
+  POSITION 6
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Dt Vencto"
+  ORDER 50
+
+ADD INDEX "unico" ON "gt-dupli-apagar" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "nome-arq" ASCENDING 
+  INDEX-FIELD "parcela" ASCENDING 
+
+ADD TABLE "gt-it-docum-est"
+  AREA "Schema Area"
+  LABEL "Item Doc Est"
+  DESCRIPTION "Esp Item doc est para importador xml"
+  DUMP-NAME "gt-it-do"
+
+ADD FIELD "nome-arq" OF "gt-it-docum-est" AS character 
+  FORMAT "X(50)"
+  INITIAL ""
+  LABEL "Arquivo XML"
+  POSITION 2
+  MAX-WIDTH 100
+  COLUMN-LABEL "Arquivo XML"
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "serie-docto" OF "gt-it-docum-est" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 3
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "nro-docto" OF "gt-it-docum-est" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 4
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "Numero Documento"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "nat-operacao" OF "gt-it-docum-est" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Natureza Operacao"
+  POSITION 5
+  MAX-WIDTH 12
+  COLUMN-LABEL "Natur Oper"
+  ORDER 50
+  MANDATORY
+
+ADD FIELD "cod-emitente" OF "gt-it-docum-est" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 6
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 60
+  MANDATORY
+
+ADD FIELD "cod-estabel" OF "gt-it-docum-est" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 7
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 70
+
+ADD FIELD "it-codigo" OF "gt-it-docum-est" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Item"
+  POSITION 8
+  MAX-WIDTH 32
+  COLUMN-LABEL "Item"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "etiquetas" OF "gt-it-docum-est" AS integer 
+  FORMAT "zz9"
+  INITIAL "0"
+  LABEL "Etiquetas"
+  POSITION 9
+  MAX-WIDTH 4
+  COLUMN-LABEL "Etiquetas"
+  ORDER 90
+
+ADD FIELD "qt-do-forn" OF "gt-it-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.9999"
+  INITIAL "0"
+  LABEL "Qt Fornecedor"
+  POSITION 10
+  MAX-WIDTH 17
+  COLUMN-LABEL "Qt Fornecedor"
+  DECIMALS 4
+  ORDER 100
+
+ADD FIELD "preco-total" OF "gt-it-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Preco Total"
+  POSITION 11
+  MAX-WIDTH 17
+  COLUMN-LABEL "Preco Total"
+  DECIMALS 2
+  ORDER 110
+
+ADD FIELD "desconto" OF "gt-it-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Desconto"
+  POSITION 12
+  MAX-WIDTH 17
+  COLUMN-LABEL "Desconto"
+  DECIMALS 2
+  ORDER 120
+
+ADD FIELD "valor-subs" OF "gt-it-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Subs"
+  POSITION 13
+  MAX-WIDTH 17
+  COLUMN-LABEL "Valor Subs"
+  DECIMALS 2
+  ORDER 130
+
+ADD FIELD "class-fiscal" OF "gt-it-docum-est" AS character 
+  FORMAT "9999.99.99"
+  INITIAL ""
+  LABEL "Classificacao Fiscal"
+  POSITION 14
+  MAX-WIDTH 20
+  COLUMN-LABEL "Class Fisc"
+  ORDER 140
+
+ADD FIELD "narrativa" OF "gt-it-docum-est" AS character 
+  FORMAT "x(2000)"
+  INITIAL ""
+  LABEL "Narrativa"
+  POSITION 15
+  MAX-WIDTH 4000
+  COLUMN-LABEL "Narrativa"
+  ORDER 150
+
+ADD FIELD "int-2" OF "gt-it-docum-est" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 16
+  MAX-WIDTH 4
+  ORDER 160
+
+ADD FIELD "int-1" OF "gt-it-docum-est" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 17
+  MAX-WIDTH 4
+  ORDER 170
+
+ADD FIELD "dec-1" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>,>>9.99"
+  INITIAL "0"
+  POSITION 18
+  MAX-WIDTH 17
+  DECIMALS 2
+  ORDER 180
+
+ADD FIELD "dec-2" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>,>>9.99"
+  INITIAL "0"
+  POSITION 19
+  MAX-WIDTH 17
+  DECIMALS 2
+  ORDER 190
+
+ADD FIELD "log-1" OF "gt-it-docum-est" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  POSITION 20
+  MAX-WIDTH 1
+  ORDER 200
+
+ADD FIELD "log-2" OF "gt-it-docum-est" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  POSITION 21
+  MAX-WIDTH 1
+  ORDER 210
+
+ADD FIELD "char-1" OF "gt-it-docum-est" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  POSITION 22
+  MAX-WIDTH 16
+  ORDER 220
+
+ADD FIELD "char-2" OF "gt-it-docum-est" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  POSITION 23
+  MAX-WIDTH 16
+  ORDER 230
+
+ADD FIELD "date-1" OF "gt-it-docum-est" AS date 
+  FORMAT "99/99/99"
+  INITIAL ?
+  POSITION 24
+  MAX-WIDTH 4
+  ORDER 240
+
+ADD FIELD "date-2" OF "gt-it-docum-est" AS date 
+  FORMAT "99/99/99"
+  INITIAL ?
+  POSITION 25
+  MAX-WIDTH 4
+  ORDER 250
+
+ADD FIELD "sequencia" OF "gt-it-docum-est" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 26
+  MAX-WIDTH 4
+  COLUMN-LABEL "Sequencia"
+  ORDER 260
+  MANDATORY
+
+ADD FIELD "numero-ordem" OF "gt-it-docum-est" AS integer 
+  FORMAT "zzzzz9,99"
+  INITIAL "0"
+  POSITION 27
+  MAX-WIDTH 4
+  ORDER 270
+
+ADD FIELD "nr-ord-produ" OF "gt-it-docum-est" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 28
+  MAX-WIDTH 4
+  ORDER 280
+
+ADD FIELD "preco-unit" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>>,>>>,>>9.99999"
+  INITIAL "0"
+  LABEL "Preco Unitario"
+  POSITION 29
+  MAX-WIDTH 17
+  COLUMN-LABEL "Preco Unitario"
+  DECIMALS 5
+  ORDER 290
+
+ADD FIELD "valor-icm" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "ICMS"
+  POSITION 30
+  MAX-WIDTH 17
+  COLUMN-LABEL "ICMS"
+  DECIMALS 2
+  ORDER 300
+
+ADD FIELD "valor-ipi" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "IPI"
+  POSITION 31
+  MAX-WIDTH 17
+  COLUMN-LABEL "IPI"
+  DECIMALS 2
+  ORDER 310
+
+ADD FIELD "valor-iss" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "ISS"
+  POSITION 32
+  MAX-WIDTH 17
+  COLUMN-LABEL "ISS"
+  DECIMALS 2
+  ORDER 320
+
+ADD FIELD "aliquota-icm" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>,>>9.99"
+  INITIAL "0"
+  LABEL "Aliquota ICMS"
+  POSITION 33
+  MAX-WIDTH 17
+  COLUMN-LABEL "Aliquota ICMS"
+  DECIMALS 2
+  ORDER 330
+
+ADD FIELD "aliquota-ipi" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>,>>9.99"
+  INITIAL "0"
+  LABEL "Aliquota IPI"
+  POSITION 34
+  MAX-WIDTH 17
+  COLUMN-LABEL "Aliquota IPI"
+  DECIMALS 2
+  ORDER 340
+
+ADD FIELD "Aliquota-iss" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>,>>9.99"
+  INITIAL "0"
+  LABEL "Aliquota ISS"
+  POSITION 35
+  MAX-WIDTH 17
+  COLUMN-LABEL "Aliquota ISS"
+  DECIMALS 2
+  ORDER 350
+
+ADD FIELD "base-iss" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Base ISS"
+  POSITION 36
+  MAX-WIDTH 17
+  COLUMN-LABEL "Base ISS"
+  DECIMALS 2
+  ORDER 360
+
+ADD FIELD "base-icm" OF "gt-it-docum-est" AS decimal 
+  FORMAT "->>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Base ICMS"
+  POSITION 37
+  MAX-WIDTH 17
+  COLUMN-LABEL "Base ICMS"
+  DECIMALS 2
+  ORDER 370
+
+ADD FIELD "un" OF "gt-it-docum-est" AS character 
+  FORMAT "x(2)"
+  INITIAL ""
+  LABEL "Unidade de Medida"
+  POSITION 38
+  MAX-WIDTH 4
+  COLUMN-LABEL "Unidade de Medida"
+  ORDER 380
+
+ADD FIELD "quantidade" OF "gt-it-docum-est" AS decimal 
+  FORMAT ">>>>>,>>9.9999"
+  INITIAL "0"
+  LABEL "Quantidade"
+  POSITION 39
+  MAX-WIDTH 17
+  COLUMN-LABEL "Quantidade"
+  DECIMALS 4
+  ORDER 390
+
+ADD FIELD "cod-depos" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "Codigo do Deposito"
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Deposito"
+  POSITION 40
+  MAX-WIDTH 6
+  COLUMN-LABEL "Deposito"
+  ORDER 400
+
+ADD FIELD "item-ems" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "Item EMS"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Item EMS"
+  POSITION 41
+  MAX-WIDTH 32
+  COLUMN-LABEL "Item EMS"
+  ORDER 410
+
+ADD FIELD "cod-localiz" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "Localizacao"
+  FORMAT "x(10)"
+  INITIAL ""
+  LABEL "Localizacao"
+  POSITION 42
+  MAX-WIDTH 20
+  COLUMN-LABEL "Localizacao"
+  ORDER 420
+
+ADD FIELD "base-ipi" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "Base Calculo IPI"
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Base Calculo IPI"
+  POSITION 43
+  MAX-WIDTH 17
+  COLUMN-LABEL "Base Calculo IPI"
+  HELP "Base Calculo IPI"
+  DECIMALS 2
+  ORDER 430
+
+ADD FIELD "ge-codigo" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Grupo Estoque"
+  FORMAT "99"
+  INITIAL "0"
+  LABEL "Grupo Estoque"
+  POSITION 44
+  MAX-WIDTH 4
+  COLUMN-LABEL "Grupo Estoque"
+  HELP "Grupo Estoque"
+  ORDER 440
+
+ADD FIELD "cd-trib-icm" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Codigo de tributacao de ICM"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Cod Trib ICM"
+  POSITION 45
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Trib ICM"
+  ORDER 450
+
+ADD FIELD "cd-trib-iss" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Codigo de tributacao de ISS"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Cod Trib ISS"
+  POSITION 46
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Trib ISS"
+  ORDER 460
+
+ADD FIELD "cd-trib-ipi" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Codigo de tributacao de IPI"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Cod Trib IPI"
+  POSITION 47
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Cod Trib IPI"
+  ORDER 470
+
+ADD FIELD "redbc" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "Reducao da Base de Calculo"
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Red Base Calc"
+  POSITION 48
+  MAX-WIDTH 12
+  VIEW-AS ""
+  COLUMN-LABEL "Red Base Calc"
+  ORDER 480
+
+ADD FIELD "base-subs" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "Base ST"
+  FORMAT ">>>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Base ST"
+  POSITION 49
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Base ST"
+  DECIMALS 2
+  ORDER 490
+
+ADD FIELD "vl-subs" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "Valor ST"
+  FORMAT ">>>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor ST"
+  POSITION 50
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Valor ST"
+  DECIMALS 2
+  ORDER 500
+
+ADD FIELD "num-pedido" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Pedido"
+  FORMAT ">>>>>,>>9"
+  INITIAL "0"
+  LABEL "Pedido"
+  POSITION 52
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Pedido"
+  ORDER 510
+
+ADD FIELD "CFOP" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "CFOP"
+  FORMAT "x(4)"
+  INITIAL ""
+  LABEL "CFOP"
+  POSITION 53
+  MAX-WIDTH 8
+  VIEW-AS ""
+  COLUMN-LABEL "CFOP"
+  ORDER 530
+
+ADD FIELD "serie-comp" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "Serie Comp"
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie Comp"
+  POSITION 54
+  MAX-WIDTH 10
+  VIEW-AS ""
+  COLUMN-LABEL "Serie Comp"
+  ORDER 550
+
+ADD FIELD "nat-comp" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "Nat Comp"
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Nat Comp"
+  POSITION 55
+  MAX-WIDTH 12
+  VIEW-AS ""
+  COLUMN-LABEL "Nat Comp"
+  ORDER 560
+
+ADD FIELD "nro-comp" OF "gt-it-docum-est" AS character 
+  DESCRIPTION "Nro Comp"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nro Comp"
+  POSITION 56
+  MAX-WIDTH 32
+  VIEW-AS ""
+  COLUMN-LABEL "Nro Comp"
+  ORDER 540
+
+ADD FIELD "peso-liquido" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "Peso liquido"
+  FORMAT ">>>>,>>9.99999"
+  INITIAL "0"
+  LABEL "Peso Liq"
+  POSITION 57
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Peso Liq"
+  DECIMALS 2
+  ORDER 570
+
+ADD FIELD "val-aliq-pis" OF "gt-it-docum-est" AS decimal
+  DESCRIPTION "Aliquota de PIS"
+  FORMAT ">>9.99"
+  FORMAT-SA ?
+  POSITION 58
+  INITIAL "0"
+  INITIAL-SA ?
+  HELP ""
+  HELP-SA ""
+  LABEL "Aliq PIS"
+  LABEL-SA ?
+  COLUMN-LABEL "Aliq PIS"
+  COLUMN-LABEL-SA ?
+  CAN-READ "*"
+  CAN-WRITE "*"
+  VALEXP ?
+  VALMSG ""
+  VALMSG-SA ""
+  VIEW-AS ""
+  EXTENT 0
+  DECIMALS 2
+  ORDER 580
+  NULL-ALLOWED
+  NOT-CASE-SENSITIVE
+  MAX-WIDTH 17
+
+ADD FIELD "val-aliq-cofins" OF "gt-it-docum-est" AS decimal
+  DESCRIPTION "Aliquota de COFINS"
+  FORMAT ">>9.99"
+  FORMAT-SA ?
+  POSITION 59
+  INITIAL "0"
+  INITIAL-SA ?
+  HELP ""
+  HELP-SA ""
+  LABEL "Aliq COFINS"
+  LABEL-SA ?
+  COLUMN-LABEL "Aliq COFINS"
+  COLUMN-LABEL-SA ?
+  CAN-READ "*"
+  CAN-WRITE "*"
+  VALEXP ?
+  VALMSG ""
+  VALMSG-SA ""
+  VIEW-AS ""
+  EXTENT 0
+  DECIMALS 2
+  ORDER 590
+  NULL-ALLOWED
+  NOT-CASE-SENSITIVE
+  MAX-WIDTH 17
+
+ADD FIELD "idi-tributac-cofins" OF "gt-it-docum-est" AS integer
+  DESCRIPTION "Codigo de tributacao do COFINS"
+  FORMAT ">9"
+  FORMAT-SA ?
+  POSITION 60
+  INITIAL "0"
+  INITIAL-SA ?
+  HELP ""
+  HELP-SA ""
+  LABEL "Cod Trib COFINS"
+  LABEL-SA ?
+  COLUMN-LABEL "Cod Trib COFINS"
+  COLUMN-LABEL-SA ?
+  CAN-READ "*"
+  CAN-WRITE "*"
+  VALEXP ?
+  VALMSG ""
+  VALMSG-SA ""
+  VIEW-AS ""
+  EXTENT 0
+  DECIMALS ?
+  ORDER 600
+  NULL-ALLOWED
+  NOT-CASE-SENSITIVE
+  MAX-WIDTH 4
+
+ADD FIELD "idi-tributac-pis" OF "gt-it-docum-est" AS integer
+  DESCRIPTION "Codigo de tributacao do PIS"
+  FORMAT ">9"
+  FORMAT-SA ?
+  POSITION 61
+  INITIAL "0"
+  INITIAL-SA ?
+  HELP ""
+  HELP-SA ""
+  LABEL "Cod Trib PIS"
+  LABEL-SA ?
+  COLUMN-LABEL "Cod Trib PIS"
+  COLUMN-LABEL-SA ?
+  CAN-READ "*"
+  CAN-WRITE "*"
+  VALEXP ?
+  VALMSG ""
+  VALMSG-SA ""
+  VIEW-AS ""
+  EXTENT 0
+  DECIMALS ?
+  ORDER 610
+  NULL-ALLOWED
+  NOT-CASE-SENSITIVE
+  MAX-WIDTH 4
+
+ADD FIELD "fci-conteudo" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "% Conteudo Importacao"
+  FORMAT ">>9.99"
+  INITIAL "0"
+  LABEL "% Conteudo"
+  POSITION 62
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "% Conteudo"
+  DECIMALS 2
+  ORDER 620
+
+ADD FIELD "fci-vl-parcela" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "Valor da Parcela Importada"
+  FORMAT ">>>,>>9.9999"
+  INITIAL "0"
+  LABEL "Vl. Parcela Imp."
+  POSITION 63
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Vl. Parcela Imp."
+  DECIMALS 4
+  ORDER 630
+
+ADD FIELD "fci-numero" OF "gt-it-docum-est" AS CHAR 
+  DESCRIPTION "Numero da FCI"
+  FORMAT "x(40)"
+  INITIAL ""
+  LABEL "Nro. FCI"
+  POSITION 64
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Nro. FCI"
+  ORDER 640
+
+ADD FIELD "origem" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Origem"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Origem"
+  POSITION 65
+  MAX-WIDTH 4
+  COLUMN-LABEL "Origem"
+  ORDER 650
+
+ADD FIELD "num_sol_pag" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Numero da Solicitacao de Pagamento - Especifico Plascar"
+  FORMAT ">>>>>>>>>9"
+  INITIAL "0"
+  LABEL "Numero SP"
+  POSITION 66
+  MAX-WIDTH 4
+  COLUMN-LABEL "Numero SP"
+  ORDER 660
+
+ADD FIELD "num_seq_sol_pag" OF "gt-it-docum-est" AS integer 
+  DESCRIPTION "Sequencia da Solicitacao de Pagamento - Especifico Plascar"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Seq. SP"
+  POSITION 67
+  MAX-WIDTH 4
+  COLUMN-LABEL "Seq. SP"
+  ORDER 670
+
+ADD FIELD "vl-biss-it" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "Base Calc ISS Item"
+  FORMAT ">,>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Base Calc ISS Item"
+  POSITION 68
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Base ISS Item"
+  DECIMALS 2
+  ORDER 680
+
+ADD FIELD "vl-iss-it" OF "gt-it-docum-est" AS decimal 
+  DESCRIPTION "Valor ISS Item"
+  FORMAT ">,>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor ISS Item"
+  POSITION 69
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Vl ISS"
+  DECIMALS 2
+  ORDER 690
+
+ADD INDEX "documento" ON "gt-it-docum-est" 
+  AREA "Schema Area"
+  PRIMARY
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+  INDEX-FIELD "sequencia" ASCENDING 
+
+ADD INDEX "arquivo" ON "gt-it-docum-est" 
+  AREA "Schema Area"
+  INDEX-FIELD "nome-arq" ASCENDING 
+
+ADD INDEX "gati0102" ON "gt-it-docum-est" 
+  AREA "Schema Area"
+  DESCRIPTION "indice usado para carregar browse do gati0102"
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+  INDEX-FIELD "nome-arq" ASCENDING 
+
+ADD TABLE "gt-rat-lote"
+  AREA "Schema Area"
+  DUMP-NAME "gt-rat-l"
+
+ADD FIELD "cod-emitente" OF "gt-rat-lote" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Emitente"
+  POSITION 2
+  MAX-WIDTH 4
+  COLUMN-LABEL "Emit"
+  ORDER 10
+
+ADD FIELD "serie-docto" OF "gt-rat-lote" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "S‚rie"
+  POSITION 3
+  MAX-WIDTH 10
+  COLUMN-LABEL "Ser"
+  ORDER 20
+
+ADD FIELD "nro-docto" OF "gt-rat-lote" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Documento"
+  POSITION 4
+  MAX-WIDTH 32
+  VIEW-AS ""
+  COLUMN-LABEL "Documento"
+  ORDER 30
+
+ADD FIELD "cod-depos" OF "gt-rat-lote" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Deposito"
+  POSITION 5
+  MAX-WIDTH 6
+  VIEW-AS ""
+  COLUMN-LABEL "Dep"
+  ORDER 40
+
+ADD FIELD "lote" OF "gt-rat-lote" AS character 
+  FORMAT "x(10)"
+  INITIAL ""
+  LABEL "Lote/Serie"
+  POSITION 6
+  MAX-WIDTH 20
+  VIEW-AS ""
+  COLUMN-LABEL "Lote/Serie"
+  ORDER 50
+
+ADD FIELD "nat-operacao" OF "gt-rat-lote" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Nat Operacao"
+  POSITION 7
+  MAX-WIDTH 12
+  VIEW-AS ""
+  COLUMN-LABEL "Nat Oper"
+  ORDER 60
+
+ADD FIELD "dt-vali-lote" OF "gt-rat-lote" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Validade Lote"
+  POSITION 8
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Valid Lote"
+  ORDER 70
+
+ADD FIELD "quantidade" OF "gt-rat-lote" AS decimal 
+  FORMAT ">>>>,>>9.9999"
+  INITIAL "0"
+  LABEL "Quantidade"
+  POSITION 9
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Qtde"
+  DECIMALS 4
+  ORDER 80
+
+ADD FIELD "sequencia" OF "gt-rat-lote" AS integer 
+  FORMAT ">>>>9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 10
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Seq"
+  ORDER 90
+
+ADD FIELD "it-codigo" OF "gt-rat-lote" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Item"
+  POSITION 11
+  MAX-WIDTH 32
+  VIEW-AS ""
+  COLUMN-LABEL "Item"
+  ORDER 100
+
+ADD FIELD "nr-ficha" OF "gt-rat-lote" AS integer 
+  FORMAT ">>>>,>>9"
+  INITIAL "0"
+  LABEL "Ficha CQ"
+  POSITION 12
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Ficha CQ"
+  ORDER 110
+
+ADD FIELD "cod-localiz" OF "gt-rat-lote" AS character 
+  FORMAT "x(10)"
+  INITIAL ""
+  LABEL "Localizacao"
+  POSITION 13
+  MAX-WIDTH 20
+  VIEW-AS ""
+  COLUMN-LABEL "Localiz"
+  ORDER 120
+
+ADD FIELD "char-1" OF "gt-rat-lote" AS character 
+  FORMAT "x(100)"
+  INITIAL ""
+  POSITION 14
+  MAX-WIDTH 200
+  VIEW-AS ""
+  ORDER 130
+
+ADD FIELD "char-2" OF "gt-rat-lote" AS character 
+  FORMAT "x(100)"
+  INITIAL ""
+  POSITION 15
+  MAX-WIDTH 200
+  VIEW-AS ""
+  ORDER 140
+
+ADD FIELD "dec-1" OF "gt-rat-lote" AS decimal 
+  FORMAT "->>>>>>>>>>>9.999999"
+  INITIAL "0"
+  POSITION 16
+  MAX-WIDTH 17
+  VIEW-AS ""
+  DECIMALS 2
+  ORDER 150
+
+ADD FIELD "dec-2" OF "gt-rat-lote" AS decimal 
+  FORMAT "->>>>>>>>>>>9.999999"
+  INITIAL "0"
+  POSITION 17
+  MAX-WIDTH 17
+  VIEW-AS ""
+  DECIMALS 2
+  ORDER 160
+
+ADD FIELD "int-1" OF "gt-rat-lote" AS integer 
+  FORMAT "->>>>>>>>>9"
+  INITIAL "0"
+  POSITION 18
+  MAX-WIDTH 4
+  VIEW-AS ""
+  ORDER 170
+
+ADD FIELD "int-2" OF "gt-rat-lote" AS integer 
+  FORMAT "->>>>>>>>>9"
+  INITIAL "0"
+  POSITION 19
+  MAX-WIDTH 4
+  VIEW-AS ""
+  ORDER 180
+
+ADD FIELD "log-1" OF "gt-rat-lote" AS logical 
+  FORMAT "Sim/Nao"
+  INITIAL "Nao"
+  POSITION 20
+  MAX-WIDTH 1
+  VIEW-AS ""
+  ORDER 190
+
+ADD FIELD "log-2" OF "gt-rat-lote" AS logical 
+  FORMAT "Sim/Nao"
+  INITIAL "Nao"
+  POSITION 21
+  MAX-WIDTH 1
+  VIEW-AS ""
+  ORDER 200
+
+ADD FIELD "data-1" OF "gt-rat-lote" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  POSITION 22
+  MAX-WIDTH 4
+  VIEW-AS ""
+  ORDER 210
+
+ADD FIELD "data-2" OF "gt-rat-lote" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  POSITION 23
+  MAX-WIDTH 4
+  VIEW-AS ""
+  ORDER 220
+
+ADD FIELD "check-sum" OF "gt-rat-lote" AS character 
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Check-sum"
+  POSITION 24
+  MAX-WIDTH 40
+  VIEW-AS ""
+  COLUMN-LABEL "Check-sum"
+  ORDER 230
+
+ADD FIELD "tipo-nota" OF "gt-rat-lote" AS integer 
+  FORMAT ">9"
+  INITIAL "1"
+  LABEL "Tipo Nota"
+  POSITION 25
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Tp Nota"
+  ORDER 240
+
+ADD FIELD "vl-movto" OF "gt-rat-lote" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Movimento"
+  POSITION 26
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "Vl Movto"
+  DECIMALS 2
+  ORDER 250
+
+ADD FIELD "cod-refer" OF "gt-rat-lote" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  LABEL "Referencia"
+  POSITION 27
+  MAX-WIDTH 16
+  VIEW-AS ""
+  COLUMN-LABEL "Ref"
+  ORDER 260
+
+ADD FIELD "nome-arq" OF "gt-rat-lote" AS character 
+  FORMAT "x(50)"
+  INITIAL ""
+  LABEL "Arquivo XML"
+  POSITION 28
+  MAX-WIDTH 100
+  VIEW-AS ""
+  COLUMN-LABEL "Arquivo XML"
+  ORDER 270
+
+ADD INDEX "documento" ON "gt-rat-lote" 
+  AREA "Schema Area"
+  PRIMARY
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+  INDEX-FIELD "sequencia" ASCENDING 
+
+ADD INDEX "arq" ON "gt-rat-lote" 
+  AREA "Schema Area"
+  INDEX-FIELD "nome-arq" ASCENDING 
+
+ADD INDEX "arq-seq" ON "gt-rat-lote" 
+  AREA "Schema Area"
+  INDEX-FIELD "nome-arq" ASCENDING 
+  INDEX-FIELD "sequencia" ASCENDING 
+
+ADD INDEX "ser-doc-emit-nat" ON "gt-rat-lote" 
+  AREA "Schema Area"
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+
+ADD TABLE "gt-refer-docto"
+  AREA "Schema Area"
+  DESCRIPTION "Documentos de Referencia Encontrados na Importacao dos XML Entrada"
+  DUMP-NAME "gt-refer"
+
+ADD FIELD "id-sequencia" OF "gt-refer-docto" AS integer 
+  DESCRIPTION "Sequencia de Inser‡Æo, pois posso ter Redespacho"
+  FORMAT ">,>>>,>>>,>>>,>>>,>>9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 2
+  MAX-WIDTH 4
+  COLUMN-LABEL "Seq"
+  ORDER 10
+  MANDATORY    
+
+ADD FIELD "chave-saida" OF "gt-refer-docto" AS character 
+  DESCRIPTION "Chave Acesso Nota Saida"
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Chave Acesso Nota Saida"
+  POSITION 3
+  MAX-WIDTH 160
+  COLUMN-LABEL "Ch Aces Nota Saida"
+  ORDER 20
+  MANDATORY  
+
+ADD FIELD "chave-entrada" OF "gt-refer-docto" AS character 
+  DESCRIPTION "Chave Acesso XML Entrada"
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Chave Acesso XML Entrada"
+  POSITION 4
+  MAX-WIDTH 160
+  VIEW-AS ""
+  COLUMN-LABEL "Ch Acesso XML Entr"
+  ORDER 30
+  MANDATORY
+  
+ADD FIELD "tipo-nota" OF "gt-refer-docto" AS integer 
+  DESCRIPTION "Tipo XML: NFe ou CTe"
+  FORMAT ">9"
+  INITIAL "1"
+  LABEL "NF-e ou CTe"
+  POSITION 5
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "NFe/CTe"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "ep-codigo" OF "gt-refer-docto" AS integer 
+  DESCRIPTION "Empresa"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Empresa"
+  POSITION 6
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Empresa"
+  ORDER 50
+
+ADD FIELD "cod-estabel" OF "gt-refer-docto" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 7
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 60
+
+ADD FIELD "serie-docto" OF "gt-refer-docto" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 8
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 70
+  MANDATORY
+
+ADD FIELD "nro-docto" OF "gt-refer-docto" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 9
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "N£mero Documento"
+  ORDER 80
+  MANDATORY
+
+ADD FIELD "cod-emitente" OF "gt-refer-docto" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 10
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 90
+  MANDATORY
+
+ADD FIELD "i-saida" OF "gt-refer-docto" AS integer 
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "NF-e Faturamento"
+  POSITION 11
+  MAX-WIDTH 4
+  COLUMN-LABEL "Fatur"
+  ORDER 100
+
+ADD FIELD "i-receb" OF "gt-refer-docto" AS integer 
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "NF-e Recebimento"
+  POSITION 12
+  MAX-WIDTH 4
+  COLUMN-LABEL "Recbto"
+  ORDER 110
+
+ADD FIELD "i-atualiz" OF "gt-refer-docto" AS integer 
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "NF-e Atualizada Recebimento"
+  POSITION 13
+  MAX-WIDTH 4
+  COLUMN-LABEL "Atual Recbto"
+  ORDER 120
+
+ADD INDEX "IDX-Primary" ON "gt-refer-docto" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "id-sequencia" ASCENDING 
+  INDEX-FIELD "chave-saida" ASCENDING 
+
+ADD INDEX "Docto" ON "gt-refer-docto" 
+  AREA "Schema Area"
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+
+ADD TABLE "gt-tt-docum-est"
+  AREA "Schema Area"
+  LABEL "ESP Docum Est"
+  DESCRIPTION "Processo utilizado para importador XML"
+  DUMP-NAME "gt-tt-do"
+
+ADD FIELD "nome-arq" OF "gt-tt-docum-est" AS character 
+  FORMAT "X(50)"
+  INITIAL ""
+  LABEL "Arquivo XML"
+  POSITION 2
+  MAX-WIDTH 100
+  COLUMN-LABEL "Arquivo XML"
+  ORDER 10
+  MANDATORY
+
+ADD FIELD "log-situacao" OF "gt-tt-docum-est" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  LABEL "Situacao"
+  POSITION 3
+  MAX-WIDTH 1
+  COLUMN-LABEL "Situacao"
+  HELP "Arquivo Atualizado em EMS?"
+  ORDER 20
+
+ADD FIELD "serie-docto" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 4
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  HELP "Serie Documento"
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "nro-docto" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nr Documento"
+  POSITION 5
+  MAX-WIDTH 32
+  COLUMN-LABEL "Documento"
+  HELP "N£mero Documento"
+  ORDER 40
+  MANDATORY
+
+ADD FIELD "nat-operacao" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Natureza Operacao"
+  POSITION 6
+  MAX-WIDTH 12
+  COLUMN-LABEL "Natur Oper"
+  ORDER 50
+  MANDATORY
+
+ADD FIELD "cod-emitente" OF "gt-tt-docum-est" AS integer 
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Cliente"
+  POSITION 7
+  MAX-WIDTH 4
+  COLUMN-LABEL "Cliente"
+  ORDER 60
+  MANDATORY
+
+ADD FIELD "cod-estabel" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 8
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 70
+
+ADD FIELD "estab-fisc" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabeb Fisc"
+  POSITION 9
+  MAX-WIDTH 6
+  COLUMN-LABEL "Est Fisc"
+  ORDER 80
+
+ADD FIELD "uf" OF "gt-tt-docum-est" AS character 
+  FORMAT "!!xx"
+  INITIAL ""
+  LABEL "UF"
+  POSITION 10
+  MAX-WIDTH 8
+  COLUMN-LABEL "UF"
+  ORDER 90
+
+ADD FIELD "tot-peso" OF "gt-tt-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.9999"
+  INITIAL "0"
+  LABEL "Total Peso"
+  POSITION 11
+  MAX-WIDTH 17
+  COLUMN-LABEL "Tot Peso"
+  DECIMALS 2
+  ORDER 100
+
+ADD FIELD "tot-desconto" OF "gt-tt-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Total Desconto"
+  POSITION 12
+  MAX-WIDTH 17
+  COLUMN-LABEL "Tot Desconto"
+  DECIMALS 2
+  ORDER 110
+
+ADD FIELD "valor-frete" OF "gt-tt-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Frete"
+  POSITION 13
+  MAX-WIDTH 17
+  COLUMN-LABEL "Vl Frete"
+  DECIMALS 2
+  ORDER 120
+
+ADD FIELD "valor-seguro" OF "gt-tt-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Seguro"
+  POSITION 14
+  MAX-WIDTH 17
+  COLUMN-LABEL "Vl Seguro"
+  DECIMALS 2
+  ORDER 130
+
+ADD FIELD "valor-outras" OF "gt-tt-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Outras"
+  POSITION 15
+  MAX-WIDTH 17
+  COLUMN-LABEL "Vl Outras"
+  DECIMALS 2
+  ORDER 140
+
+ADD FIELD "valor-mercad" OF "gt-tt-docum-est" AS decimal 
+  FORMAT ">>>>,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Valor Mercadoria"
+  POSITION 16
+  MAX-WIDTH 17
+  COLUMN-LABEL "Vl Mercadoria"
+  DECIMALS 2
+  ORDER 150
+
+ADD FIELD "mod-frete" OF "gt-tt-docum-est" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Frete"
+  POSITION 17
+  MAX-WIDTH 4
+  COLUMN-LABEL "Frete"
+  ORDER 160
+
+ADD FIELD "int-2" OF "gt-tt-docum-est" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 18
+  MAX-WIDTH 4
+  ORDER 180
+
+ADD FIELD "int-1" OF "gt-tt-docum-est" AS integer 
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  POSITION 19
+  MAX-WIDTH 4
+  ORDER 190
+
+ADD FIELD "dec-1" OF "gt-tt-docum-est" AS decimal 
+  FORMAT "->>,>>9.99"
+  INITIAL "0"
+  POSITION 20
+  MAX-WIDTH 17
+  DECIMALS 2
+  ORDER 200
+
+ADD FIELD "dec-2" OF "gt-tt-docum-est" AS decimal 
+  FORMAT "->>,>>9.99"
+  INITIAL "0"
+  POSITION 21
+  MAX-WIDTH 17
+  DECIMALS 2
+  ORDER 210
+
+ADD FIELD "log-1" OF "gt-tt-docum-est" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  POSITION 22
+  MAX-WIDTH 1
+  ORDER 220
+
+ADD FIELD "log-2" OF "gt-tt-docum-est" AS logical 
+  FORMAT "yes/no"
+  INITIAL "no"
+  POSITION 23
+  MAX-WIDTH 1
+  ORDER 230
+
+ADD FIELD "char-1" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  POSITION 24
+  MAX-WIDTH 16
+  ORDER 240
+
+ADD FIELD "char-2" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(8)"
+  INITIAL ""
+  POSITION 25
+  MAX-WIDTH 16
+  ORDER 250
+
+ADD FIELD "date-1" OF "gt-tt-docum-est" AS date 
+  FORMAT "99/99/99"
+  INITIAL ?
+  POSITION 26
+  MAX-WIDTH 4
+  ORDER 260
+
+ADD FIELD "date-2" OF "gt-tt-docum-est" AS date 
+  FORMAT "99/99/99"
+  INITIAL ?
+  POSITION 27
+  MAX-WIDTH 4
+  ORDER 270
+
+ADD FIELD "cod-observa" OF "gt-tt-docum-est" AS integer 
+  DESCRIPTION "Observacao"
+  FORMAT "->,>>>,>>9"
+  INITIAL "0"
+  LABEL "Observacao"
+  POSITION 28
+  MAX-WIDTH 4
+  COLUMN-LABEL "Observacao"
+  ORDER 280
+
+ADD FIELD "qt-volume" OF "gt-tt-docum-est" AS decimal 
+  FORMAT "->,>>>,>>9.99"
+  INITIAL "0"
+  LABEL "Quantidade"
+  POSITION 29
+  MAX-WIDTH 17
+  COLUMN-LABEL "Quantidade"
+  DECIMALS 2
+  ORDER 290
+
+ADD FIELD "Volume" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Volume"
+  POSITION 30
+  MAX-WIDTH 40
+  COLUMN-LABEL "Volume"
+  ORDER 300
+
+ADD FIELD "peso-liq" OF "gt-tt-docum-est" AS decimal 
+  FORMAT "->,>>>,>>9.9999"
+  INITIAL "0"
+  LABEL "Peso Liq"
+  POSITION 31
+  MAX-WIDTH 17
+  COLUMN-LABEL "Peso Liq"
+  DECIMALS 2
+  ORDER 310
+
+ADD FIELD "peso-bru" OF "gt-tt-docum-est" AS decimal 
+  FORMAT "->,>>>,>>9.9999"
+  INITIAL "0"
+  LABEL "Peso Bruto"
+  POSITION 32
+  MAX-WIDTH 17
+  COLUMN-LABEL "Peso Bruto"
+  DECIMALS 2
+  ORDER 320
+
+ADD FIELD "dt-emissao" OF "gt-tt-docum-est" AS date 
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Data Emissao"
+  POSITION 33
+  MAX-WIDTH 4
+  ORDER 330
+
+ADD FIELD "Narrativa" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(256)"
+  INITIAL ""
+  LABEL "Narrativa da Nota"
+  POSITION 34
+  MAX-WIDTH 512
+  ORDER 340
+
+ADD FIELD "ep-codigo" OF "gt-tt-docum-est" AS integer 
+  DESCRIPTION "Empresa"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Empresa"
+  POSITION 35
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Empresa"
+  ORDER 350
+
+ADD FIELD "cep" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(12)"
+  INITIAL ""
+  POSITION 37
+  MAX-WIDTH 24
+  ORDER 370
+
+ADD FIELD "bairro" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(30)"
+  INITIAL ""
+  POSITION 38
+  MAX-WIDTH 60
+  ORDER 380
+
+ADD FIELD "endereco" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(40)"
+  INITIAL ""
+  POSITION 39
+  MAX-WIDTH 80
+  ORDER 390
+
+ADD FIELD "pais" OF "gt-tt-docum-est" AS character 
+  FORMAT "x(20)"
+  INITIAL ""
+  POSITION 40
+  MAX-WIDTH 40
+  ORDER 400
+
+ADD FIELD "placa-1" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "Placa 1"
+  FORMAT "x(7)"
+  INITIAL ""
+  LABEL "Placa 1"
+  POSITION 41
+  MAX-WIDTH 14
+  VIEW-AS ""
+  COLUMN-LABEL "Placa 1"
+  ORDER 410
+
+ADD FIELD "placa-2" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "Placa 2"
+  FORMAT "x(7)"
+  INITIAL ""
+  LABEL "Placa 2"
+  POSITION 42
+  MAX-WIDTH 14
+  VIEW-AS ""
+  COLUMN-LABEL "Placa 2"
+  ORDER 420
+
+ADD FIELD "placa-3" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "Placa 3"
+  FORMAT "x(7)"
+  INITIAL ""
+  LABEL "Placa 3"
+  POSITION 43
+  MAX-WIDTH 14
+  VIEW-AS ""
+  COLUMN-LABEL "Placa 3"
+  ORDER 430
+
+ADD FIELD "uf-1" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "UF 1"
+  FORMAT "x(2)"
+  INITIAL ""
+  LABEL "UF 1"
+  POSITION 44
+  MAX-WIDTH 4
+  COLUMN-LABEL "UF 1"
+  ORDER 440
+
+ADD FIELD "uf-2" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "UF 2"
+  FORMAT "x(2)"
+  INITIAL ""
+  LABEL "UF 2"
+  POSITION 45
+  MAX-WIDTH 4
+  COLUMN-LABEL "UF 2"
+  ORDER 450
+
+ADD FIELD "uf-3" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "UF 3"
+  FORMAT "x(2)"
+  INITIAL ""
+  LABEL "UF 3"
+  POSITION 46
+  MAX-WIDTH 4
+  COLUMN-LABEL "UF 3"
+  ORDER 460
+
+ADD FIELD "log-cancelada" OF "gt-tt-docum-est" AS logical 
+  DESCRIPTION "Informacao de nota cancelada no SEFAZ"
+  FORMAT "Sim/Nao"
+  INITIAL "Nao"
+  LABEL "Cancelada"
+  POSITION 47
+  MAX-WIDTH 1
+  VIEW-AS ""
+  COLUMN-LABEL "Cancelada"
+  ORDER 470
+
+ADD FIELD "chave-acesso" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "Chave Acesso"
+  FORMAT "x(60)"
+  INITIAL ""
+  LABEL "Chave Acesso"
+  POSITION 49
+  MAX-WIDTH 120
+  VIEW-AS ""
+  COLUMN-LABEL "Chave Acesso"
+  ORDER 480
+  MANDATORY
+
+ADD FIELD "nome-transp" OF "gt-tt-docum-est" AS character 
+  DESCRIPTION "Nome da Transportadora"
+  FORMAT "x(12)"
+  INITIAL ""
+  LABEL "Nome Transp"
+  POSITION 53
+  MAX-WIDTH 24
+  VIEW-AS ""
+  COLUMN-LABEL "Nome Transp"
+  ORDER 530
+  
+ADD FIELD "tt-backup-itens" OF "gt-tt-docum-est" AS blob 
+  FORMAT "x(8)"
+  INITIAL ?
+  POSITION 54
+  LOB-AREA "Schema Area"
+  LOB-BYTES 104857600
+  LOB-SIZE 100M
+  ORDER 540
+
+ADD INDEX "codigo" ON "gt-tt-docum-est" 
+  AREA "Schema Area"
+  PRIMARY
+  INDEX-FIELD "nome-arq" ASCENDING 
+
+ADD INDEX "chave" ON "gt-tt-docum-est" 
+  AREA "Schema Area"
+  INDEX-FIELD "chave-acesso" ASCENDING 
+
+ADD INDEX "docum" ON "gt-tt-docum-est" 
+  AREA "Schema Area"
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+
+ADD INDEX "gati0102" ON "gt-tt-docum-est" 
+  AREA "Schema Area"
+  DESCRIPTION "utilizado para carregar browse do gati0102"
+  INDEX-FIELD "ep-codigo" ASCENDING 
+  INDEX-FIELD "cod-estabel" ASCENDING 
+  INDEX-FIELD "serie-docto" ASCENDING 
+  INDEX-FIELD "nro-docto" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "log-situacao" ASCENDING 
+  INDEX-FIELD "char-1" ASCENDING 
+
+ADD TABLE "param-xml"
+  AREA "Schema Area"
+  LABEL "Parametros Importacao XML"
+  DUMP-NAME "param-xm"
+
+ADD FIELD "arquivo-entr" OF "param-xml" AS character 
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Entrada"
+  POSITION 2
+  MAX-WIDTH 160
+  COLUMN-LABEL "Entrada"
+  ORDER 10
+
+ADD FIELD "Arquivo-saida" OF "param-xml" AS character 
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Saida"
+  POSITION 3
+  MAX-WIDTH 160
+  COLUMN-LABEL "Saida"
+  ORDER 20
+
+ADD FIELD "cod-estabel" OF "param-xml" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 4
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 30
+  MANDATORY
+
+ADD FIELD "l-tribut-nat-xml" OF "param-xml" AS integer 
+  DESCRIPTION "Define se serao consideradas as tributacoes da natureza de operacao ou do arquivo xml"
+  FORMAT ">9"
+  INITIAL "1"
+  POSITION 5
+  MAX-WIDTH 4
+  VIEW-AS ""
+  ORDER 40
+
+ADD FIELD "l-retorna-xml" OF "param-xml" AS logical 
+  DESCRIPTION "Define se o XML voltara ao importador quando sua respectiva nota for deletada no recebimento"
+  FORMAT "yes/no"
+  INITIAL "yes"
+  POSITION 6
+  MAX-WIDTH 1
+  VIEW-AS ""
+  ORDER 50
+
+ADD FIELD "l-atualiza-auto" OF "param-xml" AS logical 
+  DESCRIPTION "Atualiza Automatico"
+  FORMAT "yes/no"
+  INITIAL "no"
+  LABEL "Atualiz Aut"
+  POSITION 7
+  MAX-WIDTH 1
+  VIEW-AS ""
+  COLUMN-LABEL "Atualiz Aut"
+  ORDER 60
+
+ADD FIELD "ep-codigo" OF "param-xml" AS integer 
+  DESCRIPTION "Empresa"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Empresa"
+  POSITION 8
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Empresa"
+  ORDER 70
+
+ADD FIELD "arq-entrada-cce" OF "param-xml" AS character 
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Entrada CCE"
+  POSITION 9
+  MAX-WIDTH 160
+  COLUMN-LABEL "Entrada CCE"
+  ORDER 80
+
+ADD FIELD "arq-saida-cce" OF "param-xml" AS character 
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "Sa¡da CCE"
+  POSITION 10
+  MAX-WIDTH 160
+  COLUMN-LABEL "Saida CCE"
+  ORDER 90
+
+ADD FIELD "e-mail" OF "param-xml" AS character 
+  DESCRIPTION "E-mail NF-e"
+  FORMAT "x(80)"
+  INITIAL ""
+  LABEL "E-mail NF-e"
+  POSITION 11
+  MAX-WIDTH 80
+  VIEW-AS ""
+  COLUMN-LABEL "E-mail NF-e"
+  ORDER 100
+
+ADD FIELD "it-codigo-cte" OF "param-xml" AS character 
+  DESCRIPTION "Item CT-e"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Item CT-e"
+  POSITION 12
+  MAX-WIDTH 32
+  VIEW-AS ""
+  COLUMN-LABEL "Item CT-e"
+  ORDER 110
+
+ADD FIELD "duplic-ped-xml" OF "param-xml" AS integer
+  DESCRIPTION "Informa se duplicata sera gerada a partir do pedido ou do xml."
+  FORMAT ">9"
+  FORMAT-SA ?
+  POSITION 13
+  INITIAL "1"
+  INITIAL-SA ?
+  HELP ""
+  HELP-SA ""
+  LABEL "Duplicata"
+  LABEL-SA ?
+  COLUMN-LABEL "Duplicata"
+  COLUMN-LABEL-SA ?
+  CAN-READ "*"
+  CAN-WRITE "*"
+  VALEXP ?
+  VALMSG ""
+  VALMSG-SA ""
+  VIEW-AS ""
+  EXTENT 0
+  DECIMALS ?
+  ORDER 120
+  NULL-ALLOWED
+  NOT-CASE-SENSITIVE
+  MAX-WIDTH 4
+
+ADD FIELD "arquivo-mde" OF "param-xml" AS character 
+  DESCRIPTION "Diretorio onde serao gerados os xml de manifestos do destinatario, para notas recebidas"
+  FORMAT "x(100)"
+  INITIAL ""
+  LABEL "Diretorio MDE"
+  POSITION 14
+  MAX-WIDTH 200
+  VIEW-AS ""
+  COLUMN-LABEL "Diretorio MDE"
+  ORDER 130
+
+ADD FIELD "class-fiscal-item-xml" OF "param-xml" AS integer 
+  DESCRIPTION "Class fiscal"
+  FORMAT ">9"
+  INITIAL "1"
+  LABEL "Class fiscal"
+  POSITION 15
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Class fiscal"
+  ORDER 140
+
+ADD FIELD "l-cte-despesa" OF "param-xml" AS logical 
+  DESCRIPTION "Gera CT-e como Despesa das Notas Fiscais Transportadas"
+  FORMAT "yes/no"
+  INITIAL "no"
+  LABEL "Gera CT-e Como Despesa"
+  POSITION 16
+  MAX-WIDTH 1
+  VIEW-AS ""
+  COLUMN-LABEL "Gera CT-e Como Despesa"
+  ORDER 150
+
+ADD FIELD "int-ext" OF "param-xml" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL ""
+  POSITION 17
+  MAX-WIDTH 300
+  VIEW-AS ""
+  COLUMN-LABEL ""
+  EXTENT 50
+  ORDER 160
+ 
+ADD FIELD "url-ws" OF "param-xml" AS character 
+  DESCRIPTION "URL Web Service"
+  FORMAT "x(200)"
+  INITIAL ""
+  LABEL "URL Web Service"
+  POSITION 18
+  MAX-WIDTH 2000
+  VIEW-AS ""
+  COLUMN-LABEL "URL WS"
+  ORDER 170
+
+ADD FIELD "nsu" OF "param-xml" AS decimal 
+  DESCRIPTION "Numero Sequencia Unico"
+  FORMAT ">>>>>>>>>>>9"
+  INITIAL "0"
+  LABEL "Numero Sequencial"
+  POSITION 19
+  MAX-WIDTH 17
+  VIEW-AS ""
+  COLUMN-LABEL "NSU"
+  DECIMALS 2
+  ORDER 180
+
+ADD FIELD "qtd-xml" OF "param-xml" AS decimal 
+  DESCRIPTION "Quantidade XML a serem lidos por vez no Web Service"
+  FORMAT ">>>>>>>>9"
+  INITIAL "999999"
+  LABEL "Quantidade XML"
+  POSITION 20
+  MAX-WIDTH 15
+  VIEW-AS ""
+  COLUMN-LABEL "Quantidade XML"
+  DECIMALS 0
+  ORDER 190
+
+ADD FIELD "url-ws-saida" OF "param-xml" AS character 
+  DESCRIPTION "URL Web Service Saida"
+  FORMAT "x(200)"
+  INITIAL ""
+  LABEL "URL Web Service Saida"
+  POSITION 21
+  MAX-WIDTH 2000
+  VIEW-AS ""
+  COLUMN-LABEL "URL WS Saida"
+  ORDER 200
+
+ADD FIELD "l-quebra-doc-por-natureza" OF "param-xml" AS logical 
+  FORMAT "yes/no"
+  INITIAL "yes"
+  LABEL "Quebra Doc. P/ Natureza"
+  POSITION 22
+  MAX-WIDTH 1
+  COLUMN-LABEL "Quebra Doc. P/ Nat."
+  ORDER 210
+
+ADD INDEX "unico1" ON "param-xml" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "ep-codigo" ASCENDING 
+  INDEX-FIELD "cod-estabel" ASCENDING 
+
+ADD TABLE "gati-cce"
+  AREA "Schema Area"
+  LABEL "GATI CCE"
+  DUMP-NAME "gati-cce"
+
+ADD FIELD "serie" OF "gati-cce" AS character 
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 3
+  MAX-WIDTH 10
+  COLUMN-LABEL "Serie"
+  ORDER 20
+
+ADD FIELD "nr-nota-fis" OF "gati-cce" AS character 
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nota Fiscal"
+  POSITION 4
+  MAX-WIDTH 32
+  COLUMN-LABEL "Nota Fis"
+  ORDER 30
+
+ADD FIELD "nat-operacao" OF "gati-cce" AS character 
+  FORMAT "x(6)"
+  INITIAL ""
+  LABEL "Nat Operacao"
+  POSITION 5
+  MAX-WIDTH 12
+  COLUMN-LABEL "Nat Oper"
+  ORDER 40
+
+ADD FIELD "ind-tipo-nota" OF "gati-cce" AS integer 
+  DESCRIPTION "1 - Entrada / 2 - Sa¡da"
+  FORMAT "9"
+  INITIAL "0"
+  LABEL "Tipo Nota"
+  POSITION 6
+  MAX-WIDTH 4
+  COLUMN-LABEL "Tp Nota"
+  ORDER 50
+
+ADD FIELD "ind-tipo-ambiente" OF "gati-cce" AS integer 
+  DESCRIPTION "1 - Producao / 2 - Homologacao"
+  FORMAT "9"
+  INITIAL "1"
+  LABEL "Tipo Ambiente"
+  POSITION 7
+  MAX-WIDTH 4
+  COLUMN-LABEL "Tp Ambiente"
+  ORDER 60
+
+ADD FIELD "ind-sit-cce" OF "gati-cce" AS integer 
+  DESCRIPTION "1 - Pendente / 2 - Autorizada"
+  FORMAT "9"
+  INITIAL "1"
+  LABEL "Situacao CCE"
+  POSITION 8
+  MAX-WIDTH 4
+  COLUMN-LABEL "Sit CCE"
+  ORDER 70
+
+ADD FIELD "narrativa" OF "gati-cce" AS character 
+  FORMAT "x(1000)"
+  INITIAL ""
+  LABEL "Narrativa"
+  POSITION 9
+  MAX-WIDTH 2000
+  COLUMN-LABEL "Narrativa"
+  ORDER 80
+
+ADD FIELD "data-cce" OF "gati-cce" AS date 
+  FORMAT "99/99/9999"
+  INITIAL "today"
+  LABEL "Data CCE"
+  POSITION 10
+  MAX-WIDTH 4
+  COLUMN-LABEL "Data CCE"
+  ORDER 90
+
+ADD FIELD "hora-cce" OF "gati-cce" AS character 
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Hora CCE"
+  POSITION 11
+  MAX-WIDTH 40
+  COLUMN-LABEL "Hora CCE"
+  ORDER 100
+
+ADD FIELD "versao" OF "gati-cce" AS character 
+  FORMAT "x(4)"
+  INITIAL ""
+  LABEL "Versao"
+  POSITION 12
+  MAX-WIDTH 6
+  COLUMN-LABEL "Ver."
+  ORDER 110
+
+ADD FIELD "cod-estabel" OF "gati-cce" AS character 
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 13
+  MAX-WIDTH 6
+  COLUMN-LABEL "Estab"
+  ORDER 120
+
+ADD FIELD "sequencia" OF "gati-cce" AS integer 
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 14
+  MAX-WIDTH 4
+  COLUMN-LABEL "Seq."
+  ORDER 130
+
+ADD FIELD "protocolo" OF "gati-cce" AS character 
+  DESCRIPTION "Protocolo"
+  FORMAT "x(20)"
+  INITIAL ""
+  LABEL "Protocolo"
+  POSITION 15
+  MAX-WIDTH 40
+  COLUMN-LABEL "Protocolo"
+  HELP "Protocolo"
+  ORDER 140
+
+ADD FIELD "cod-emitente" OF "gati-cce" AS integer 
+  DESCRIPTION "Codigo do emitente"
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Codigo"
+  POSITION 16
+  MAX-WIDTH 4
+  COLUMN-LABEL "Codigo"
+  HELP "Codigo do emitente"
+  ORDER 150
+
+ADD INDEX "idx-01" ON "gati-cce" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "cod-estabel" ASCENDING 
+  INDEX-FIELD "serie" ASCENDING 
+  INDEX-FIELD "nr-nota-fis" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "nat-operacao" ASCENDING 
+  INDEX-FIELD "sequencia" ASCENDING 
+
+ADD TABLE "gati-mde"
+  AREA "Schema Area"
+  LABEL "Manifesto do Destinatario"
+  DESCRIPTION "Tabela guarda as informacoes de manifestos do destinatario, para notas de entrada e para notas de saida."
+  DUMP-NAME "gati-mde"
+
+ADD FIELD "cod-estabel" OF "gati-mde" AS character 
+  DESCRIPTION "Estabelecimento"
+  FORMAT "x(3)"
+  INITIAL ""
+  LABEL "Estabelecimento"
+  POSITION 2
+  MAX-WIDTH 6
+  VIEW-AS ""
+  COLUMN-LABEL "Estabelecimento"
+  ORDER 10
+
+ADD FIELD "serie" OF "gati-mde" AS character 
+  DESCRIPTION "Serie"
+  FORMAT "x(5)"
+  INITIAL ""
+  LABEL "Serie"
+  POSITION 3
+  MAX-WIDTH 10
+  VIEW-AS ""
+  COLUMN-LABEL "Serie"
+  ORDER 20
+
+ADD FIELD "nr-nota-fis" OF "gati-mde" AS character 
+  DESCRIPTION "Nota fiscal"
+  FORMAT "x(16)"
+  INITIAL ""
+  LABEL "Nota Fiscal"
+  POSITION 4
+  MAX-WIDTH 32
+  VIEW-AS ""
+  COLUMN-LABEL "Nota Fiscal"
+  ORDER 30
+
+ADD FIELD "cod-emitente" OF "gati-mde" AS integer 
+  DESCRIPTION "Emitente"
+  FORMAT ">>>>>>>>9"
+  INITIAL "0"
+  LABEL "Emitente"
+  POSITION 5
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Emitente"
+  ORDER 40
+
+ADD FIELD "enviado-recebido" OF "gati-mde" AS integer 
+  DESCRIPTION "1-Enviado/2-Recebido"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Env/Receb"
+  POSITION 6
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Env/Receb"
+  ORDER 50
+
+ADD FIELD "sequencia" OF "gati-mde" AS integer 
+  DESCRIPTION "Sequencia"
+  FORMAT ">>9"
+  INITIAL "0"
+  LABEL "Sequencia"
+  POSITION 7
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Sequencia"
+  ORDER 60
+
+ADD FIELD "cod-usuario" OF "gati-mde" AS character 
+  DESCRIPTION "Usuario corrente que gerou ou leu o manifesto"
+  FORMAT "x(12)"
+  INITIAL ""
+  LABEL "Usuario"
+  POSITION 8
+  MAX-WIDTH 24
+  VIEW-AS ""
+  COLUMN-LABEL "Usuario"
+  ORDER 70
+
+ADD FIELD "data" OF "gati-mde" AS date 
+  DESCRIPTION "Data da geracao ou leitura do manifesto"
+  FORMAT "99/99/9999"
+  INITIAL ?
+  LABEL "Data"
+  POSITION 9
+  MAX-WIDTH 4
+  VIEW-AS ""
+  COLUMN-LABEL "Data"
+  ORDER 80
+
+ADD FIELD "situacao" OF "gati-mde" AS integer 
+  DESCRIPTION "1 - Confirmacao da Operacao
+2 - Ciencia da Operacao
+3 - Desconhecimento da Operacao
+4 - Operacao nao Realizada"
+  FORMAT ">9"
+  INITIAL "0"
+  LABEL "Situacao"
+  POSITION 10
+  MAX-WIDTH 4
+  COLUMN-LABEL "Situacao"
+  ORDER 90
+
+ADD FIELD "justificativa" OF "gati-mde" AS character 
+  DESCRIPTION "Justificativa quando situacao for 4 - Operacao nao realizada"
+  FORMAT "x(500)"
+  INITIAL ""
+  LABEL "Justificativa"
+  POSITION 11
+  MAX-WIDTH 1000
+  VIEW-AS ""
+  COLUMN-LABEL "Justificativa"
+  ORDER 100
+
+ADD FIELD "chave" OF "gati-mde" AS character 
+  DESCRIPTION "Chave da nota de entrada ou saida"
+  FORMAT "x(60)"
+  INITIAL ""
+  LABEL "Chave"
+  POSITION 12
+  MAX-WIDTH 120
+  VIEW-AS ""
+  COLUMN-LABEL "Chave"
+  ORDER 110
+
+ADD FIELD "hora" OF "gati-mde" AS character 
+  DESCRIPTION "Hora de criacao ou leitura do manifesto"
+  FORMAT "x(8)"
+  INITIAL ""
+  LABEL "Hora"
+  POSITION 13
+  MAX-WIDTH 16
+  VIEW-AS ""
+  COLUMN-LABEL "Hora"
+  ORDER 120
+
+ADD FIELD "idlote" OF "gati-mde" AS decimal 
+  DESCRIPTION "Id Lote"
+  FORMAT ">>>>>>>>>>>>>>9"
+  INITIAL "0"
+  LABEL "Id Lote"
+  POSITION 14
+  MAX-WIDTH 15
+  VIEW-AS ""
+  COLUMN-LABEL "Id Lote"
+  DECIMALS 0
+  ORDER 130
+
+ADD FIELD "protocolo" OF "gati-mde" AS character 
+  DESCRIPTION "Protocolo"
+  FORMAT "x(15)"
+  INITIAL ""
+  LABEL "Protocolo"
+  POSITION 15
+  MAX-WIDTH 30
+  VIEW-AS ""
+  COLUMN-LABEL "Protocolo"
+  ORDER 140
+
+ADD INDEX "ch-unica" ON "gati-mde" 
+  AREA "Schema Area"
+  UNIQUE
+  PRIMARY
+  INDEX-FIELD "cod-estabel" ASCENDING 
+  INDEX-FIELD "serie" ASCENDING 
+  INDEX-FIELD "nr-nota-fis" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "enviado-recebido" ASCENDING 
+  INDEX-FIELD "sequencia" ASCENDING 
+
+ADD INDEX "ch-docum" ON "gati-mde" 
+  AREA "Schema Area"
+  INDEX-FIELD "cod-estabel" ASCENDING 
+  INDEX-FIELD "serie" ASCENDING 
+  INDEX-FIELD "nr-nota-fis" ASCENDING 
+  INDEX-FIELD "cod-emitente" ASCENDING 
+  INDEX-FIELD "enviado-recebido" ASCENDING 
+
+ADD INDEX "ch-lote" ON "gati-mde" 
+  AREA "Schema Area"
+  INDEX-FIELD "idlote" ASCENDING 
+
+.
+PSC
+cpstream=ibm850
+.
+0001199903

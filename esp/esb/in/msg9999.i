@@ -1,0 +1,5 @@
+/* DEFINI€ÇO DAS VARÖAVEIS PARA TESTE DE LOCK DE REGISTRO */
+
+DEF VAR l-locked           AS LOGICAL NO-UNDO.
+DEF VAR l-reg-disponivel   AS LOGICAL NO-UNDO.
+DEF VAR i-tentativas       AS INTEGER NO-UNDO.

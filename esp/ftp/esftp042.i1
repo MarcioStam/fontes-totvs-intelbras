@@ -1,0 +1,277 @@
+
+/******************************************************************************
+** Copyright DATASUL S.A. (1997)
+** Todos os Direitos Reservados.
+**
+** Este fonte e de propriedade exclusiva da DATASUL, sua reproducao
+** parcial ou total por qualquer meio, so podera ser feita mediante
+** autorizacao expressa.
+*******************************************************************************/
+/******************************************************************************
+**                          
+**     Include: esftp042.i1 -  Defini‡Æo das procedures secund rias
+**                          
+*******************************************************************************/
+
+
+
+/*PROCEDURE pi-calc-abat:
+    DEF OUTPUT PARAM de-vl-icms-abat AS DECIMAL NO-UNDO.
+
+    FIND FIRST cidade-zf NO-LOCK
+         WHERE cidade-zf.cidade  = nota-fiscal.cidade
+           AND cidade-zf.estado  = nota-fiscal.estado NO-ERROR.
+
+    IF AVAIL cidade-zf AND 
+       nota-fiscal.nat-operacao BEGINS '6' THEN
+        ASSIGN de-vl-icms-abat = nota-fiscal.dec-1.
+
+
+END PROCEDURE.
+
+
+PROCEDURE pi-calc-pis-item:
+/* Calcula o valor de PIS para o item da nota */
+
+    DEF OUTPUT PARAM de-val-pis AS DECIMAL NO-UNDO.
+
+    DEF VAR de-vl-total-pis-por-unidade AS DECIMAL NO-UNDO.
+    DEF VAR de-taxa-pis                 AS DECIMAL NO-UNDO.
+    DEF VAR de-vl-base-pis              AS DECIMAL NO-UNDO.
+    
+
+    /* Calcula PIS */
+    ASSIGN de-vl-total-pis-por-unidade = 0.
+    
+    IF natur-oper.mercado = 1 THEN
+        IF nota-fiscal.dt-emis-nota < 11/01/2002 THEN
+            ASSIGN de-taxa-pis = DECIMAL(SUBSTR(natur-oper.char-1,76,5)) / 100.
+        ELSE    /* Novo tratamento de PIS e COFINS */
+            IF it-nota-fisc.idi-forma-calc-pis = 2 /* valor por unidade */ THEN DO:
+                ASSIGN de-taxa-pis = 0.
+                /* Calcula valor total do PIS por unidade */
+                IF SUBSTR(it-nota-fisc.char-2,96,1) = "1" /* Tributacao do PIS = Tributado */ then
+                    ASSIGN de-vl-total-pis-por-unidade = ROUND(it-nota-fisc.qt-faturada[1] * it-nota-fisc.val-unit-pis  ,2).
+                ELSE
+                    ASSIGN de-vl-total-pis-por-unidade = 0.
+            END.
+            ELSE
+                /* calcula PIS por percentual */
+                ASSIGN de-taxa-pis = DECIMAL(SUBSTR(it-nota-fisc.char-2,76,5))
+                            * (100 - IF SUBSTR(it-nota-fisc.char-2,96,1) = "3"  /* Reduzido */
+                                     OR SUBSTR(it-nota-fisc.char-2,96,1) = "4"  /* Outros   */
+                                     THEN DECIMAL(SUBSTR(it-nota-fisc.char-2,86,5))
+                                     ELSE 0)
+                            / 10000.
+    ELSE
+        ASSIGN de-taxa-pis = natur-oper.perc-pis[2] / 100.
+    
+    IF  it-nota-fisc.vl-tot-item > 0
+    AND (   de-taxa-pis > 0
+         OR de-vl-total-pis-por-unidade > 0 ) THEN DO:
+    
+        IF  de-vl-total-pis-por-unidade > 0 THEN
+             ASSIGN de-vl-base-pis = 0
+                    de-val-pis     = de-vl-total-pis-por-unidade.
+        ELSE DO:
+            ASSIGN de-vl-base-pis = it-nota-fisc.vl-tot-item
+                                  - (IF SUBSTR(ITEM.char-1,50,5) = " "    /* Retira PIS/Cofins Subst incorporado */
+                                     OR SUBSTR(ITEM.char-1,50,5) = "Sim"
+                                     THEN   it-nota-fisc.vl-pis
+                                          + it-nota-fisc.vl-finsocial
+                                     ELSE 0)
+                                  - (IF natur-oper.tp-oper-terc = 4
+                                     THEN it-nota-fisc.vl-icmsubit-e[3]
+                                     ELSE it-nota-fisc.vl-icmsub-it).
+    
+            /* IN306 - IPI integrante base PIS COFINS */
+            {ftp/ft0708a.i12 de-vl-base-pis natur-oper}
+    
+            ASSIGN de-val-pis = ROUND(de-vl-base-pis * de-taxa-pis,2).
+        END.
+    END.
+END PROCEDURE.
+
+
+PROCEDURE pi-calc-cofins-item:
+/* Calcula o valor de PIS para o item da nota */
+
+    DEF OUTPUT PARAM de-val-cofins AS DECIMAL NO-UNDO.
+
+    DEF VAR de-vl-total-cofins-por-unidade AS DECIMAL NO-UNDO.
+    DEF VAR de-taxa-cofins                 AS DECIMAL NO-UNDO.
+    DEF VAR de-vl-base-cofins              AS DECIMAL NO-UNDO.
+    
+    ASSIGN de-vl-total-cofins-por-unidade = 0.
+
+    IF natur-oper.mercado = 1 THEN
+        IF nota-fiscal.dt-emis-nota < 11/01/2002 THEN
+            ASSIGN de-taxa-cofins = DECIMAL(SUBSTR(natur-oper.char-1,81,5)) / 100.
+        ELSE    /* Novo tratamento de PIS e COFINS */
+            IF it-nota-fisc.idi-forma-calc-cofins = 2 /* valor por unidade */ THEN DO:
+                ASSIGN de-taxa-cofins = 0.
+    
+                /* Calcula valor total do COFINS por unidade */
+                IF SUBSTR(it-nota-fisc.char-2,97,1) = "1" /* Tributacao do COFINS = Tributado */ THEN
+                    ASSIGN de-vl-total-cofins-por-unidade = ROUND(it-nota-fisc.qt-faturada[1] * it-nota-fisc.val-unit-cofins,2).
+                ELSE
+                    ASSIGN de-vl-total-cofins-por-unidade = 0.
+            END.
+            ELSE
+                /* calcula COFINS por percentual */
+                ASSIGN de-taxa-cofins = DECIMAL(SUBSTR(it-nota-fisc.char-2,81,5))
+                               * (100 - IF SUBSTR(it-nota-fisc.char-2,97,1) = "3"  /* Reduzido */
+                                        OR SUBSTR(it-nota-fisc.char-2,97,1) = "4"  /* Outros   */
+                                        THEN DECIMAL(SUBSTR(it-nota-fisc.char-2,91,5))
+                                        ELSE 0)
+                               / 10000.
+    ELSE
+        ASSIGN de-taxa-cofins = natur-oper.per-fin-soc[2] / 100.
+    
+    IF it-nota-fisc.vl-tot-item > 0
+    AND (   de-taxa-cofins > 0
+         OR de-vl-total-cofins-por-unidade > 0 ) THEN DO:
+    
+        IF de-vl-total-cofins-por-unidade > 0 THEN
+            ASSIGN de-vl-base-cofins = 0
+                   de-val-cofins     = de-vl-total-cofins-por-unidade.
+            
+        ELSE DO:
+            ASSIGN de-vl-base-cofins = it-nota-fisc.vl-tot-item
+                                     - (IF SUBSTR(item.char-1,50,5) = " "    /* Retira PIS/Cofins Subst incorporado */
+                                        OR SUBSTR(item.char-1,50,5) = "Sim"
+                                        THEN   it-nota-fisc.vl-pis
+                                             + it-nota-fisc.vl-finsocial
+                                        ELSE 0)
+                                     - (IF natur-oper.tp-oper-terc = 4
+                                        THEN it-nota-fisc.vl-icmsubit-e[3]
+                                        ELSE it-nota-fisc.vl-icmsub-it).
+    
+            /* IN306 - IPI integrante base PIS COFINS */
+            {ftp/ft0708a.i12 de-vl-base-cofins natur-oper}
+    
+            ASSIGN de-val-cofins = ROUND(de-vl-base-cofins * de-taxa-cofins,2).
+        END.
+    END.
+END PROCEDURE.*/
+
+PROCEDURE pi-retorna-desc-it:
+/* Retorna a descri‡Æo do item da nota */
+
+    DEF OUTPUT PARAM c-desc-prod AS CHARACTER NO-UNDO.
+    DEF BUFFER b-item FOR item.      
+    DEF VAR i-tam AS INTEGER NO-UNDO.
+    
+    ASSIGN i-tam = 120.
+    
+    FIND FIRST b-item NO-LOCK
+         WHERE b-item.it-codigo = item.it-codigo NO-ERROR.   
+
+    IF nota-fiscal.estado = "EX" AND
+       b-item.desc-inter <> ""   THEN
+        ASSIGN c-desc-prod = SUBSTRING(b-item.desc-inter,1,i-tam).
+    ELSE DO:
+        FIND narrativa OF b-item NO-LOCK NO-ERROR.
+        IF b-item.ind-imp-desc =  8 OR
+           b-item.ind-imp-desc =  9 OR
+           b-item.ind-imp-desc = 10 THEN 
+            ASSIGN c-desc-prod = SUBSTRING(b-item.desc-nacional,1,i-tam).
+       
+        IF b-item.ind-imp-desc = 1 THEN
+           if b-item.desc-nacional <> "" then
+                ASSIGN c-desc-prod = SUBSTRING(b-item.desc-nacional,1,i-tam).
+           else 
+               IF AVAIL narrativa and
+                  narrativa.descricao <> "" THEN
+                  ASSIGN c-desc-prod = SUBSTRING(narrativa.descricao,1,42).
+               ELSE
+                  ASSIGN c-desc-prod = SUBSTRING(b-item.descricao-1,1,42).
+        
+        IF (b-item.ind-imp-desc = 2
+            OR b-item.ind-imp-desc = 5
+            OR b-item.ind-imp-desc = 6)
+           AND AVAIL narrativa THEN DO:
+           
+            ASSIGN c-desc-prod = IF b-item.ind-imp-desc = 2 THEN
+                                     b-item.desc-nacional + narrativa.descricao
+                                 ELSE
+                                     IF b-item.ind-imp-desc = 5 THEN
+                                         narrativa.descricao
+                                     ELSE
+                                         IF b-item.ind-imp-desc = 6 THEN
+                                             SUBSTRING(narrativa.descricao,1,42)
+                                         ELSE "". 
+        END.
+       
+        IF b-item.ind-imp-desc = 3 THEN DO:
+                    
+            FIND FIRST item-cli NO-LOCK
+                 WHERE item-cli.nome-abrev = nota-fiscal.nome-ab-cli
+                   AND item-cli.it-codigo  = it-nota-fisc.it-codigo NO-ERROR.
+            ASSIGN c-desc-prod = b-item.desc-nacional + IF AVAIL item-cli THEN
+                                     item-cli.narrativa
+                                 ELSE "".
+        END.
+       
+        IF b-item.ind-imp-desc = 4 OR
+           b-item.ind-imp-desc = 7 THEN DO:
+                    
+            FIND FIRST nar-it-nota NO-LOCK
+                 WHERE nar-it-nota.cod-estabel  = it-nota-fisc.cod-estabel
+                   AND nar-it-nota.serie        = it-nota-fisc.serie
+                   AND nar-it-nota.nr-nota-fis  = it-nota-fisc.nr-nota-fis
+                   AND nar-it-nota.nr-sequencia = it-nota-fisc.nr-seq-fat
+                   AND nar-it-nota.it-codigo    = it-nota-fisc.it-codigo NO-ERROR.
+       
+            IF b-item.ind-imp-desc = 4 THEN DO:
+              
+                ASSIGN c-desc-prod = b-item.desc-nacional + IF AVAIL nar-it-nota THEN
+                                                                nar-it-nota.narrativa
+                                                            ELSE "".
+            END.
+       
+            IF b-item.ind-imp-desc = 7 THEN DO:
+               ASSIGN c-desc-prod =  IF AVAIL nar-it-nota THEN
+                                         nar-it-nota.narrativa
+                                     ELSE "".
+              
+            END.
+       END.
+    END.
+    
+ 
+
+END PROCEDURE.
+
+PROCEDURE situacaoTribICMSDoitem:
+/* Determina a situacao tributaria do item da Nota, conforme tabela
+   do regulamento do Icms:*/
+
+    DEF OUTPUT PARAM piCodigo  AS INT  NO-UNDO.
+
+    DEF VAR deVlIcmsIte3 AS DEC NO-UNDO.
+    DEF VAR iCdTribIcm   AS INT NO-UNDO.
+    DEF VAR lIndIcmRet   AS LOG NO-UNDO.
+
+    ASSIGN deVlIcmsIte3 = it-nota-fisc.vl-icmsit-e[3]
+           iCdTribIcm   = it-nota-fisc.cd-trib-icm
+           lIndIcmRet   = it-nota-fisc.ind-icm-ret.
+    
+    
+    ASSIGN piCodigo = (IF item.codigo-orig <= 0 
+                       THEN 000 
+                       ELSE ((item.codigo-orig - 1) * 100)) +  
+                      (     IF  natur-oper.ind-entfut AND deVlIcmsIte3 > 0 THEN 90
+                       ELSE IF  natur-oper.ind-it-sub-dif                  THEN 50
+                       ELSE IF  natur-oper.ind-it-sub-dif   = ?            THEN 51
+                       ELSE IF  natur-oper.ind-it-icms                     THEN 60
+                       ELSE IF  iCdTribIcm = 1     AND lIndIcmRet          THEN 10
+                       ELSE IF  iCdTribIcm = 1                             THEN 00
+                       ELSE IF  iCdTribIcm = 4     AND lIndIcmRet          THEN 70
+                       ELSE IF  iCdTribIcm = 4     AND NOT lIndIcmRet      THEN 20
+                       ELSE IF  iCdTribIcm = 2     AND lIndIcmRet          THEN 30
+                       ELSE IF  iCdTribIcm = 2                             THEN 40 + INT(natur-oper.ind-tipo-vat)
+                                                                           ELSE 90).
+    
+END PROCEDURE.
+

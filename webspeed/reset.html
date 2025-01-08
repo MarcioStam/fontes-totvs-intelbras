@@ -1,0 +1,141 @@
+<script language="SpeedScript">
+procedure output-header:
+   if (get-cgi("HTTP_ACCEPT") matches "*application/xhtml+xml*") then
+      output-content-type("application/xhtml+xml; charset=iso-8859-1").
+   else
+      output-content-type("text/html; charset=iso-8859-1").
+end.
+
+define variable h-util as handle no-undo.
+run html-util.p persistent set h-util.
+</script>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt_BR">
+<head>
+  <title>Reiniciar senha</title>
+  <style type="text/css">
+body {
+  background-color: #ffffff;
+  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-size: 0.8em;
+}
+h2 {
+  font-size: 1.8em;
+}
+h5 {
+  font-size: 1em;
+}
+h6 {
+  font-size: 0.9em;
+}
+table {
+  font-size: 1em;
+  margin: auto;
+}
+th {
+  background-color: #aaaaaa;
+  text-align: right;
+}
+.light {
+  background-color: #ffffff;
+}
+.dark {
+  background-color: #e7e7e7;
+}
+input {
+  font-size: 0.9em;
+}
+select {
+  font-size: 0.9em;
+}
+fieldset {
+  height: 5em;
+}
+legend {
+  margin-bottom: 0.5em;
+}
+#form {
+  margin: auto;
+  width: 600px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="form">
+  <form action="" method="post">
+    <table width="100%">
+      <tr>
+        <th><label for="_login">Usu†rio:</label></th>
+        <td><input type="text" name="_login" id="_login" maxlength="12" /></td>
+      </tr>
+      <tr>
+        <th><label for="_senha">Senha:</label></th>
+        <td><input type="password" name="_senha" id="_senha" /></td>
+      </tr>
+      <tr>
+        <th><label for="_cod_usuario">Usu†rio a reiniciar senha:</label></th>
+        <td><input type="text" name="_cod_usuario" id="_cod_usuario" maxlength="12" /></td>
+      </tr>
+      <tr>
+        <td colspan="2"><input type="submit" name="submit" value="Reiniciar" /></td>
+      </tr>
+    </table>
+  </form>
+
+<script language="SpeedScript">
+if (get-value("_login") ne "" and get-value("_senha") ne "" and get-value("_cod_usuario") ne "") then do:
+   define buffer b-usuar_mestre for usuar_mestre.
+   define variable c-senha as character no-undo.
+
+   find usuar_mestre no-lock
+      where usuar_mestre.cod_usuario = get-value('_login') no-error.
+
+   if available usuar_mestre then do:
+      if usuar_mestre.cod_senha = base64-encode(sha1-digest(get-value('_senha'))) then do:
+         find b-usuar_mestre exclusive-lock
+            where b-usuar_mestre.cod_usuario = get-value('_cod_usuario') no-error.
+
+         if available b-usuar_mestre and b-usuar_mestre.dat_fim_valid >= today then do:
+            if not can-find (first usuar_grp_usuar
+                             where usuar_grp_usuar.cod_grp_usuar = 't20'
+                               and usuar_grp_usuar.cod_usuario   = usuar_mestre.cod_usuario)
+               and not can-find (first usuar_grp_usuar
+                                 where usuar_grp_usuar.cod_grp_usuar = 'adm'
+                                   and usuar_grp_usuar.cod_usuario   = usuar_mestre.cod_usuario) then
+               {&out} '<h3>Usu†rio sem permiss∆o pra reiniciar senha</h3>'.
+            else do:
+               find int_usuar_mestre no-lock
+                  where int_usuar_mestre.cod_usuario = b-usuar_mestre.cod_usuario no-error.
+               if available int_usuar_mestre then
+                  assign c-senha = int_usuar_mestre.cpf.
+               else
+                  assign c-senha = 'intelbras'.
+
+               assign b-usuar_mestre.cod_senha           = base64-encode(sha1-digest(c-senha))
+                      b-usuar_mestre.cod_senha_framework = base64-encode(sha1-digest(c-senha))
+                      b-usuar_mestre.dat_valid_senha     = today - 1.
+               {&out} '<h3>Senha reiniciada.'.
+               if not available int_usuar_mestre then
+                  {&out} ' Sem CPF, ficou "intelbras".'.
+               {&out} '</h3>'.
+            end.
+         end.
+         else
+            {&out} '<h3>Usu†rio inexistente ou desativado</h3>'.
+      end.
+      else
+         {&out} '<h3>Senha incorreta</h3>'.
+   end.
+   else
+      {&out} '<h3>Usu†rio inexistente</h3>'.
+end.
+else if get-value("submit") = "Reiniciar" then
+  {&out} '<h3>Os tràs campos devem ser preenchidos!</h3>'.
+</script>
+</div>
+
+</body>
+</html>

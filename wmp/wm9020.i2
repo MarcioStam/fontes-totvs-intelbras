@@ -1,0 +1,62 @@
+/**********************************************************************
+****
+****     SUGEST€O DE RETIRADA - Controle de Sa­da por Data de Validade
+****
+****     Par³metro: {1} - Pode assumir os valores "" ou descending 
+****
+************************************************************************/
+
+    for each b-wm-saldo-estoque
+       where b-wm-saldo-estoque.cod-estabel      = wm-docto-itens.cod-estabel
+         and b-wm-saldo-estoque.cod-local        = wm-docto-itens.cod-local
+         and b-wm-saldo-estoque.cod-cliente      = wm-docto-itens.cod-cliente     
+         and b-wm-saldo-estoque.cod-item         = wm-docto-itens.cod-item
+         and b-wm-saldo-estoque.cod-refer        = wm-docto-itens.cod-refer
+         and (b-wm-saldo-estoque.cod-lote        = wm-docto-itens.cod-lote or
+              wm-docto-itens.cod-lote            = "" )
+         and b-wm-saldo-estoque.ind-status-saldo = 3 /* liberado */   no-lock 
+         by b-wm-saldo-estoque.dt-validade-lote {1}:
+
+       assign c-lote = b-wm-saldo-estoque.cod-lote.
+       
+       /* Abertura de Query */
+       {wmp/wm9020.i1 {1} }
+
+       run doAlocation.
+       
+       if  de-qtd-item-retirada <= 0 then 
+           leave.
+    end.
+    
+    /* ----- Procura a embalagem fechada com menor quantidade que satisfa»a a 
+             quantidade a retirar que n’o possa ser aberta para arredondamento
+             n„a importando a data de validade ou data da entrada ----------------*/
+                           
+    if  de-qtd-item-retirada > 0
+    and wm-item.ind-forma-arredonda = 1 /* Para mais */ 
+    and not piEmbalFechada then do:
+             
+        for each b-wm-saldo-estoque
+           where b-wm-saldo-estoque.cod-estabel      = wm-docto-itens.cod-estabel
+             and b-wm-saldo-estoque.cod-local        = wm-docto-itens.cod-local
+             and b-wm-saldo-estoque.cod-cliente      = wm-docto-itens.cod-cliente     
+             and b-wm-saldo-estoque.cod-item         = wm-docto-itens.cod-item
+             and b-wm-saldo-estoque.cod-refer        = wm-docto-itens.cod-refer
+             and (b-wm-saldo-estoque.cod-lote        = wm-docto-itens.cod-lote or
+                  wm-docto-itens.cod-lote            = "" )             
+             and b-wm-saldo-estoque.ind-status-saldo = 3 /* liberado */   no-lock 
+             by b-wm-saldo-estoque.dt-validade-lote {1}:
+                                          
+            assign c-lote = b-wm-saldo-estoque.cod-lote.
+            
+            /* Abertura de Query */
+            {wmp/wm9020.i1 {1} }
+
+            run doAlocationMoreExit.
+                        
+            if  de-qtd-item-retirada <= 0 then 
+                leave.
+        end.                
+    end.
+
+/* fim */

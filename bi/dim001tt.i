@@ -1,0 +1,32 @@
+define temp-table tt-param no-undo
+   field usuario     as character
+   field senha       as character.
+
+define temp-table ttDimEmitente no-undo
+   field CD_Emitente          like emitente.cod-emitente
+   field TX_Emitente          like emitente.nome-emit
+   field TX_Nome_Abreviado    like emitente.nome-abrev
+   field TX_Identificador     as character
+   field CD_CGC               like emitente.cgc
+   field CD_Pais              like emitente.pais
+   field CD_Estado            like emitente.estado
+   field CD_Cidade            like emitente.cidade
+   field CD_Grupo_Cliente     like emitente.cod-gr-cli
+   field TX_Grupo_Cliente     like gr-cli.descricao
+   field CD_Grupo_Fornecedor  like emitente.cod-gr-forn
+   field TX_Grupo_Fornecedor  like grupo-fornec.descricao
+   field CD_Matriz            like emitente.cod-emitente
+   field TX_Matriz            like emitente.nome-matriz
+   field TX_Nome_Abrev_Matriz like emitente.nome-abrev
+   field CD_Ativo_Cliente     as integer
+   field CD_Ativo_Fornecedor  as integer
+   field CD_Grupo_Cobranca    like int-emitente.cod-gr-cob
+   field CD_Representante     like emitente.cod-rep
+   field DT_Implantacao       like emitente.data-implant
+   field CD_Natureza          as character
+   field CD_Canal             as integer
+   field CD_GUID              as character
+   field CD_Matriz_Canal      like emitente.cod-emitente
+   field TX_Nome_Abrev_Matriz_Canal like emitente.nome-abrev
+   field TX_Matriz_Canal      like emitente.nome-abrev
+   index idx_pri is primary unique CD_Emitente.

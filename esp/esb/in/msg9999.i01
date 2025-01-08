@@ -1,0 +1,51 @@
+/********************************************************************************************/
+/* Programa...: esp/esb/in/msg9999.I - TRATAMENTO USUµRIOS PRESOS - ELIMINA€ÇO DE REGISTRO  */
+/* Altor......: Roger Marcelino Bruhn                                                       */
+/* Data.......: 03/04/2014                                                                  */ 
+/* Objetivo...: Padronizar a forma de tratamento de lock na atualiza‡Æo ou elimina‡Æo       */
+/*              de registros no ERPtabelas do produto                                       */
+/* Parƒmetros.: {1} -> TABELA A SER ELIMINADA                                               */
+/*              {2} -> STRING COM O CAMANDO COMPLETO FIND OU FOR FIRST                      */
+/*                     OBS: SEMPRE COM A OP€ÇO <NO-WAIT> PARA NÇO TRAVAR EM TELA O REGISTRO */
+/*              {3} -> TEMPO DE ESPERA ENTRE CADA TENTATIVA                                 */
+/*              {4} -> NéMERO DE VEZES QUE O PROGRAMA IRµ NOVAMENTE TESTAR SE ESTµ LOCADO   */
+/*                                                                                          */
+/*              OBS: a inclusde atualizar  o valor das seguintes vari veis:                 */
+/*                   l-locked           -> indicar  ao programa chamador se o registro est  */
+/*                                         preso por outro usu rio                          */
+/*                   l-reg-indispon¡vel -> Se o registro est  dispon¡vel para Elimina‡Æo ou */
+/*                                         Atualiz‡Æo                                       */
+/********************************************************************************************/
+
+ASSIGN l-locked           = NO
+       l-reg-disponivel   = YES
+       i-tentativas       = 0.
+
+{2} /* Comando Find ou For First */
+
+DO  WHILE LOCKED {1} :
+    IF  LOCKED {1} THEN DO:
+        
+        PAUSE {3} NO-MESSAGE.  /* Tempo de espera */
+
+        {2} /* Comando Find ou For First */
+    END.
+
+    IF (NOT LOCKED {1} AND NOT AVAILABLE {1})
+    OR (AVAILABLE  {1} AND NOT LOCKED {1})
+    OR (i-tentativas >= {4}) /*Nr Tentativas*/ 
+    THEN 
+        LEAVE.
+
+    ASSIGN i-tentativas = i-tentativas + 1.
+END.
+
+IF  NOT AVAILABLE {1} THEN DO:
+    assign l-reg-disponivel = NO.
+    
+    IF  LOCKED {1} THEN
+        l-locked = YES.
+        
+END.
+
+/* FIM */

@@ -1,0 +1,55 @@
++----------------------------------------------------------------------------+
+|           Layout do Arquivo de Importa‡Æo dos Parƒmetros do Item           |
+|----------------------------------------------------------------------------|
+|           Nome do Arquivo: A ser informado                                 |
+|                   Formato: Arquivo CSV (separado por ponto e v¡rgula)      |
+|----------------------------------------------------------------------------|
+|**Obs.: A primeira linha do arquivo ficou reservada para t¡tulos da coluna**|
+|----------------------------------------------------------------------------|
+|     Coluna    |  Descri‡Æo                                                 |
+|---------------+------------------------------------------------------------|
+|       01      |  Item                                                      |
+|       02      |  Estab.                                                    |
+|       03      |  C¢d. Forn.                                                |
+|       04      |  Ressup Fornec                                             |
+|       05      |  Cota‡Æo Autom tica                                        |
+|       06      |  Ativo                                                     |
+|       07      |  CPI                                                       |
+|       08      |  CPF                                                       |
+|       09      |  CPT                                                       |
+|       10      |  Nr. Tab                                                   |
+|       11      |  % Compra                                                  |
+|       12      |  Comprador                                                 |
+|       13      |  Pol¡tica                                                  |
+|       14      |  Tipo de demanda                                           |
+|       15      |  Lote m£ltiplo                                             |
+|       16      |  Lote m¡nimo                                               |
++----------------------------------------------------------------------------+
++----------------------------------------------------------------------------+
+|           Layout do Arquivo de Importa‡Æo dos Parƒmetros do Item           |
+|----------------------------------------------------------------------------|
+|           Nome do Arquivo: A ser informado                                 |
+|                   Formato: Arquivo CSV (separado por ponto e v¡rgula)      |
+|----------------------------------------------------------------------------|
+|**Obs.: A primeira linha do arquivo ficou reservada para t¡tulos da coluna**|
+|----------------------------------------------------------------------------|
+|     Coluna    |  Descri‡Æo                                                 |
+|---------------+------------------------------------------------------------|
+|       17      |  Per¡odo fixo                                              |
+|       18      |  Qtde. pol¡tica                                            |
+|       19      |  Tipo Estq Segur                                           |
+|       20      |  Reabastecimento                                           |
+|       21      |  Classe Reprograma‡Æo                                      |
+|       22      |  EmissÆo Ordens                                            |
+|       23      |  DivisÆo de Ordens                                         |
+|       24      |  Represa Demanda                                           |
+|       25      |  Ressupr Compras                                           |
+|       26      |  Ressupr Fornec                                            |
+|       27      |  Ressupr CQ                                                |
+|       28      |  Horizonte libera‡Æo                                       |
+|       29      |  Fixo                                                      |
+|       30      |  Dep¢sito                                                  |
+|       31      |  Tipo de Despesa                                           |
+|       32      |  Situa‡Æo                                                  |
++----------------------------------------------------------------------------+
+

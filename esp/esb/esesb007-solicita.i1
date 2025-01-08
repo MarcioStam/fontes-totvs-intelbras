@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------*/
+/* INDICA QUE O EMITENTE ESTµ NO GRUPO DE DISTRIBUIDORES                 */
+/*-----------------------------------------------------------------------*/
+
+def buffer b-emit-distrib for emitente.
+
+FUNCTION fn-grupo-distribuidores RETURNS LOGICAL
+    (p-emitente AS INT) FORWARD.
+
+FUNCTION fn-grupo-distribuidores RETURNS LOGICAL
+    (p-emitente AS INT ):
+    
+    FIND b-emit-distrib NO-LOCK
+        WHERE b-emit-distrib.cod-emitente = p-emitente NO-ERROR.
+
+    FOR FIRST ponto-programa NO-LOCK
+        WHERE ponto-programa.nome-programa = "pd4000"
+          AND ponto-programa.ponto         = 8:
+        FOR EACH conteudo-programa NO-LOCK
+            WHERE conteudo-programa.cod-programa = ponto-programa.cod-programa :
+            IF  b-emit-distrib.cod-gr-cli = int(conteudo-programa.conteudo) then
+                RETURN YES.
+        END.
+    END.
+
+    RETURN NO.
+END FUNCTION.

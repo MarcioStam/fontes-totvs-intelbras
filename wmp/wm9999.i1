@@ -1,0 +1,26 @@
+/***********************************************************************************
+** include/wm9999.i1 - BUSCA RELACIONAMENTO ITEM X FORNEC X EMB X SAIDA           **
+**                   {1} - codigo do item                                         **
+**                   {2} - cdn-emitente                                           **
+**                   {3} - codigo da embalagem                                    **
+**                   {4} - e utilizado para executar o comando "get next          **
+**                         q-box-saldo" quando esta include for executada a par-  **
+**                     tir do programa WM9020B                                    **
+***********************************************************************************/
+IF AVAIL b-wms-item-fornec-embal THEN do: 
+    FIND FIRST wms-item-fornec-embal WHERE
+        wms-item-fornec-embal.cod-item       = {1} AND
+        wms-item-fornec-embal.cdn-emitente   = {2} AND
+        wms-item-fornec-embal.cdn-tip-trans  = 2   AND
+        wms-item-fornec-embal.cod-embal      = {3}
+        NO-LOCK NO-ERROR.
+        
+    if not avail wms-item-fornec-embal or
+       (avail wms-item-fornec-embal and
+        wms-item-fornec-embal.cod-embal <> {3}) then do:
+        {4}.    
+        NEXT bloco.
+    end.
+end.    
+
+/* Fim da include */

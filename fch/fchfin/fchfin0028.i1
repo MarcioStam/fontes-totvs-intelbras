@@ -1,0 +1,5 @@
+DEFINE TEMP-TABLE {1} NO-UNDO 
+  FIELD calcDate AS date
+  FIELD cashTransTypeCode AS character
+
+.

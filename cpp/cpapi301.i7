@@ -1,0 +1,137 @@
+/********************************************************************************
+** PROCEDURE GerarListaProcesItem:
+** Parƒmetros: Input  p-it-codigo
+**                    p-qt-ordem
+**                    p-cod-estabel
+**                    p-cod-refer
+**                    p-dt-inicio
+**                    p-nr-linha
+**                    p-log-gera-lista (Gera lista ou encontra primeiro processo)  
+**             Input Output tt-proces-item
+** Objetivo:  Gerar lista de processos ou encontrar 1 processo para ser usado na
+**            fabrica‡Æo do item
+** Regra:     A procedure nÆo validar  a regra que tenha como input ?
+**            Estabelecimento, linha de produ‡Æo e quantidade
+**                            
+********************************************************************************/
+
+PROCEDURE GerarListaProcesItem:
+    
+    def input param p-it-codigo      like ord-prod.it-codigo   no-undo.
+    def input param p-qt-ordem       like ord-prod.qt-ordem    no-undo.
+    def input param p-cod-estabel    like ord-prod.cod-estabel no-undo.
+    def input param p-cod-refer      like ord-prod.cod-refer   no-undo.
+    def input param p-dt-inicio      like ord-prod.dt-inicio   no-undo.
+    def input param p-nr-linha       like ord-prod.nr-linha    no-undo.
+    def input param p-log-gera-lista as logical                no-undo.
+    &if defined (bf_man_206b) &then
+        def input param p-unid-negoc as char                   no-undo.
+    &endif
+    def input-output param table for tt-proces-item.
+    
+    def var v-soma-perc  as decimal no-undo.
+    def var v-num-proces as integer no-undo.
+    
+    /** Elimina‡Æo da tt **/
+  
+    for each tt-proces-item:
+        delete tt-proces-item.
+    end.
+    
+    for each proces-item
+        where proces-item.it-codigo = p-it-codigo no-lock:
+        
+        /*** Validade de datas para roteiro e lista componentes associadas ***/
+        if p-dt-inicio <> ? then do:
+            if proces-item.cod-roteiro <> "" then do:
+                find rot-item where 
+                     rot-item.it-codigo   = proces-item.it-codigo and
+                     rot-item.cod-roteiro = proces-item.cod-roteiro no-lock no-error.
+                if not avail rot-item or
+                    (rot-item.data-inicio   > p-dt-inicio or 
+                     rot-item.data-termino  < p-dt-inicio) then next.
+            end.
+            if proces-item.cod-lista-compon <> "" then do:
+                find first lista-compon-item where
+                           lista-compon-item.cod-lista-compon = proces-item.cod-lista-compon and
+                           lista-compon-item.it-codigo        = proces-item.it-codigo no-lock no-error.
+                   if lista-compon-item.data-inicio  > p-dt-inicio or           
+                      lista-compon-item.data-termino < p-dt-inicio then next.       
+            end.
+        end.
+        
+        /* Verifica se existe restri‡Æo para o processo */
+        if  proces-item.des-regra-proces <> ""  or 
+            proces-item.char-1           <> "" then do:
+            
+            /*** Verifica a quantidade da ordem ***/
+            if p-qt-ordem <> ?  
+            and proces-item.qtd-min-item <> ?
+            and proces-item.qtd-max-item <> ? 
+            and (p-qt-ordem <  proces-item.qtd-min-item
+             or  p-qt-ordem >= proces-item.qtd-max-item) then
+                    next.
+
+            /*** Verifica o estabelecimento do processo ***/
+            if p-cod-estabel <> ? 
+            and proces-item.cod-estabel <> "" 
+            and proces-item.cod-estabel <> p-cod-estabel then 
+                next.
+
+            /*** Verifica a referencia ***/
+            if  proces-item.cod-refer <> ""
+            and proces-item.cod-refer <> p-cod-refer then
+                next.
+            
+            /*** Verifica a data de validade do processo ***/
+            if  p-dt-inicio  <> ?
+            and proces-item.data-inicio  <> ? 
+            and proces-item.data-termino <> ? then
+                if  p-dt-inicio < proces-item.data-inicio
+                or  p-dt-inicio > proces-item.data-termino then
+                    next.
+
+            /*** Verifica a linha de produ‡Æo ***/
+            if p-nr-linha <> ?
+            and proces-item.nr-linha <> ?
+            and proces-item.nr-linha <> 0 
+            and proces-item.nr-linha <> p-nr-linha then
+                next.
+                
+            /*** Verifica a unidade de neg¢cio ***/
+            &if defined (bf_man_206b) &then
+                if (can-find(funcao where funcao.cd-funcao = "EMS2-UNIDADE-NEGOCIO"
+                and funcao.ativo = yes)) then do:
+                        if p-unid-negoc <> ?
+                        and p-unid-negoc <> ""
+                        and proces-item.cod-unid-negoc <> ?
+                        and proces-item.cod-unid-negoc <> ""
+                        and p-unid-negoc <> proces-item.cod-unid-negoc then next.
+                end.
+            &endif
+                          
+        end.
+      
+        create tt-proces-item.
+        buffer-copy proces-item to tt-proces-item.
+    
+        if  not p-log-gera-lista then
+            return. 
+
+        assign v-soma-perc  = v-soma-perc + proces-item.proporcao
+               v-num-proces = v-num-proces + 1. 
+                           
+    end.
+    
+    /*** Ajuste de somatoria de propor‡äes para 100 % ***/
+    if v-soma-perc > 0 and v-soma-perc < 100 then 
+       for each tt-proces-item:
+           assign tt-proces-item.proporcao = tt-proces-item.proporcao * 100 / v-soma-perc.
+       end.
+
+    if v-soma-perc = 0 then 
+       for each tt-proces-item:
+           assign tt-proces-item.proporcao = 100 / v-num-proces.
+       end.
+    
+END PROCEDURE.

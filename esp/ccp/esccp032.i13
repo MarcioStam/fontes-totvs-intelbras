@@ -1,0 +1,90 @@
+/**************************************************************************
+**
+**  Include: CD0420.i13 - Procedure pi-processa-componentes
+**
+**************************************************************************/
+
+procedure pi-processa-componentes.
+
+    assign i-nivel        = 0
+           c-ref-pai      = c-cod-refer
+           l-controla-ref = (item.tipo-con-est = 4).
+    run pi-navega-estrutura (input item.it-codigo).    
+
+end procedure.
+
+procedure pi-navega-estrutura.
+
+    def input parameter c-it-codigo as char no-undo.
+
+    define buffer b-estrutura for estrutura. 
+
+    assign i-nivel = i-nivel + 1.
+    
+    if i-nivel < tt-param.i-niveis then do:    
+       for each  b-estrutura 
+           where b-estrutura.it-codigo    =  c-it-codigo
+             and b-estrutura.data-inicio  <= tt-param.da-corte  
+             and b-estrutura.data-termino >  tt-param.da-corte  no-lock,
+           first b-item
+           where b-item.it-codigo = b-estrutura.es-codigo no-lock:
+           
+           if l-controla-ref or b-item.tipo-con-est = 4 then 
+              run cdp/cd9060.p (input b-estrutura.it-codigo,
+                                input b-estrutura.sequencia,
+                                input b-estrutura.es-codigo,
+                                input c-ref-pai,
+                                output l-util-item,
+                                output c-ref-filho).
+           else 
+               assign l-util-item = yes
+                      c-ref-filho = "".
+
+           if l-util-item                                    and
+              b-item.cod-estabel  >= tt-param.c-ci-estab-ini and
+              b-item.cod-estabel  <= tt-param.c-ci-estab-fim and
+              b-item.nr-linha     >= tt-param.i-ci-linha-ini and
+              b-item.nr-linha     <= tt-param.i-ci-linha-fim and
+              b-item.it-codigo    >= tt-param.c-ci-item-ini  and
+              b-item.it-codigo    <= tt-param.c-ci-item-fim  and
+              b-item.fm-codigo    >= tt-param.c-ci-fami-ini  and
+              b-item.fm-codigo    <= tt-param.c-ci-fami-fim  and 
+              b-item.cd-planejado >= tt-param.c-ci-plan-ini  and
+              b-item.cd-planejado <= tt-param.c-ci-plan-fim  and
+              b-item.ge-codigo    >= tt-param.i-ci-ge-ini    and  
+              b-item.ge-codigo    <= tt-param.i-ci-ge-fim    and
+              b-item.cod-comprado >= tt-param.c-ci-comp-ini  and
+              b-item.cod-comprado <= tt-param.c-ci-comp-fim  and
+              ((b-item.compr-fabric  = 1 and l-comp-comp)     or
+              (b-item.compr-fabric  = 2 and l-comp-fabr)) then do:
+              
+              &IF defined(bf_man_206b) &THEN 
+                    if l-usa-unid-negoc then do:
+                        RUN retornaUnidadeNegocio IN h-cdapi024 (INPUT b-item.cod-estabel,
+                                                                 INPUT b-item.it-codigo,
+                                                                 INPUT "",
+                                                                 OUTPUT c-cod-unid-negoc).
+                        if not (c-cod-unid-negoc >= tt-param.c-ci-cod-unid-negoc-ini
+                           and  c-cod-unid-negoc <= tt-param.c-ci-cod-unid-negoc-fim) then
+                           next. 
+                   end.                                                                
+              &ENDIF
+              
+              assign c-cod-refer = c-ref-filho
+                     l-ref       = no.
+              if not b-estrutura.fantasma then
+                  run pi-simulacao (buffer b-item,
+                                         input  no
+                                         &if defined(bf_man_206b) &then
+                                            ,input l-usa-unid-negoc
+                                         &endif
+                                         ).
+              run pi-navega-estrutura (input b-item.it-codigo).
+           end.
+
+       end.
+    end.
+
+    assign i-nivel = i-nivel - 1.
+
+end procedure.

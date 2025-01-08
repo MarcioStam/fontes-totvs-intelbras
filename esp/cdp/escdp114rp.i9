@@ -1,0 +1,354 @@
+procedure pi-procedimento-09:
+    def var c-tp-pedido as char init "1,2,3,4,5,7,8,9,10,11,13,14,69,73,90,91,92,93,94,96,97,99" no-undo.
+
+    def var de-qt-ped   as deci no-undo.
+    def var de-qt-estoq as deci no-undo.
+    def var de-qt-op    as deci no-undo.
+    def var de-qt-oc    as deci no-undo.
+    
+    form tt-item.it-codigo     format "x(16)"            column-label "Item"
+         tt-item.desc-item     format "x(60)"            column-label "Descri‡Æo"
+         tt-item.quantidade[1] format "->>,>>>,>>9.9999" column-label "Qtde Pedido"
+         tt-item.quantidade[2] format "->>,>>>,>>9.9999" column-label "Qtde Estoque"
+         tt-item.quantidade[3] format "->>,>>>,>>9.9999" column-label "Qtde Ord Prod"
+         tt-item.quantidade[4] format "->>,>>>,>>9.9999" column-label "Qtde Ord Compra"
+         with width 172 down no-box stream-io frame f-09-1.
+    
+    form tt-ped-item.cod-estabel  format "x(5)"             column-label "Estab" at 10
+         tt-ped-item.nome-abrev   format "x(12)"            column-label "Cliente"
+         tt-ped-item.nr-pedcli    format "x(12)"            column-label "Ped Cli"
+         tt-ped-item.nr-sequencia format ">>,>>9"           column-label "Seq"
+         tt-ped-item.quantidade   format "->>,>>>,>>9.9999" column-label "Quantidade"
+         with width 172 down no-box stream-io frame f-09-2.
+    
+    form tt-saldo-estoq.cod-estabel  format "x(5)"             column-label "Estab" at 10
+         tt-saldo-estoq.cod-depos    format "x(3)"             column-label "Dep"
+         tt-saldo-estoq.cod-localiz  format "x(20)"            column-label "Localiz"
+         tt-saldo-estoq.lote         format "x(40)"            column-label "Lote/S‚rie"
+         tt-saldo-estoq.qtidade-atu  format "->>,>>>,>>9.9999" column-label "Qtde Atual"
+         tt-saldo-estoq.qt-alocada   format "->>,>>>,>>9.9999" column-label "Qt Aloc"
+         tt-saldo-estoq.qt-aloc-prod format "->>,>>>,>>9.9999" column-label "Qt Aloc Prod"
+         tt-saldo-estoq.qt-aloc-ped  format "->>,>>>,>>9.9999" column-label "Qt Aloc Ped"
+         with width 172 down no-box stream-io frame f-09-3.
+    
+    form tt-ord-prod.cod-estabel  format "x(5)"             column-label "Estab" at 10
+         tt-ord-prod.nr-ord-produ format ">>>,>>>,>>9"      column-label "Ord Prod"
+         tt-ord-prod.qt-ordem     format "->>,>>>,>>9.9999" column-label "Qtde Ordem"
+         with width 172 down no-box stream-io frame f-09-4.
+    
+    form tt-prazo-compra.cod-estabel  format "x(5)"             column-label "Estab" at 10
+         tt-prazo-compra.numero-ordem format "zzzzz9,99"        column-label "Ordem"
+         tt-prazo-compra.parcela      format ">>>>9"            column-label "Parcela"
+         tt-prazo-compra.quant-saldo  format "->>,>>>,>>9.9999" column-label "Qtde Saldo"
+         with width 172 down no-box stream-io frame f-09-5.
+
+    empty temp-table tt-ped-item.
+    empty temp-table tt-item.
+    empty temp-table tt-saldo-estoq.
+    empty temp-table tt-ord-prod.
+    empty temp-table tt-prazo-compra.
+
+    assign i-aux          = 0
+           c-arquivo      = tt-param.diretorio + "pedidos-venda-itens-obsoletos.txt"
+           c-titulo-relat = "Pedidos de Venda de Itens obsoletos".
+
+    output stream st-relat to value(c-arquivo) paged page-size 64 convert target "iso8859-1".
+
+    view stream st-relat frame f-cabec-172.
+    view stream st-relat frame f-rodape-172.
+
+    for each tt-digita use-index id2
+       where tt-digita.id-brw = 1:
+        assign i-cont = 0.
+
+        if valid-handle(h-acomp)
+        then do:
+             run pi-seta-titulo in h-acomp (input "Ped Venda It obsol (" + tt-digita.cod-estabel + ")").
+             run pi-acompanhar  in h-acomp (input 0).
+        end.
+
+        do i-aux = 0 to 2:
+            for each item-uni-estab fields(demanda) use-index item-uni-estab-ressup no-lock
+               where item-uni-estab.cod-estabel  = tt-digita.cod-estabel
+                 and item-uni-estab.demanda      = i-aux
+                 and item-uni-estab.cod-obsoleto > 1,
+                each ped-item fields(nr-sequencia qt-pedida qt-atendida qt-alocada qtd-alocar qt-log-aloca) use-index planejamento no-lock
+               where ped-item.it-codigo    = item-uni-estab.it-codigo
+                 and ped-item.cod-sit-item < 3,
+               first ped-ent fields(it-codigo) no-lock
+               where ped-ent.nome-abrev   = ped-item.nome-abrev
+                 and ped-ent.nr-pedcli    = ped-item.nr-pedcli
+                 and ped-ent.nr-sequencia = ped-item.nr-sequencia
+                 and ped-ent.it-codigo    = ped-item.it-codigo
+                 and ped-ent.cod-refer    = ped-item.cod-refer
+                 and ped-ent.cod-sit-ent <> 3
+                 and ped-ent.cod-sit-ent <> 5
+                 and ped-ent.cod-sit-ent <> 6,
+               first ped-venda fields(nome-abrev nr-pedcli cod-estabel tp-pedido) no-lock
+               where ped-venda.nome-abrev   = ped-item.nome-abrev
+                 and ped-venda.nr-pedcli    = ped-item.nr-pedcli
+                 and ped-venda.cod-estabel  = item-uni-estab.cod-estabel
+                 and ped-venda.cod-sit-aval = 3
+                 and ped-venda.cod-priori  <> 44,
+/*                first atendente no-lock                        */
+/*                where atendente.cd-oper = ped-venda.tp-pedido, */
+               first item fields(desc-item tipo-contr) no-lock
+               where item.it-codigo  = item-uni-estab.it-codigo
+                 and item.ge-codigo <> 0
+                 and item.fm-codigo <> "40016140"
+                 and item.fm-codigo <> "99400001"
+                 and item.fm-codigo <> "99400002"
+                 and item.fm-codigo <> "99200000":
+                 assign i-cont = i-cont + 1.
+
+                 if valid-handle(h-acomp)
+                 then run pi-acompanhar in h-acomp (input i-cont).
+
+                 if lookup(trim(ped-venda.tp-pedido),c-tp-pedido) > 0
+                 then next.
+
+/*                  if lookup(trim(atendente.cd-oper),c-tp-pedido) > 0 */
+/*                  then next.                                         */
+
+                 assign de-qt-ped = ped-item.qt-pedida - ped-item.qt-atendida - ped-item.qt-alocada - ped-item.qtd-alocar - ped-item.qt-log-aloca.
+
+                 if de-qt-ped <= 0
+                 then next.
+
+                 for first tt-item
+                     where tt-item.it-codigo = ped-ent.it-codigo: end.
+
+                 if not avail tt-item
+                 then do:
+                      create tt-item.
+                      assign tt-item.it-codigo   = ped-ent.it-codigo
+                             tt-item.desc-item   = item.desc-item.
+
+                      for each saldo-estoq fields(cod-estabel cod-localiz lote 
+                                                  qtidade-atu qt-alocada  qt-aloc-prod qt-aloc-ped) no-lock
+                         where saldo-estoq.it-codigo = ped-ent.it-codigo,
+                         first b-tt-digita 
+                         where b-tt-digita.id-brw      = 1
+                           and b-tt-digita.cod-estabel = saldo-estoq.cod-estabel,
+                         first deposito fields(cod-depos cons-saldo) no-lock
+                         where deposito.cod-depos = saldo-estoq.cod-depos:
+                          if  not deposito.cons-saldo
+                          and deposito.cod-depos  <> "EXP"
+                          and deposito.cod-depos  <> "ACA"
+                          and deposito.cod-depos  <> "WEX"
+                          and deposito.cod-depos  <> "ALC"
+                          and deposito.cod-depos  <> "CDN"
+                          and deposito.cod-depos  <> "EPE"
+                          then next.
+
+                          if  saldo-estoq.qtidade-atu  = 0
+                          and saldo-estoq.qt-alocada   = 0
+                          and saldo-estoq.qt-aloc-prod = 0
+                          and saldo-estoq.qt-aloc-ped  = 0
+                          then next.
+                
+                          assign tt-item.quantidade[2] = tt-item.quantidade[2]
+                                                       + (saldo-estoq.qtidade-atu 
+                                                       -  saldo-estoq.qt-alocada 
+                                                       -  saldo-estoq.qt-aloc-prod 
+                                                       -  saldo-estoq.qt-aloc-ped).
+
+                          for first tt-saldo-estoq
+                              where tt-saldo-estoq.it-codigo   = ped-ent.it-codigo
+                                and tt-saldo-estoq.cod-estabel = saldo-estoq.cod-estabel
+                                and tt-saldo-estoq.cod-depos   = deposito.cod-depos
+                                and tt-saldo-estoq.cod-localiz = saldo-estoq.cod-localiz
+                                and tt-saldo-estoq.lote        = saldo-estoq.lote: end.
+
+                          if not avail tt-saldo-estoq
+                          then do:
+                               create tt-saldo-estoq.
+                               assign tt-saldo-estoq.it-codigo   = ped-ent.it-codigo      
+                                      tt-saldo-estoq.cod-estabel = saldo-estoq.cod-estabel  
+                                      tt-saldo-estoq.cod-depos   = deposito.cod-depos     
+                                      tt-saldo-estoq.cod-localiz = saldo-estoq.cod-localiz
+                                      tt-saldo-estoq.lote        = saldo-estoq.lote.
+                          end.
+
+                          assign tt-saldo-estoq.qtidade-atu  = tt-saldo-estoq.qtidade-atu  + saldo-estoq.qtidade-atu
+                                 tt-saldo-estoq.qt-alocada   = tt-saldo-estoq.qt-alocada   + saldo-estoq.qt-alocada
+                                 tt-saldo-estoq.qt-aloc-prod = tt-saldo-estoq.qt-aloc-prod + saldo-estoq.qt-aloc-prod
+                                 tt-saldo-estoq.qt-aloc-ped  = tt-saldo-estoq.qt-aloc-ped  + saldo-estoq.qt-aloc-ped.
+                      end. /* for each saldo-estoq */
+                           
+                      for each ord-prod fields(nr-ord-produ cod-estabel qt-ordem) use-index planejamento no-lock
+                         where ord-prod.it-codigo   = ped-ent.it-codigo
+                           and ord-prod.estado      < 7,
+                         first b-tt-digita
+                         where b-tt-digita.id-brw      = 1
+                           and b-tt-digita.cod-estabel = ord-prod.cod-estabel:
+                          assign tt-item.quantidade[3] = tt-item.quantidade[3] + ord-prod.qt-ordem.
+
+                          create tt-ord-prod.
+                          assign tt-ord-prod.it-codigo    = ped-ent.it-codigo
+                                 tt-ord-prod.cod-estabel  = ord-prod.cod-estabel
+                                 tt-ord-prod.nr-ord-produ = ord-prod.nr-ord-produ
+                                 tt-ord-prod.qt-ordem     = ord-prod.qt-ordem.
+                      end. /* for each ord-prod */
+                
+                      if  item.tipo-contr         <> 4 /* D‚bito Direto */
+                      and item-uni-estab.demanda   = 1 /* Dependente */
+                      then for each b-tt-digita
+                              where b-tt-digita.id-brw = 1,
+                               each ordem-compra fields(cod-estabel numero-ordem) use-index estab-item-sit no-lock
+                              where ordem-compra.cod-estabel = b-tt-digita.cod-estabel
+                                and ordem-compra.it-codigo   = ped-ent.it-codigo
+                                and ordem-compra.situacao   <> 4  /* Eliminada */
+                                and ordem-compra.situacao   <> 6  /* Recebida */
+                                and ordem-compra.natureza    = 1, /* Compra */
+                               each prazo-compra fields(parcela quant-saldo) use-index sit-ordem no-lock
+                              where prazo-compra.situacao     <> 4 /* Eliminada */
+                                and prazo-compra.situacao     <> 6 /* Recebida */
+                                and prazo-compra.numero-ordem  = ordem-compra.numero-ordem
+                                and prazo-compra.qtd-sal-forn  > 0:
+                               assign tt-item.quantidade[4] = tt-item.quantidade[4] + prazo-compra.quant-saldo.
+
+                               create tt-prazo-compra.
+                               assign tt-prazo-compra.it-codigo    = ped-ent.it-codigo
+                                      tt-prazo-compra.cod-estabel  = ordem-compra.cod-estabel
+                                      tt-prazo-compra.numero-ordem = ordem-compra.numero-ordem
+                                      tt-prazo-compra.parcela      = prazo-compra.parcela
+                                      tt-prazo-compra.quant-saldo  = prazo-compra.quant-saldo.
+                           end. /* for each ordem-compra */
+                 end. /* if not can-find(first tt-item) */
+
+                 for first tt-ped-item
+                     where tt-ped-item.it-codigo    = ped-ent.it-codigo
+                       and tt-ped-item.cod-estabel  = ped-venda.cod-estabel
+                       and tt-ped-item.nome-abrev   = ped-venda.nome-abrev
+                       and tt-ped-item.nr-pedcli    = ped-venda.nr-pedcli
+                       and tt-ped-item.nr-sequencia = ped-item.nr-sequencia: end.
+
+                 if not avail tt-ped-item
+                 then do:
+                      create tt-ped-item.
+                      assign tt-ped-item.nome-abrev   = ped-venda.nome-abrev 
+                             tt-ped-item.nr-pedcli    = ped-venda.nr-pedcli  
+                             tt-ped-item.nr-sequencia = ped-item.nr-sequencia
+                             tt-ped-item.it-codigo    = ped-ent.it-codigo
+                             tt-ped-item.cod-estabel  = ped-venda.cod-estabel.
+                 end. /* if not avail tt-ped-item */
+
+                 assign tt-ped-item.quantidade = tt-ped-item.quantidade          + de-qt-ped
+                        tt-item.quantidade[1]  = tt-item.quantidade[1] + de-qt-ped.
+            end. /* for each item-uni-estab */
+        end. /* do i-aux = 0 to 3 */
+    end. /* for each tt-digita */
+    find current tt-ped-item     no-error.
+    find current tt-item         no-error.
+    find current tt-saldo-estoq  no-error.
+    find current tt-ord-prod     no-error.
+    find current tt-prazo-compra no-error.
+
+    if valid-handle(h-acomp)
+    then run pi-seta-titulo in h-acomp (input "Ped Venda It obsol...").
+
+    for each tt-item:
+          if valid-handle(h-acomp)
+          then run pi-acompanhar in h-acomp(input "Item: " + tt-item.it-codigo).
+
+          assign de-qt-ped   = tt-item.quantidade[1]
+                 de-qt-estoq = tt-item.quantidade[2]
+                 de-qt-op    = tt-item.quantidade[3]
+                 de-qt-oc    = tt-item.quantidade[4].
+
+          if de-qt-ped - (de-qt-estoq + de-qt-op + de-qt-oc) <= 0
+          then next.
+
+          disp stream st-relat
+               tt-item.it-codigo
+               tt-item.desc-item
+               de-qt-ped   @ tt-item.quantidade[1]
+               de-qt-estoq @ tt-item.quantidade[2]
+               de-qt-op    @ tt-item.quantidade[3]
+               de-qt-oc    @ tt-item.quantidade[4]
+               with frame f-09-1.
+          down stream st-relat with frame f-09-1.
+
+          if can-find(first tt-ped-item where
+                            tt-ped-item.it-codigo = tt-item.it-codigo)
+          then do:
+               put stream st-relat skip(1).
+
+               for each tt-ped-item
+                  where tt-ped-item.it-codigo = tt-item.it-codigo:
+                   disp stream st-relat
+                        tt-ped-item.cod-estabel 
+                        tt-ped-item.nome-abrev  
+                        tt-ped-item.nr-pedcli   
+                        tt-ped-item.nr-sequencia
+                        tt-ped-item.quantidade
+                        with frame f-09-2.
+                   down stream st-relat with frame f-09-2.                   
+               end. /* for each tt-saldo-estoq */
+          end. /* if can-find(first tt-saldo-estoq */
+
+          if can-find(first tt-saldo-estoq where
+                            tt-saldo-estoq.it-codigo = tt-item.it-codigo)
+          then do:
+               put stream st-relat skip(1).
+
+               for each tt-saldo-estoq
+                  where tt-saldo-estoq.it-codigo = tt-item.it-codigo:
+                   disp stream st-relat
+                        tt-saldo-estoq.cod-estabel
+                        tt-saldo-estoq.cod-depos  
+                        tt-saldo-estoq.cod-localiz
+                        tt-saldo-estoq.lote       
+                        tt-saldo-estoq.qtidade-atu 
+                        tt-saldo-estoq.qt-alocada  
+                        tt-saldo-estoq.qt-aloc-prod
+                        tt-saldo-estoq.qt-aloc-ped 
+                        with frame f-09-3.
+                   down stream st-relat with frame f-09-3.                   
+               end. /* for each tt-saldo-estoq */
+          end. /* if can-find(first tt-saldo-estoq */
+
+          if can-find(first tt-ord-prod where
+                            tt-ord-prod.it-codigo = tt-item.it-codigo)
+          then do:
+               put stream st-relat skip(1).
+
+               for each tt-ord-prod
+                  where tt-ord-prod.it-codigo = tt-item.it-codigo:
+                   disp stream st-relat
+                        tt-ord-prod.cod-estabel 
+                        tt-ord-prod.nr-ord-produ
+                        tt-ord-prod.qt-ordem    
+                        with frame f-09-4.
+                   down stream st-relat with frame f-09-4.                   
+               end. /* for each tt-ord-prod */
+          end. /* if can-find(first tt-ord-prod */
+
+          if can-find(first tt-prazo-compra where
+                            tt-prazo-compra.it-codigo = tt-item.it-codigo)
+          then do:
+               put stream st-relat skip(1).
+
+               for each tt-prazo-compra
+                  where tt-prazo-compra.it-codigo = tt-item.it-codigo:
+                   disp stream st-relat
+                        tt-prazo-compra.cod-estabel 
+                        tt-prazo-compra.numero-ordem
+                        tt-prazo-compra.parcela     
+                        tt-prazo-compra.quant-saldo 
+                        with frame f-09-5.
+                   down stream st-relat with frame f-09-5.                   
+               end. /* for each tt-saldo-estoq */
+          end. /* if can-find(first tt-saldo-estoq */
+
+          put stream st-relat skip(1).
+    end. /* for each tt-item */
+
+    output stream st-relat close.
+
+    if valid-handle(h-wprog)
+    then run OpenDocument in h-wprog (input c-arquivo). 
+
+    return "OK".
+end procedure. /* procedure pi-procedimento-09 */

@@ -1,0 +1,20 @@
+for each tt-pedidos use-index {1}:
+    put stream st-csv unformatted
+        tt-pedidos.num-pedido-orig   ";"
+        tt-pedidos.numero-ordem-orig ";"
+        tt-pedidos.it-codigo         ";"
+        tt-pedidos.parcela-orig      ";"
+        tt-pedidos.cod-cond-pag-orig ";"
+        tt-pedidos.desc-transp-orig  ";"
+        tt-pedidos.quant-saldo-orig  ";"
+        tt-pedidos.preco-fornec-orig ";"
+        tt-pedidos.num-pedido-dest   ";"
+        tt-pedidos.numero-ordem-dest ";"
+        tt-pedidos.parcela-dest      ";"
+        tt-pedidos.cod-cond-pag-dest ";"
+        tt-pedidos.desc-transp-dest  ";"
+        tt-pedidos.quant-saldo-dest  ";"
+        tt-pedidos.preco-fornec-dest ";"
+        replace(tt-pedidos.comentarios,chr(10),". ")
+        skip.
+end.
